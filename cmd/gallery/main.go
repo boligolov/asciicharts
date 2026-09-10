@@ -38,6 +38,21 @@ func main() {
 			},
 		},
 		{
+			"vbar (wide)",
+			chart.Input{
+				ChartType: chart.VBar,
+				Title:     "Revenue by quarter (width: 60)",
+				Border:    border.Rounded,
+				Height:    10,
+				Width:     60,
+				Series: []chart.Series{
+					{Name: "2025", Values: []float64{30, 45, 40, 60}},
+					{Name: "2026", Values: []float64{35, 50, 55, 70}},
+				},
+				Labels: []string{"Q1", "Q2", "Q3", "Q4"},
+			},
+		},
+		{
 			"vbar (stacked)",
 			chart.Input{
 				ChartType: chart.VBar,
@@ -114,17 +129,44 @@ func main() {
 			},
 		},
 		{
-			"scatter (quad)",
+			"scatter (cell, two groups)",
+			chart.Input{
+				ChartType: chart.Scatter,
+				Title:     "Height vs weight",
+				Border:    border.Light,
+				Width:     40,
+				Height:    14,
+				Series: []chart.Series{
+					{Name: "group A", Points: []chart.Point{
+						{X: 158, Y: 52}, {X: 160, Y: 55}, {X: 162, Y: 54}, {X: 165, Y: 60},
+						{X: 167, Y: 58}, {X: 170, Y: 65}, {X: 172, Y: 68}, {X: 163, Y: 62},
+					}},
+					{Name: "group B", Points: []chart.Point{
+						{X: 175, Y: 80}, {X: 178, Y: 78}, {X: 180, Y: 85}, {X: 183, Y: 88},
+						{X: 185, Y: 90}, {X: 182, Y: 82}, {X: 188, Y: 92}, {X: 177, Y: 86},
+					}},
+				},
+			},
+		},
+		{
+			"scatter (quad, colored groups)",
 			chart.Input{
 				ChartType: chart.Scatter,
 				Title:     "Height vs weight",
 				Border:    border.Light,
 				Mode:      chart.ModeQuad,
 				Width:     40,
-				Height:    12,
+				Height:    14,
+				UseColor:  chart.ColorOn,
 				Series: []chart.Series{
-					{Name: "group A", Points: []chart.Point{{X: 160, Y: 55}, {X: 165, Y: 60}, {X: 170, Y: 65}, {X: 172, Y: 68}}},
-					{Name: "group B", Points: []chart.Point{{X: 175, Y: 80}, {X: 180, Y: 85}, {X: 185, Y: 90}, {X: 178, Y: 78}}},
+					{Name: "group A", Points: []chart.Point{
+						{X: 158, Y: 52}, {X: 160, Y: 55}, {X: 162, Y: 54}, {X: 165, Y: 60},
+						{X: 167, Y: 58}, {X: 170, Y: 65}, {X: 172, Y: 68}, {X: 163, Y: 62},
+					}},
+					{Name: "group B", Points: []chart.Point{
+						{X: 175, Y: 80}, {X: 178, Y: 78}, {X: 180, Y: 85}, {X: 183, Y: 88},
+						{X: 185, Y: 90}, {X: 182, Y: 82}, {X: 188, Y: 92}, {X: 177, Y: 86},
+					}},
 				},
 			},
 		},

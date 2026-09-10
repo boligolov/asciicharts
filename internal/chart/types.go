@@ -59,7 +59,8 @@ type Input struct {
 	Bins      int          `json:"bins,omitempty" jsonschema:"number of buckets for histogram charts (default: 10)"`
 	UseColor  UseColor     `json:"useColor,omitempty" jsonschema:"ANSI 256-color output: auto, on or off (default: auto, which is equivalent to off since tool output is plain text for an agent, not a terminal)"`
 
-	// Threshold and ShowPoints apply only to chartType "line".
+	// Threshold, ShowPoints and PointChar apply only to chartType "line".
 	Threshold  *float64 `json:"threshold,omitempty" jsonschema:"line charts only: draw a dashed horizontal reference line at this y-value"`
-	ShowPoints bool     `json:"showPoints,omitempty" jsonschema:"line charts only: mark each individual data point with a distinct per-series glyph on top of the connecting line"`
+	ShowPoints bool     `json:"showPoints,omitempty" jsonschema:"line charts only: mark each individual data point with a glyph on top of the connecting line"`
+	PointChar  string   `json:"pointChar,omitempty" jsonschema:"line charts only, with showPoints: single character used to mark points on every series (default: a large circle for the first series, with a distinct shape per additional series)"`
 }

@@ -80,6 +80,45 @@ latency ▃▅▄█▂▆▇▁▅█▃
 ╰────────────────────╯
 ```
 
+### vbar (custom width)
+
+`width` isn't just cosmetic padding — it thickens every bar/column so the chart actually fills the requested width, rather than staying pencil-thin.
+
+```json
+{
+  "chartType": "vbar",
+  "title": "Revenue by quarter (width: 60)",
+  "border": "rounded",
+  "height": 10,
+  "width": 60,
+  "labels": ["Q1", "Q2", "Q3", "Q4"],
+  "series": [
+    { "name": "2025", "values": [30, 45, 40, 60] },
+    { "name": "2026", "values": [35, 50, 55, 70] }
+  ]
+}
+```
+
+```
+╭─────────────────────────────────────────────────────────────╮
+│               Revenue by quarter (width: 60)                │
+├─────────────────────────────────────────────────────────────┤
+│                                                     ███████ │
+│                                              ▅▅▅▅▅▅▅███████ │
+│                       ▁▁▁▁▁▁▁        ▇▇▇▇▇▇▇ ██████████████ │
+│                ▃▃▃▃▃▃▃███████        ███████ ██████████████ │
+│                ██████████████ ▆▆▆▆▆▆▆███████ ██████████████ │
+│ ▂▂▂▂▂▂▂███████ ██████████████ ██████████████ ██████████████ │
+│ ██████████████ ██████████████ ██████████████ ██████████████ │
+│ ██████████████ ██████████████ ██████████████ ██████████████ │
+│ ██████████████ ██████████████ ██████████████ ██████████████ │
+│ ██████████████ ██████████████ ██████████████ ██████████████ │
+│       Q1             Q2             Q3             Q4       │
+│                                                             │
+│ █ 2025   ▓ 2026                                             │
+╰─────────────────────────────────────────────────────────────╯
+```
+
 ### vbar (stacked)
 
 ```json
@@ -263,18 +302,19 @@ latency ▃▅▄█▂▆▇▁▅█▃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
-### scatter (quad resolution)
+### scatter (cell resolution, two groups)
+
+In `cell` mode, each series gets its own marker shape (`●`, `○`, `◆`, `◇`, …), so groups are distinguishable at a glance without needing color.
 
 ```json
 {
   "chartType": "scatter",
   "title": "Height vs weight",
-  "mode": "quad",
   "width": 40,
-  "height": 12,
+  "height": 14,
   "series": [
-    { "name": "group A", "points": [{ "x": 160, "y": 55 }, { "x": 165, "y": 60 }, { "x": 170, "y": 65 }, { "x": 172, "y": 68 }] },
-    { "name": "group B", "points": [{ "x": 175, "y": 80 }, { "x": 180, "y": 85 }, { "x": 185, "y": 90 }, { "x": 178, "y": 78 }] }
+    { "name": "group A", "points": [{ "x": 158, "y": 52 }, { "x": 160, "y": 55 }, { "x": 162, "y": 54 }, { "x": 165, "y": 60 }, { "x": 167, "y": 58 }, { "x": 170, "y": 65 }, { "x": 172, "y": 68 }, { "x": 163, "y": 62 }] },
+    { "name": "group B", "points": [{ "x": 175, "y": 80 }, { "x": 178, "y": 78 }, { "x": 180, "y": 85 }, { "x": 183, "y": 88 }, { "x": 185, "y": 90 }, { "x": 182, "y": 82 }, { "x": 188, "y": 92 }, { "x": 177, "y": 86 }] }
   ]
 }
 ```
@@ -283,19 +323,63 @@ latency ▃▅▄█▂▆▇▁▅█▃
 ┌──────────────────────────────────────────┐
 │             Height vs weight             │
 ├──────────────────────────────────────────┤
-│                                        ▖ │
+│                                        ○ │
+│                                  ○ ○     │
+│                          ○   ○           │
+│                                ○         │
+│                       ○                  │
+│                           ○              │
+│                                          │
+│                                          │
+│                   ●                      │
+│                 ●                        │
+│        ● ●                               │
+│             ●                            │
+│    ● ●                                   │
+│ ●                                        │
+│ x: [158, 188]  y: [52, 92]               │
+│ ● group A   ○ group B                    │
+└──────────────────────────────────────────┘
+```
+
+### scatter (quad resolution)
+
+`quad`/`braille` scatter plots pack sub-character dots, which is much smoother but can't carry a per-series shape the way `cell` mode does — with more than one series at these resolutions, pass `useColor: "on"` so series are told apart by color instead (group A renders blue, group B orange below; a plain-text code block can't show that, but you'll see it running the gallery yourself).
+
+```json
+{
+  "chartType": "scatter",
+  "title": "Height vs weight",
+  "mode": "quad",
+  "width": 40,
+  "height": 14,
+  "useColor": "on",
+  "series": [
+    { "name": "group A", "points": [{ "x": 158, "y": 52 }, { "x": 160, "y": 55 }, { "x": 162, "y": 54 }, { "x": 165, "y": 60 }, { "x": 167, "y": 58 }, { "x": 170, "y": 65 }, { "x": 172, "y": 68 }, { "x": 163, "y": 62 }] },
+    { "name": "group B", "points": [{ "x": 175, "y": 80 }, { "x": 178, "y": 78 }, { "x": 180, "y": 85 }, { "x": 183, "y": 88 }, { "x": 185, "y": 90 }, { "x": 182, "y": 82 }, { "x": 188, "y": 92 }, { "x": 177, "y": 86 }] }
+  ]
+}
+```
+
+```
+┌──────────────────────────────────────────┐
+│             Height vs weight             │
+├──────────────────────────────────────────┤
+│                                    ▘   ▖ │
+│                                  ▝       │
+│                          ▗   ▝           │
 │                                ▘         │
-│                                          │
-│                        ▘                 │
-│                             ▖            │
+│                       ▖   ▘              │
 │                                          │
 │                                          │
-│                    ▗                     │
+│                                          │
+│                   ▖                      │
 │                 ▗                        │
-│                                          │
-│         ▗                                │
-│ ▝                                        │
-│ x: [160, 185]  y: [55, 90]               │
+│       ▖                                  │
+│          ▗  ▝                            │
+│   ▘                                      │
+│ ▝    ▖                                   │
+│ x: [158, 188]  y: [52, 92]               │
 │ █ group A   ▓ group B                    │
 └──────────────────────────────────────────┘
 ```
@@ -468,7 +552,7 @@ Single tool: **`render_chart`**.
 | `series`    | array, required   | all                                   | see below — meaning depends on `chartType`                             |
 | `labels`    | string[]          | vbar, hbar, histogram, heatmap        | category labels / column headers                                       |
 | `title`     | string            | all                                   | shown centered above the chart                                         |
-| `width`     | int               | most types                            | defaults vary by chart type                                            |
+| `width`     | int               | most types                            | defaults vary by chart type; for `vbar`, thickens each bar/column to fill the requested width; for `hbar`, sets the max bar length |
 | `height`    | int               | most types                            | defaults vary by chart type                                            |
 | `border`    | string            | all                                   | `none`, `ascii`, `light` (default), `heavy`, `double`, `rounded`       |
 | `mode`      | string            | line, scatter, dual_axis              | `cell` (default), `quad`, `braille`                                    |
@@ -476,7 +560,8 @@ Single tool: **`render_chart`**.
 | `bins`      | int               | histogram                             | default 10                                                              |
 | `useColor`  | string            | all                                   | `auto` (default, same as off — output goes to an agent, not a terminal), `on`, `off` |
 | `threshold` | number            | line                                  | draws a dashed horizontal reference line at this y-value                |
-| `showPoints`| bool              | line                                  | marks each data point with a distinct glyph on top of the line          |
+| `showPoints`| bool              | line                                  | marks each data point with a glyph on top of the line (and switches the connector to a thin dot) |
+| `pointChar` | string            | line, with showPoints                 | override the point glyph for every series (default: a large circle `●`, with a distinct shape per additional series) |
 
 Each entry in `series` has `name`, `values`, and `points` — which ones you fill in depends on `chartType`:
 

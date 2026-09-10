@@ -39,7 +39,8 @@ func newServer() *mcp.Server {
 		Description: "Render numeric data as an ASCII/Unicode text chart. Supports sparkline, vbar, hbar, line, scatter, " +
 			"dual_axis, pie, histogram, heatmap and boxplot, with an optional title, border frame (none/ascii/light/heavy/" +
 			"double/rounded), sub-character resolution for line/scatter/dual_axis (cell/quad/braille), a dashed threshold " +
-			"line and per-point markers for line charts, and optional ANSI 256-color output. Returns the chart as plain text.",
+			"line and configurable per-point markers for line charts, a target chart width (vbar/hbar scale to fill it), " +
+			"and optional ANSI 256-color output. Returns the chart as plain text.",
 	}, renderChart)
 
 	return server

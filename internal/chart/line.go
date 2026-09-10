@@ -69,12 +69,19 @@ func renderLine(in Input) (string, error) {
 	}
 
 	if in.ShowPoints {
+		customPoint := rune(0)
+		if in.PointChar != "" {
+			customPoint = []rune(in.PointChar)[0]
+		}
 		for si, s := range in.Series {
 			color := -1
 			if colorOn {
 				color = seriesColor(si)
 			}
 			marker := markers[si%len(markers)]
+			if customPoint != 0 {
+				marker = customPoint
+			}
 			n := len(s.Values)
 			for i, v := range s.Values {
 				x := xPixel(i, n, pw)

@@ -25,7 +25,7 @@ func renderBar(in Input) (string, error) {
 	colorOn := in.UseColor.enabled()
 
 	if in.ChartType == VBar {
-		return renderVBar(labels, names, matrix, height, in.Stacked, colorOn), nil
+		return renderVBar(labels, names, matrix, in.Width, height, in.Stacked, colorOn), nil
 	}
 
 	if len(names) == 1 {
@@ -101,17 +101,34 @@ func allocateProportional(values []float64, sum float64, total int) []int {
 	return result
 }
 
-func renderVBar(labels, names []string, matrix [][]float64, height int, stacked, colorOn bool) string {
+func renderVBar(labels, names []string, matrix [][]float64, width, height int, stacked, colorOn bool) string {
 	numCat := len(labels)
 	numSeries := len(matrix)
 	const gap = 1
+
+	// Stacked bars are a single column per category; grouped bars are
+	// numSeries columns per category. barWidth thickens each of those
+	// columns so the chart fills a requested total width, rather than
+	// always being a single character thick.
+	barsPerGroup := numSeries
+	if stacked {
+		barsPerGroup = 1
+	}
+	barWidth := 1
+	if width > 0 {
+		if avail := width - (numCat-1)*gap; avail > 0 {
+			if bw := avail / (numCat * barsPerGroup); bw > 1 {
+				barWidth = bw
+			}
+		}
+	}
 
 	maxLabelW := 0
 	for _, l := range labels {
 		maxLabelW = max(maxLabelW, utf8.RuneCountInString(l))
 	}
-	groupW := max(numSeries, maxLabelW)
-	barsOffset := (groupW - numSeries) / 2
+	groupW := max(barsPerGroup*barWidth, maxLabelW)
+	barsOffset := (groupW - barsPerGroup*barWidth) / 2
 
 	totalW := numCat*groupW + (numCat-1)*gap
 	if totalW < 1 {
@@ -142,7 +159,7 @@ func renderVBar(labels, names []string, matrix [][]float64, height int, stacked,
 			maxSum = 1
 		}
 		for c := 0; c < numCat; c++ {
-			col := c*(groupW+gap) + groupW/2
+			colStart := c*(groupW+gap) + barsOffset
 			values := make([]float64, numSeries)
 			colSum := 0.0
 			for s := 0; s < numSeries; s++ {
@@ -163,8 +180,10 @@ func renderVBar(labels, names []string, matrix [][]float64, height int, stacked,
 					if row < 0 || row >= height {
 						continue
 					}
-					grid[row][col] = ch
-					colorGrid[row][col] = color
+					for w := 0; w < barWidth; w++ {
+						grid[row][colStart+w] = ch
+						colorGrid[row][colStart+w] = color
+					}
 				}
 				cursor += segRows
 			}
@@ -181,7 +200,7 @@ func renderVBar(labels, names []string, matrix [][]float64, height int, stacked,
 		}
 		for c := 0; c < numCat; c++ {
 			for s := 0; s < numSeries; s++ {
-				col := c*(groupW+gap) + barsOffset + s
+				colStart := c*(groupW+gap) + barsOffset + s*barWidth
 				v := matrix[s][c]
 				eighthsTotal := int(math.Round(v / maxVal * float64(height) * 8))
 				fullRows := eighthsTotal / 8
@@ -190,13 +209,16 @@ func renderVBar(labels, names []string, matrix [][]float64, height int, stacked,
 				if colorOn {
 					color = seriesColor(s)
 				}
-				for r := 0; r < fullRows && r < height; r++ {
-					grid[height-1-r][col] = '█'
-					colorGrid[height-1-r][col] = color
-				}
-				if frac > 0 && fullRows < height {
-					grid[height-1-fullRows][col] = eighthsUp[frac]
-					colorGrid[height-1-fullRows][col] = color
+				for w := 0; w < barWidth; w++ {
+					col := colStart + w
+					for r := 0; r < fullRows && r < height; r++ {
+						grid[height-1-r][col] = '█'
+						colorGrid[height-1-r][col] = color
+					}
+					if frac > 0 && fullRows < height {
+						grid[height-1-fullRows][col] = eighthsUp[frac]
+						colorGrid[height-1-fullRows][col] = color
+					}
 				}
 			}
 		}

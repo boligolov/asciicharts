@@ -25,6 +25,14 @@ func TestSmokeAllChartTypes(t *testing.T) {
 		},
 		{
 			ChartType: chart.VBar,
+			Title:     "VBar wide (width: 50)",
+			Border:    border.Rounded,
+			Width:     50,
+			Series:    []chart.Series{{Values: []float64{10, 45, 30, 80, 60}}},
+			Labels:    []string{"Jan", "Feb", "Mar", "Apr", "May"},
+		},
+		{
+			ChartType: chart.VBar,
 			Title:     "VBar grouped",
 			Border:    border.Heavy,
 			Series: []chart.Series{
@@ -88,6 +96,15 @@ func TestSmokeAllChartTypes(t *testing.T) {
 			Height:     8,
 			Threshold:  floatPtr(7),
 			ShowPoints: true,
+			Series:     []chart.Series{{Values: []float64{1, 3, 2, 5, 4, 8, 6, 9, 7, 2, 5, 3}}},
+		},
+		{
+			ChartType:  chart.Line,
+			Title:      "Line with custom pointChar",
+			Border:     border.Light,
+			Height:     8,
+			ShowPoints: true,
+			PointChar:  "x",
 			Series:     []chart.Series{{Values: []float64{1, 3, 2, 5, 4, 8, 6, 9, 7, 2, 5, 3}}},
 		},
 		{
