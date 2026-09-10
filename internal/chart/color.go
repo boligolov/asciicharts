@@ -29,6 +29,10 @@ func (c UseColor) enabled() bool {
 	return c == ColorOn
 }
 
+// thresholdColor is a neutral gray used for the optional line-chart
+// threshold overlay, distinct from the series palette.
+const thresholdColor = 244
+
 // seriesColor returns the ANSI 256-color code assigned to series index i,
 // cycling through palette256.
 func seriesColor(i int) int {

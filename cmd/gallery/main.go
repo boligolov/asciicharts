@@ -63,6 +63,20 @@ func main() {
 			},
 		},
 		{
+			"hbar (stacked)",
+			chart.Input{
+				ChartType: chart.HBar,
+				Title:     "Revenue by region (stacked)",
+				Border:    border.Light,
+				Stacked:   true,
+				Labels:    []string{"EMEA", "APAC", "Americas"},
+				Series: []chart.Series{
+					{Name: "Product", Values: []float64{40, 25, 55}},
+					{Name: "Services", Values: []float64{15, 20, 18}},
+				},
+			},
+		},
+		{
 			"line (cell)",
 			chart.Input{
 				ChartType: chart.Line,
@@ -70,6 +84,18 @@ func main() {
 				Border:    border.Light,
 				Height:    8,
 				Series:    []chart.Series{{Values: []float64{12, 18, 15, 30, 42, 38, 50, 45, 60, 55, 48, 35}}},
+			},
+		},
+		{
+			"line (threshold + points)",
+			chart.Input{
+				ChartType:  chart.Line,
+				Title:      "Response time vs SLA",
+				Border:     border.Light,
+				Height:     8,
+				Threshold:  floatPtr(50),
+				ShowPoints: true,
+				Series:     []chart.Series{{Values: []float64{20, 25, 22, 30, 45, 38, 55, 60, 48, 35, 30, 28}}},
 			},
 		},
 		{
@@ -179,3 +205,5 @@ func main() {
 		fmt.Printf("=== %s ===\n%s\n\n", ex.name, out)
 	}
 }
+
+func floatPtr(v float64) *float64 { return &v }

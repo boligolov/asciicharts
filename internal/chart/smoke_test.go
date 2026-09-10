@@ -82,6 +82,15 @@ func TestSmokeAllChartTypes(t *testing.T) {
 			},
 		},
 		{
+			ChartType:  chart.Line,
+			Title:      "Line with threshold and points",
+			Border:     border.Light,
+			Height:     8,
+			Threshold:  floatPtr(7),
+			ShowPoints: true,
+			Series:     []chart.Series{{Values: []float64{1, 3, 2, 5, 4, 8, 6, 9, 7, 2, 5, 3}}},
+		},
+		{
 			ChartType: chart.Line,
 			Title:     "Line quad",
 			Border:    border.Light,
@@ -193,3 +202,5 @@ func TestSmokeAllChartTypes(t *testing.T) {
 		fmt.Printf("=== %s ===\n%s\n\n", in.Title, out)
 	}
 }
+
+func floatPtr(v float64) *float64 { return &v }

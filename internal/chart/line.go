@@ -2,6 +2,7 @@ package chart
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -26,6 +27,10 @@ func renderLine(in Input) (string, error) {
 	}
 
 	min, max := seriesMinMax(in.Series)
+	if in.Threshold != nil {
+		min = math.Min(min, *in.Threshold)
+		max = math.Max(max, *in.Threshold)
+	}
 	colorOn := in.UseColor.enabled()
 
 	c := newCanvas(mode, width, height)
@@ -50,6 +55,26 @@ func renderLine(in Input) (string, error) {
 		}
 	}
 
+	if in.Threshold != nil {
+		drawThreshold(c, *in.Threshold, min, max, colorOn)
+	}
+
+	if in.ShowPoints {
+		for si, s := range in.Series {
+			color := -1
+			if colorOn {
+				color = seriesColor(si)
+			}
+			marker := markers[si%len(markers)]
+			n := len(s.Values)
+			for i, v := range s.Values {
+				x := xPixel(i, n, pw)
+				y := yPixel(v, min, max, ph)
+				c.setMarker(x/c.subX, y/c.subY, marker, color)
+			}
+		}
+	}
+
 	axisLabels, axisWidth := leftAxisLabels(min, max, height)
 	rows := c.render(colorOn)
 
@@ -65,6 +90,30 @@ func renderLine(in Input) (string, error) {
 	if len(in.Series) > 1 {
 		body += "\n\n" + legendLine(in.Series, colorOn)
 	}
+	if in.Threshold != nil {
+		note := fmt.Sprintf("- - threshold: %s", formatValue(*in.Threshold))
+		if len(in.Series) > 1 {
+			body += "   " + note
+		} else {
+			body += "\n\n" + note
+		}
+	}
 
 	return body, nil
+}
+
+// drawThreshold overlays a dashed horizontal reference line at value,
+// overwriting whatever line/canvas content occupies that row so it stays
+// legible regardless of resolution mode.
+func drawThreshold(c *canvas, value, min, max float64, colorOn bool) {
+	row := yPixel(value, min, max, c.pixelHeight()) / c.subY
+	color := -1
+	if colorOn {
+		color = thresholdColor
+	}
+	for x := 0; x < c.width; x++ {
+		if x%2 == 0 {
+			c.setMarker(x, row, '-', color)
+		}
+	}
 }

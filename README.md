@@ -31,6 +31,9 @@ Written in Go on the official [`modelcontextprotocol/go-sdk`](https://github.com
 
 Generate all of these yourself with `go run ./cmd/gallery`.
 
+> [!NOTE]
+> These examples use several Unicode ranges beyond plain ASCII: box-drawing frames, eighth-block characters (`▏▎▍▌▋▊▉` / `▁▂▃▄▅▆▇`) for fractional bar widths/heights, quadrant blocks (`▘▝▖▗▞▚▛▙▜▟`) for `mode: "quad"`, and braille patterns (`⠀`-`⣿`) for `mode: "braille"`. GitHub's own rendering and most terminals (iTerm2, Windows Terminal, Ghostty, …) have full glyph coverage and will show these perfectly aligned. Some editors' **default** monospace fonts — Consolas in particular, VS Code and PyCharm's out-of-the-box choice on Windows — don't ship glyphs for the finer block/quadrant/braille characters and silently substitute a fallback font for just those, which throws off column alignment even though the underlying text is correct. If a chart below looks ragged in your editor, either view this file on GitHub, or switch your editor's monospace font to one with full coverage (e.g. **Cascadia Code**, **JetBrains Mono**, **Noto Sans Mono**, **DejaVu Sans Mono**).
+
 ### sparkline
 
 ```json
@@ -136,6 +139,34 @@ latency ▃▅▄█▂▆▇▁▅█▃
 └───────────────────────────────────────────────────────┘
 ```
 
+### hbar (stacked)
+
+```json
+{
+  "chartType": "hbar",
+  "title": "Revenue by region (stacked)",
+  "border": "light",
+  "stacked": true,
+  "labels": ["EMEA", "APAC", "Americas"],
+  "series": [
+    { "name": "Product", "values": [40, 25, 55] },
+    { "name": "Services", "values": [15, 20, 18] }
+  ]
+}
+```
+
+```
+┌────────────────────────────────────────────────────────┐
+│              Revenue by region (stacked)               │
+├────────────────────────────────────────────────────────┤
+│ EMEA     │ ██████████████████████▓▓▓▓▓▓▓▓           55 │
+│ APAC     │ ██████████████▓▓▓▓▓▓▓▓▓▓▓                45 │
+│ Americas │ ██████████████████████████████▓▓▓▓▓▓▓▓▓▓ 73 │
+│                                                        │
+│ █ Product   ▓ Services                                 │
+└────────────────────────────────────────────────────────┘
+```
+
 ### line (cell resolution)
 
 ```json
@@ -159,6 +190,38 @@ latency ▃▅▄█▂▆▇▁▅█▃
 │ 25.71 ┤             ██                                              │
 │ 18.86 ┤   █████   ██                                                │
 │    12 ┤███     ███                                                  │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### line (threshold + points)
+
+`threshold` overlays a dashed reference line at a fixed y-value (e.g. an SLA or target); `showPoints` marks each actual data point on top of the interpolated curve.
+
+```json
+{
+  "chartType": "line",
+  "title": "Response time vs SLA",
+  "height": 8,
+  "threshold": 50,
+  "showPoints": true,
+  "series": [{ "values": [20, 25, 22, 30, 45, 38, 55, 60, 48, 35, 30, 28] }]
+}
+```
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        Response time vs SLA                         │
+├─────────────────────────────────────────────────────────────────────┤
+│    60 ┤                                   ██●█                      │
+│ 54.29 ┤                               █●██    ██                    │
+│ 48.57 ┤- - - - - - - - - - - - - - -█- - - - - -█●█- - - - - - - -  │
+│ 42.86 ┤                    █●██   ██               ███              │
+│ 37.14 ┤                  ██    ██●                    █●██          │
+│ 31.43 ┤               █●█                                 ██●██     │
+│ 25.71 ┤   ██●██    ███                                         ███● │
+│    20 ┤●██     ██●█                                                 │
+│                                                                     │
+│ - - threshold: 50                                                   │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -412,6 +475,8 @@ Single tool: **`render_chart`**.
 | `stacked`   | bool              | vbar, hbar                            | stack series instead of grouping them side by side                     |
 | `bins`      | int               | histogram                             | default 10                                                              |
 | `useColor`  | string            | all                                   | `auto` (default, same as off — output goes to an agent, not a terminal), `on`, `off` |
+| `threshold` | number            | line                                  | draws a dashed horizontal reference line at this y-value                |
+| `showPoints`| bool              | line                                  | marks each data point with a distinct glyph on top of the line          |
 
 Each entry in `series` has `name`, `values`, and `points` — which ones you fill in depends on `chartType`:
 
