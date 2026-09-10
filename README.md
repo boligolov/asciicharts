@@ -195,7 +195,7 @@ latency ▃▅▄█▂▆▇▁▅█▃
 
 ### line (threshold + points)
 
-`threshold` overlays a dashed reference line at a fixed y-value (e.g. an SLA or target); `showPoints` marks each actual data point on top of the interpolated curve.
+`threshold` overlays a dashed reference line at a fixed y-value (e.g. an SLA or target); `showPoints` marks each actual data point with a bold dot, and — since a solid block clashes with round point markers — switches the connecting line itself to a thin centered dot (`·`) instead of `█`.
 
 ```json
 {
@@ -212,14 +212,14 @@ latency ▃▅▄█▂▆▇▁▅█▃
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        Response time vs SLA                         │
 ├─────────────────────────────────────────────────────────────────────┤
-│    60 ┤                                   ██●█                      │
-│ 54.29 ┤                               █●██    ██                    │
-│ 48.57 ┤- - - - - - - - - - - - - - -█- - - - - -█●█- - - - - - - -  │
-│ 42.86 ┤                    █●██   ██               ███              │
-│ 37.14 ┤                  ██    ██●                    █●██          │
-│ 31.43 ┤               █●█                                 ██●██     │
-│ 25.71 ┤   ██●██    ███                                         ███● │
-│    20 ┤●██     ██●█                                                 │
+│    60 ┤                                   ··●·                      │
+│ 54.29 ┤                               ·●··    ··                    │
+│ 48.57 ┤- - - - - - - - - - - - - - -·- - - - - -·●·- - - - - - - -  │
+│ 42.86 ┤                    ·●··   ··               ···              │
+│ 37.14 ┤                  ··    ··●                    ·●··          │
+│ 31.43 ┤               ·●·                                 ··●··     │
+│ 25.71 ┤   ··●··    ···                                         ···● │
+│    20 ┤●··     ··●·                                                 │
 │                                                                     │
 │ - - threshold: 50                                                   │
 └─────────────────────────────────────────────────────────────────────┘

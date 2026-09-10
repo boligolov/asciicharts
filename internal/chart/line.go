@@ -36,6 +36,15 @@ func renderLine(in Input) (string, error) {
 	c := newCanvas(mode, width, height)
 	pw, ph := c.pixelWidth(), c.pixelHeight()
 
+	// A solid block reads as a thick, flat-edged line. That looks fine on
+	// its own, but clashes with the round dot markers from ShowPoints, so
+	// the connecting line switches to a thin centered dot in that case
+	// (cell mode only — quad/braille already draw a thin line by nature).
+	var lineChar rune
+	if in.ShowPoints {
+		lineChar = '·'
+	}
+
 	for si, s := range in.Series {
 		color := -1
 		if colorOn {
@@ -47,9 +56,9 @@ func renderLine(in Input) (string, error) {
 			x := xPixel(i, n, pw)
 			y := yPixel(v, min, max, ph)
 			if prevX >= 0 {
-				c.line(prevX, prevY, x, y, 0, color)
+				c.line(prevX, prevY, x, y, lineChar, color)
 			} else {
-				c.setDot(x, y, 0, color)
+				c.setDot(x, y, lineChar, color)
 			}
 			prevX, prevY = x, y
 		}
