@@ -12,6 +12,10 @@ RUN CGO_ENABLED=0 GOOS=linux go build -trimpath -ldflags="-s -w" -o /out/ascii-c
 FROM scratch
 COPY --from=build /out/ascii-charts-mcp /ascii-charts-mcp
 
-# The server speaks MCP over stdio, so it must be run with `docker run -i`
-# (an MCP client typically manages this for you via its own config).
+# By default the server speaks MCP over stdio, so it must be run with
+# `docker run -i` (an MCP client typically manages this for you via its own
+# config). Setting PORT switches it to a long-running HTTP server instead,
+# serving MCP at /mcp and a plain health check at /healthz — see
+# docker-compose.yml's "web" service and docs/development.md.
+EXPOSE 8080
 ENTRYPOINT ["/ascii-charts-mcp"]

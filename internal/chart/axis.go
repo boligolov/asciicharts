@@ -104,7 +104,14 @@ func xAxisLabels(labels []string, n, plotWidth, leftPad int) string {
 // a colored fill glyph when color is enabled, otherwise a distinct plain
 // glyph per series index.
 func legendSwatch(i int, colorOn bool) string {
-	ch := string(fills[i%len(fills)])
+	return legendSwatchRamp(i, colorOn, fills)
+}
+
+// legendSwatchRamp is legendSwatch with an explicit fill-glyph ramp, so a
+// legend can match bars rendered with a non-default ramp (e.g. the
+// halftone bar style).
+func legendSwatchRamp(i int, colorOn bool, ramp []rune) string {
+	ch := string(ramp[i%len(ramp)])
 	return colorize(ch, seriesColor(i), colorOn)
 }
 
@@ -123,10 +130,51 @@ func legendLine(series []Series, colorOn bool) string {
 	return namedLegend(names, colorOn)
 }
 
+// noShapeCaveat explains why a legend below it can't show a per-series
+// swatch: quad/braille pack every series' dots into the same shared
+// sub-character bits, so without color there is nothing shape-wise to
+// distinguish them by — a colored/shaped swatch there would claim a
+// distinction the chart doesn't actually draw.
+const noShapeCaveat = `quad/braille dots from every series share the same sub-character bits and can't be told apart by shape — pass useColor: "on" to tell them apart, or use mode: "cell"`
+
+// plainNameList renders a legend as just the series names plus
+// noShapeCaveat, for a chart where no glyph or color actually distinguishes
+// them in the body. The caveat is word-wrapped to width (the chart's own
+// plot width, roughly) instead of left as one long line — border.Wrap sizes
+// the whole frame to its widest line, so an unwrapped sentence here would
+// balloon a narrow chart's frame just to fit it.
+func plainNameList(names []string, width int) string {
+	return strings.Join(names, ", ") + "\n(" + strings.Join(wrapText(noShapeCaveat, max(width, 40)), "\n") + ")"
+}
+
+// wrapText greedily wraps s into lines of at most width runes, breaking
+// only at spaces.
+func wrapText(s string, width int) []string {
+	words := strings.Fields(s)
+	if len(words) == 0 {
+		return nil
+	}
+	lines := []string{words[0]}
+	for _, w := range words[1:] {
+		last := lines[len(lines)-1]
+		if len([]rune(last))+1+len([]rune(w)) > width {
+			lines = append(lines, w)
+		} else {
+			lines[len(lines)-1] = last + " " + w
+		}
+	}
+	return lines
+}
+
 func namedLegend(names []string, colorOn bool) string {
+	return namedLegendRamp(names, colorOn, fills)
+}
+
+// namedLegendRamp is namedLegend with an explicit fill-glyph ramp.
+func namedLegendRamp(names []string, colorOn bool, ramp []rune) string {
 	parts := make([]string, len(names))
 	for i, name := range names {
-		parts[i] = fmt.Sprintf("%s %s", legendSwatch(i, colorOn), name)
+		parts[i] = fmt.Sprintf("%s %s", legendSwatchRamp(i, colorOn, ramp), name)
 	}
 	return strings.Join(parts, "   ")
 }

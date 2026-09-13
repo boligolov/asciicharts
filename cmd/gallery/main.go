@@ -68,6 +68,51 @@ func main() {
 			},
 		},
 		{
+			"vbar (halftone)",
+			chart.Input{
+				ChartType: chart.VBar,
+				Title:     "Revenue by quarter (halftone)",
+				Border:    border.Rounded,
+				Height:    10,
+				Style:     "halftone",
+				Series: []chart.Series{
+					{Name: "2025", Values: []float64{30, 45, 40, 60}},
+					{Name: "2026", Values: []float64{35, 50, 55, 70}},
+				},
+				Labels: []string{"Q1", "Q2", "Q3", "Q4"},
+			},
+		},
+		{
+			"vbar (ascii)",
+			chart.Input{
+				ChartType: chart.VBar,
+				Title:     "Revenue by quarter (ascii)",
+				Border:    border.Rounded,
+				Height:    10,
+				Style:     "ascii",
+				Series: []chart.Series{
+					{Name: "2025", Values: []float64{30, 45, 40, 60}},
+					{Name: "2026", Values: []float64{35, 50, 55, 70}},
+				},
+				Labels: []string{"Q1", "Q2", "Q3", "Q4"},
+			},
+		},
+		{
+			"vbar (diverging)",
+			chart.Input{
+				ChartType: chart.VBar,
+				Title:     "Subscriber growth YoY (diverging)",
+				Border:    border.Rounded,
+				Height:    10,
+				Style:     "ascii",
+				Series: []chart.Series{
+					{Name: "Satellite TV", Values: []float64{-6, -8, -5, -9, -7, -4, -8}},
+					{Name: "Third-party", Values: []float64{3, 5, 2, 8, 4, 6, 9}},
+				},
+				Labels: []string{"Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"},
+			},
+		},
+		{
 			"hbar (single)",
 			chart.Input{
 				ChartType: chart.HBar,
@@ -89,6 +134,57 @@ func main() {
 					{Name: "Product", Values: []float64{40, 25, 55}},
 					{Name: "Services", Values: []float64{15, 20, 18}},
 				},
+			},
+		},
+		{
+			"hbar (diverging)",
+			chart.Input{
+				ChartType: chart.HBar,
+				Title:     "Estimated sales growth (diverging)",
+				Border:    border.Light,
+				Series:    []chart.Series{{Values: []float64{-8.2, 4.9, 27.6, -42.8, 7.8}}},
+				Labels:    []string{"ABB", "Aetna", "Apple", "Bankers Pet.", "Biogen"},
+			},
+		},
+		{
+			"hbar (ascii, grouped)",
+			chart.Input{
+				ChartType: chart.HBar,
+				Title:     "Share of analysts' ratings that are a buy",
+				Border:    border.Light,
+				Style:     "ascii",
+				Labels:    []string{"04/01/15", "06/01/15", "08/01/15", "10/01/15"},
+				Series: []chart.Series{
+					{Name: "Shell", Values: []float64{22, 25, 24, 30}},
+					{Name: "Total", Values: []float64{34, 30, 32, 30}},
+					{Name: "BP", Values: []float64{15, 12, 18, 22}},
+				},
+			},
+		},
+		{
+			"hbar (halftone, stacked)",
+			chart.Input{
+				ChartType: chart.HBar,
+				Title:     "Revenue by region (halftone)",
+				Border:    border.Light,
+				Stacked:   true,
+				Style:     "halftone",
+				Labels:    []string{"EMEA", "APAC", "Americas"},
+				Series: []chart.Series{
+					{Name: "Product", Values: []float64{40, 25, 55}},
+					{Name: "Services", Values: []float64{15, 20, 18}},
+				},
+			},
+		},
+		{
+			"hbar (ascii, single)",
+			chart.Input{
+				ChartType: chart.HBar,
+				Title:     "Data center switching market share",
+				Border:    border.Light,
+				Style:     "ascii",
+				Series:    []chart.Series{{Values: []float64{61, 9, 6, 4, 4, 4, 3, 2}}},
+				Labels:    []string{"Cisco", "HPE", "Arista", "Huawei", "Juniper", "Dell", "Lenovo", "Brocade"},
 			},
 		},
 		{
@@ -114,6 +210,18 @@ func main() {
 			},
 		},
 		{
+			"line (dotted, Bloomberg-style)",
+			chart.Input{
+				ChartType: chart.Line,
+				Title:     "Apple revenue",
+				Border:    border.Light,
+				Height:    10,
+				Width:     50,
+				Style:     "dotted",
+				Series:    []chart.Series{{Name: "iPhone", Values: []float64{15, 16, 17.5, 19, 20, 21.5, 23, 24.5, 26, 27.5, 29, 30}}},
+			},
+		},
+		{
 			"line (braille, two series)",
 			chart.Input{
 				ChartType: chart.Line,
@@ -126,6 +234,43 @@ func main() {
 					{Name: "forecast", Values: []float64{10, 12, 15, 14, 18, 20, 19, 17, 15, 13, 12, 11}},
 					{Name: "actual", Values: []float64{11, 13, 14, 16, 17, 19, 21, 18, 16, 14, 13, 10}},
 				},
+			},
+		},
+		{
+			"area (single series)",
+			chart.Input{
+				ChartType: chart.Area,
+				Title:     "Actively managed fund flows",
+				Border:    border.Light,
+				Height:    8,
+				Series:    []chart.Series{{Values: []float64{20, 10, -20, -60, -120, -180, -260, -340, -420, -520, -600}}},
+			},
+		},
+		{
+			"area (stacked)",
+			chart.Input{
+				ChartType: chart.Area,
+				Title:     "Mobile data traffic (stacked)",
+				Border:    border.Light,
+				Height:    8,
+				Stacked:   true,
+				Style:     "ascii",
+				Series: []chart.Series{
+					{Name: "Other", Values: []float64{1, 2, 3, 5, 8, 12}},
+					{Name: "Video", Values: []float64{0.2, 0.4, 0.8, 1.5, 2.5, 4}},
+				},
+				Labels: []string{"2014", "2015", "2016", "2017", "2018", "2019"},
+			},
+		},
+		{
+			"dotplot",
+			chart.Input{
+				ChartType: chart.DotPlot,
+				Title:     "2016 apartment rent growth forecast",
+				Border:    border.Light,
+				Width:     30,
+				Labels:    []string{"Oakland", "San Francisco", "Seattle", "Denver", "Chicago", "Detroit"},
+				Series:    []chart.Series{{Values: []float64{5.2, 4.8, 4.4, 3.6, 2.8, 2.2}}},
 			},
 		},
 		{

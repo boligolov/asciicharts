@@ -24,6 +24,10 @@ func Render(in Input) (string, error) {
 		body, err = renderBar(in)
 	case Line:
 		body, err = renderLine(in)
+	case Area:
+		body, err = renderArea(in)
+	case DotPlot:
+		body, err = renderDotPlot(in)
 	case Scatter:
 		body, err = renderScatter(in)
 	case DualAxis:
@@ -38,7 +42,7 @@ func Render(in Input) (string, error) {
 		body, err = renderBoxplot(in)
 	default:
 		return "", fmt.Errorf(
-			"unknown chartType %q (expected one of: sparkline, vbar, hbar, line, scatter, dual_axis, pie, histogram, heatmap, boxplot)",
+			"unknown chartType %q (expected one of: sparkline, vbar, hbar, line, area, scatter, dual_axis, pie, histogram, heatmap, boxplot, dotplot)",
 			in.ChartType)
 	}
 	if err != nil {
@@ -58,8 +62,23 @@ func validate(in Input) error {
 	if !validMode(in.Mode) {
 		return fmt.Errorf("invalid mode %q (expected one of: cell, quad, braille)", in.Mode)
 	}
+	if !validStyle(in.Style) {
+		return fmt.Errorf("invalid style %q (expected one of: solid, halftone, ascii, dotted)", in.Style)
+	}
 	if !validUseColor(in.UseColor) {
 		return fmt.Errorf("invalid useColor %q (expected one of: auto, on, off)", in.UseColor)
 	}
 	return nil
+}
+
+// validStyle checks in.Style against the full vocabulary across every
+// chart type; which values are meaningful for a given chartType is
+// documented on Input.Style, unused values are simply ignored (same
+// convention as Mode).
+func validStyle(s string) bool {
+	switch s {
+	case "", "solid", "halftone", "ascii", "dotted":
+		return true
+	}
+	return false
 }

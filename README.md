@@ -1,15 +1,20 @@
 # ascii-charts-mcp
 
-An [MCP](https://modelcontextprotocol.io) server with a single tool, `render_chart`, that turns numeric data into an ASCII/Unicode text chart and hands it back as plain text — no image, no library on the caller's side, just a string an agent can drop straight into a reply.
+An [MCP](https://modelcontextprotocol.io) server built around one tool, `render_chart`, that turns numeric data into an ASCII/Unicode text chart and hands it back as plain text — no image, no library on the caller's side, just a string an agent can drop straight into a reply.
 
-Written in Go on the official [`modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk). All rendering (line drawing, quadrant/braille sub-character packing, bar scaling, pie rasterization, box-and-whisker math) is hand-rolled — the only dependency is the MCP SDK itself.
+Written in Go on the official [`modelcontextprotocol/go-sdk`](https://github.com/modelcontextprotocol/go-sdk). All rendering (line drawing, quadrant/braille sub-character packing, bar scaling, pie rasterization, box-and-whisker math) is hand-rolled.
 
 ## Features
 
-- **10 chart types**: `sparkline`, `vbar`, `hbar`, `line`, `scatter`, `dual_axis`, `pie`, `histogram`, `heatmap`, `boxplot`
-- **vbar/hbar** support single-series, grouped, and stacked layouts
+- **12 chart types**: `sparkline`, `vbar`, `hbar`, `line`, `area`, `scatter`, `dual_axis`, `pie`, `histogram`, `heatmap`, `boxplot`, `dotplot`
+- **vbar/hbar** support single-series, grouped, and stacked layouts, and **diverging bars** (bars that grow up/down or left/right from a zero baseline) the moment any value is negative
+- **area** fills the region under one or more line series from a zero baseline — overlaid or `stacked: true`, and diverging the same way vbar/hbar are when a series crosses zero
+- **dotplot** is a Cleveland dot plot: one row per category, a marker per series positioned along a shared value axis instead of a filled bar — the axis zooms to the data's actual range rather than always starting at 0
 - **line/scatter/dual_axis** support three sub-character resolutions: `cell` (1 point per character), `quad` (2×2 dots via quadrant blocks `▘▝▀▖▌▞▛▗▚▐▜▄▙▟█`), and `braille` (2×4 dots via Unicode braille patterns) for much smoother curves
 - **6 border styles**: `none`, `ascii`, `light`, `heavy`, `double`, `rounded` — with a centered title row
+- **`style: "halftone"`** for vbar/hbar/histogram: swaps flat solid-block bars for lighter, stippled per-series shades — the dot-matrix/printed look of old financial-terminal charts, without needing color to tell series apart
+- **`style: "ascii"`** for vbar/hbar/histogram: tiles each series with a plain-ASCII letter (`#`, `X`, `H`, `W`, `=`, `:`, `|`, `.`) instead of a Unicode block glyph — renders identically in any monospace font, no box-drawing/block-glyph coverage required
+- **`style: "dotted"`** for line charts: a sparse "+"-plotted trend line instead of a solid stroke, inspired by Bloomberg Businessweek's [Year Ahead 2016](https://www.bloomberg.com/graphics/year-ahead-2016/) ASCII graphics
 - Optional **ANSI 256-color** output (`useColor: on`), off by default since tool output goes to an agent, not a terminal
 
 ## Chart types at a glance
@@ -20,19 +25,21 @@ Written in Go on the official [`modelcontextprotocol/go-sdk`](https://github.com
 | `vbar`      | vertical bars — single / grouped / stacked                   |
 | `hbar`      | horizontal bars — single / grouped / stacked                 |
 | `line`      | one or many line series, with left-axis value ticks          |
+| `area`      | line series filled to a zero baseline — overlaid or stacked  |
 | `scatter`   | (x, y) points only, one or many series                       |
 | `dual_axis` | exactly two line series, independent left/right y-axes       |
 | `pie`       | circular pie chart + legend with percentages                 |
 | `histogram` | buckets raw values into bins and draws them as horizontal bars |
 | `heatmap`   | 2-D matrix as shaded (or colored) cells                      |
 | `boxplot`   | min / Q1 / median / Q3 / max, computed from raw samples       |
+| `dotplot`   | one marker per category/series on a shared value axis (Cleveland dot plot) |
 
 ## Examples
 
 Generate all of these yourself with `go run ./cmd/gallery`.
 
 > [!NOTE]
-> These examples use several Unicode ranges beyond plain ASCII: box-drawing frames, eighth-block characters (`▏▎▍▌▋▊▉` / `▁▂▃▄▅▆▇`) for fractional bar widths/heights, quadrant blocks (`▘▝▖▗▞▚▛▙▜▟`) for `mode: "quad"`, and braille patterns (`⠀`-`⣿`) for `mode: "braille"`. GitHub's own rendering and most terminals (iTerm2, Windows Terminal, Ghostty, …) have full glyph coverage and will show these perfectly aligned. Some editors' **default** monospace fonts — Consolas in particular, VS Code and PyCharm's out-of-the-box choice on Windows — don't ship glyphs for the finer block/quadrant/braille characters and silently substitute a fallback font for just those, which throws off column alignment even though the underlying text is correct. If a chart below looks ragged in your editor, either view this file on GitHub, or switch your editor's monospace font to one with full coverage (e.g. **Cascadia Code**, **JetBrains Mono**, **Noto Sans Mono**, **DejaVu Sans Mono**).
+> These examples use several Unicode ranges beyond plain ASCII: box-drawing frames, eighth-block characters (`▏▎▍▌▋▊▉` / `▁▂▃▄▅▆▇`) for fractional bar widths/heights, quadrant blocks (`▘▝▖▗▞▚▛▙▜▟`) for `mode: "quad"`, and braille patterns (`⠀`-`⣿`) for `mode: "braille"`. GitHub's own rendering and most terminals (iTerm2, Windows Terminal, Ghostty, …) have full glyph coverage and will show these perfectly aligned. Some editors' **default** monospace fonts — Consolas in particular, VS Code and PyCharm's out-of-the-box choice on Windows — don't ship glyphs for the finer block/quadrant/braille characters and silently substitute a fallback font for just those, which throws off column alignment even though the underlying text is correct. The telltale sign is a crooked right border on an otherwise-rectangular chart (most visible on `mode: "braille"` examples, since they pack the most non-ASCII characters per row) — every line genuinely has the same character count (verified with `go run ./cmd/gallery`, not just eyeballed), so a jagged wall means the viewer, not the generator. If a chart below looks ragged in your editor, either view this file on GitHub, or switch your editor's monospace font to one with full coverage (e.g. **Cascadia Code**, **JetBrains Mono**, **Noto Sans Mono**, **DejaVu Sans Mono**).
 
 ### sparkline
 
@@ -64,21 +71,23 @@ latency ▃▅▄█▂▆▇▁▅█▃
 ╭────────────────────╮
 │ Revenue by quarter │
 ├────────────────────┤
-│           █        │
-│          ▅█        │
-│     ▁  ▇ ██        │
-│    ▃█  █ ██        │
-│    ██ ▆█ ██        │
-│ ▂█ ██ ██ ██        │
-│ ██ ██ ██ ██        │
-│ ██ ██ ██ ██        │
-│ ██ ██ ██ ██        │
-│ ██ ██ ██ ██        │
+│           ▓        │
+│          █▓        │
+│        ▓ █▓        │
+│     ▓  ▓ █▓        │
+│    █▓ █▓ █▓        │
+│  ▓ █▓ █▓ █▓        │
+│ █▓ █▓ █▓ █▓        │
+│ █▓ █▓ █▓ █▓        │
+│ █▓ █▓ █▓ █▓        │
+│ █▓ █▓ █▓ █▓        │
 │ Q1 Q2 Q3 Q4        │
 │                    │
 │ █ 2025   ▓ 2026    │
 ╰────────────────────╯
 ```
+
+With more than one series, each gets its own shade (`█`, `▓`, `▒`, …) even in the default `solid` style — matching the legend below the chart — not just when color is on. A lone series stays a plain solid block, no shading needed.
 
 ### vbar (custom width)
 
@@ -103,16 +112,16 @@ latency ▃▅▄█▂▆▇▁▅█▃
 ╭─────────────────────────────────────────────────────────────╮
 │               Revenue by quarter (width: 60)                │
 ├─────────────────────────────────────────────────────────────┤
-│                                                     ███████ │
-│                                              ▅▅▅▅▅▅▅███████ │
-│                       ▁▁▁▁▁▁▁        ▇▇▇▇▇▇▇ ██████████████ │
-│                ▃▃▃▃▃▃▃███████        ███████ ██████████████ │
-│                ██████████████ ▆▆▆▆▆▆▆███████ ██████████████ │
-│ ▂▂▂▂▂▂▂███████ ██████████████ ██████████████ ██████████████ │
-│ ██████████████ ██████████████ ██████████████ ██████████████ │
-│ ██████████████ ██████████████ ██████████████ ██████████████ │
-│ ██████████████ ██████████████ ██████████████ ██████████████ │
-│ ██████████████ ██████████████ ██████████████ ██████████████ │
+│                                                     ▓▓▓▓▓▓▓ │
+│                                              ███████▓▓▓▓▓▓▓ │
+│                                      ▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ │
+│                       ▓▓▓▓▓▓▓        ▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ │
+│                ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ │
+│        ▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ │
+│ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ │
+│ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ │
+│ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ │
+│ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ ███████▓▓▓▓▓▓▓ │
 │       Q1             Q2             Q3             Q4       │
 │                                                             │
 │ █ 2025   ▓ 2026                                             │
@@ -154,6 +163,129 @@ latency ▃▅▄█▂▆▇▁▅█▃
 ║ █ Product   ▓ Services       ║
 ╚══════════════════════════════╝
 ```
+
+### vbar (halftone style)
+
+`style: "halftone"` trades the flat solid-block fill for a lighter, stippled per-series shade — closer to the dot-matrix look of the Bloomberg Businessweek charts that inspired it, and it keeps series visually distinct from each other even without color (compare to the plain "vbar (grouped)" example above, where every series is drawn with the same solid block and only its position tells them apart).
+
+```json
+{
+  "chartType": "vbar",
+  "title": "Revenue by quarter (halftone)",
+  "border": "rounded",
+  "height": 10,
+  "style": "halftone",
+  "labels": ["Q1", "Q2", "Q3", "Q4"],
+  "series": [
+    { "name": "2025", "values": [30, 45, 40, 60] },
+    { "name": "2026", "values": [35, 50, 55, 70] }
+  ]
+}
+```
+
+```
+╭───────────────────────────────╮
+│ Revenue by quarter (halftone) │
+├───────────────────────────────┤
+│           ▒                   │
+│          ▓▒                   │
+│        ▒ ▓▒                   │
+│     ▒  ▒ ▓▒                   │
+│    ▓▒ ▓▒ ▓▒                   │
+│  ▒ ▓▒ ▓▒ ▓▒                   │
+│ ▓▒ ▓▒ ▓▒ ▓▒                   │
+│ ▓▒ ▓▒ ▓▒ ▓▒                   │
+│ ▓▒ ▓▒ ▓▒ ▓▒                   │
+│ ▓▒ ▓▒ ▓▒ ▓▒                   │
+│ Q1 Q2 Q3 Q4                   │
+│                               │
+│ ▓ 2025   ▒ 2026               │
+╰───────────────────────────────╯
+```
+
+> [!NOTE]
+> Halftone bars round to whole rows/columns instead of the sub-character eighth-block precision solid bars get, since there's no fractional-height glyph for a shade character like `▒`.
+
+### vbar (ascii style)
+
+`style: "ascii"` is the same idea as halftone, but with plain ASCII letters instead of Unicode shade glyphs — `#`, `X`, `H`, `W`, `=`, `:`, `|`, `.`, in roughly that ink-density order. This is a closer match to how Bloomberg Businessweek actually built these charts: their "ZINJIN 2014 REVENUE BY PRODUCT" bar tiles `X` for the biggest segment and thins out through `.` and `-` for smaller ones, their "MOBILE DEVICES RUNNING WINDOWS" chart literally repeats `XXX` for one series and `|||` for another with a `XXX Smartphones  ||| Tablets` legend, and "SHARE OF ANALYSTS' RATINGS THAT ARE A BUY" uses `::: Shell  ### Total  ||| BP`. Since it's plain ASCII, it also sidesteps the Unicode block/quadrant/braille glyph-coverage caveat above entirely — useful if you don't know what font the chart will land in.
+
+```json
+{
+  "chartType": "vbar",
+  "title": "Revenue by quarter (ascii)",
+  "border": "rounded",
+  "height": 10,
+  "style": "ascii",
+  "labels": ["Q1", "Q2", "Q3", "Q4"],
+  "series": [
+    { "name": "2025", "values": [30, 45, 40, 60] },
+    { "name": "2026", "values": [35, 50, 55, 70] }
+  ]
+}
+```
+
+```
+╭────────────────────────────╮
+│ Revenue by quarter (ascii) │
+├────────────────────────────┤
+│           X                │
+│          #X                │
+│        X #X                │
+│     X  X #X                │
+│    #X #X #X                │
+│  X #X #X #X                │
+│ #X #X #X #X                │
+│ #X #X #X #X                │
+│ #X #X #X #X                │
+│ #X #X #X #X                │
+│ Q1 Q2 Q3 Q4                │
+│                            │
+│ # 2025   X 2026            │
+╰────────────────────────────╯
+```
+
+### vbar (diverging)
+
+Any negative value switches vbar/hbar into a **diverging** chart: instead of every bar growing up from the bottom row, the zero baseline moves to wherever `0` actually falls in the data's range, and bars grow up or down (hbar: left or right) from there — a dashed guide marks the baseline itself. This is exactly the shape of Bloomberg's "MODERN TIMES PREMIUM SUBSCRIBER GROWTH" chart (`## Satellite TV  == Third-party networks`, one series shrinking, the other growing, both sharing one zero line).
+
+```json
+{
+  "chartType": "vbar",
+  "title": "Subscriber growth YoY (diverging)",
+  "border": "rounded",
+  "height": 10,
+  "style": "ascii",
+  "labels": ["Q1", "Q2", "Q3", "Q4", "Q5", "Q6", "Q7"],
+  "series": [
+    { "name": "Satellite TV", "values": [-6, -8, -5, -9, -7, -4, -8] },
+    { "name": "Third-party", "values": [3, 5, 2, 8, 4, 6, 9] }
+  ]
+}
+```
+
+```
+╭───────────────────────────────────╮
+│ Subscriber growth YoY (diverging) │
+├───────────────────────────────────┤
+│                    X              │
+│           X     X  X              │
+│     X     X     X  X              │
+│  X  X  X  X  X  X  X              │
+│  X  X  X  X  X  X  X              │
+│ #X-#X-#X-#X-#X-#X-#X              │
+│ #  #  #  #  #  #  #               │
+│ #  #  #  #  #  #  #               │
+│ #  #     #  #     #               │
+│    #     #        #               │
+│ Q1 Q2 Q3 Q4 Q5 Q6 Q7              │
+│                                   │
+│ # Satellite TV   X Third-party    │
+╰───────────────────────────────────╯
+```
+
+> [!NOTE]
+> A chart of all-non-negative values renders identically to before (the common case is untouched, byte-for-byte). Values that are all negative anchor at the top row instead of diverging around a visible zero line. Diverging rounds to whole rows/columns, like halftone/ascii — there's no partial-height glyph that fills from either end. Stacked vbar/hbar still assume non-negative values.
 
 ### hbar (single series)
 
@@ -205,6 +337,134 @@ latency ▃▅▄█▂▆▇▁▅█▃
 │ █ Product   ▓ Services                                 │
 └────────────────────────────────────────────────────────┘
 ```
+
+### hbar (halftone, stacked)
+
+Halftone applies the same way to hbar — including stacked segments, where each series already got its own glyph (`fills`), just swapped for the lighter `halftoneFills` ramp.
+
+```json
+{
+  "chartType": "hbar",
+  "title": "Revenue by region (halftone)",
+  "border": "light",
+  "stacked": true,
+  "style": "halftone",
+  "labels": ["EMEA", "APAC", "Americas"],
+  "series": [
+    { "name": "Product", "values": [40, 25, 55] },
+    { "name": "Services", "values": [15, 20, 18] }
+  ]
+}
+```
+
+```
+┌────────────────────────────────────────────────────────┐
+│              Revenue by region (halftone)              │
+├────────────────────────────────────────────────────────┤
+│ EMEA     │ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒           55 │
+│ APAC     │ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒                45 │
+│ Americas │ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒▒▒▒ 73 │
+│                                                        │
+│ ▓ Product   ▒ Services                                 │
+└────────────────────────────────────────────────────────┘
+```
+
+### hbar (ascii style)
+
+Single-series bars all use the same glyph (`#`, the densest in the ramp); grouped/stacked series each get their own, so — just like Bloomberg's charts — they stay distinguishable from each other in a plain-text agent reply with no color at all.
+
+```json
+{
+  "chartType": "hbar",
+  "title": "Data center switching market share",
+  "border": "light",
+  "style": "ascii",
+  "labels": ["Cisco", "HPE", "Arista", "Huawei", "Juniper", "Dell", "Lenovo", "Brocade"],
+  "series": [{ "values": [61, 9, 6, 4, 4, 4, 3, 2] }]
+}
+```
+
+```
+┌───────────────────────────────────────────────────────┐
+│          Data center switching market share           │
+├───────────────────────────────────────────────────────┤
+│ Cisco   │ ######################################## 61 │
+│ HPE     │ ######                                   9  │
+│ Arista  │ ####                                     6  │
+│ Huawei  │ ###                                      4  │
+│ Juniper │ ###                                      4  │
+│ Dell    │ ###                                      4  │
+│ Lenovo  │ ##                                       3  │
+│ Brocade │ #                                        2  │
+└───────────────────────────────────────────────────────┘
+```
+
+```json
+{
+  "chartType": "hbar",
+  "title": "Share of analysts' ratings that are a buy",
+  "border": "light",
+  "style": "ascii",
+  "labels": ["04/01/15", "06/01/15", "08/01/15", "10/01/15"],
+  "series": [
+    { "name": "Shell", "values": [22, 25, 24, 30] },
+    { "name": "Total", "values": [34, 30, 32, 30] },
+    { "name": "BP", "values": [15, 12, 18, 22] }
+  ]
+}
+```
+
+```
+┌───────────────────────────────────────────────────────┐
+│       Share of analysts' ratings that are a buy       │
+├───────────────────────────────────────────────────────┤
+│ 04/01/15                                              │
+│   Shell │ ##########################               22 │
+│   Total │ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 34 │
+│   BP    │ HHHHHHHHHHHHHHHHHH                       15 │
+│                                                       │
+│ 06/01/15                                              │
+│   Shell │ #############################            25 │
+│   Total │ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX      30 │
+│   BP    │ HHHHHHHHHHHHHH                           12 │
+│                                                       │
+│ 08/01/15                                              │
+│   Shell │ ############################             24 │
+│   Total │ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX   32 │
+│   BP    │ HHHHHHHHHHHHHHHHHHHHH                    18 │
+│                                                       │
+│ 10/01/15                                              │
+│   Shell │ ###################################      30 │
+│   Total │ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX      30 │
+│   BP    │ HHHHHHHHHHHHHHHHHHHHHHHHHH               22 │
+└───────────────────────────────────────────────────────┘
+```
+
+### hbar (diverging)
+
+```json
+{
+  "chartType": "hbar",
+  "title": "Estimated sales growth (diverging)",
+  "border": "light",
+  "labels": ["ABB", "Aetna", "Apple", "Bankers Pet.", "Biogen"],
+  "series": [{ "values": [-8.2, 4.9, 27.6, -42.8, 7.8] }]
+}
+```
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│               Estimated sales growth (diverging)               │
+├────────────────────────────────────────────────────────────────┤
+│ ABB          │                     ████|                -8.20  │
+│ Aetna        │                         ███              4.90   │
+│ Apple        │                         ████████████████ 27.60  │
+│ Bankers Pet. │ ████████████████████████|                -42.80 │
+│ Biogen       │                         █████            7.80   │
+└────────────────────────────────────────────────────────────────┘
+```
+
+The `|` marks the zero column on any bar that doesn't already reach it (a bar that does reach zero starts right there, no separate marker needed).
 
 ### line (cell resolution)
 
@@ -264,9 +524,41 @@ latency ▃▅▄█▂▆▇▁▅█▃
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+### line (dotted style, Bloomberg-inspired)
+
+`style: "dotted"` replaces the solid connecting stroke with a sparse `+`-plotted trace — every other pixel along the path — which is exactly how the trend lines look in Bloomberg Businessweek's [Year Ahead 2016](https://www.bloomberg.com/graphics/year-ahead-2016/) ASCII graphics (the "APPLE REVENUE" chart there plots iPhone revenue the same way, `+` marks and all). Independent of `showPoints`/`pointChar`.
+
+```json
+{
+  "chartType": "line",
+  "title": "Apple revenue",
+  "height": 10,
+  "width": 50,
+  "style": "dotted",
+  "series": [{ "name": "iPhone", "values": [15, 16, 17.5, 19, 20, 21.5, 23, 24.5, 26, 27.5, 29, 30] }]
+}
+```
+
+```
+┌───────────────────────────────────────────────────────────┐
+│                       Apple revenue                       │
+├───────────────────────────────────────────────────────────┤
+│    30 ┤                                                ++ │
+│ 28.33 ┤                                       ++ + + +    │
+│ 26.67 ┤                                 + + +             │
+│    25 ┤                              ++                   │
+│ 23.33 ┤                        + + +                      │
+│ 21.67 ┤                     ++                            │
+│    20 ┤               + + +                               │
+│ 18.33 ┤            ++                                     │
+│ 16.67 ┤  + + + + +                                        │
+│    15 ┤+                                                  │
+└───────────────────────────────────────────────────────────┘
+```
+
 ### line (braille resolution, two series)
 
-`mode: "braille"` packs a 2×4 dot grid into every character cell for a much smoother curve than one point per column.
+`mode: "braille"` packs a 2×4 dot grid into every character cell for a much smoother curve than one point per column — at the cost of a per-series glyph, since every series' dots share the same packed bits. Without `useColor: "on"`, forecast and actual below are genuinely one indistinguishable squiggle (see the note under the chart); pass color, or use `mode: "cell"`, if the two series need to actually be told apart.
 
 ```json
 {
@@ -298,9 +590,110 @@ latency ▃▅▄█▂▆▇▁▅█▃
 ┃ 11.22 ┤⡠⠒⢁⠤⠊                                       ⠈⠉⠚⠢⡤⣀ ┃
 ┃    10 ┤⡠⠒⠁                                             ⠘⢄ ┃
 ┃                                                           ┃
-┃ █ forecast   ▓ actual                                     ┃
+┃ forecast, actual                                          ┃
+┃ (quad/braille dots from every series share the same       ┃
+┃ sub-character bits and can't be told apart by             ┃
+┃ shape — pass useColor: "on" to tell them apart, or        ┃
+┃ use mode: "cell")                                         ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
+
+### area (single series)
+
+Fills the region between the line and a zero baseline, interpolating between data points so the fill has no gaps — inspired by Bloomberg's "cumulative flows" chart, which fills its negative "actively managed" region below zero the same way this fills below a falling line.
+
+```json
+{
+  "chartType": "area",
+  "title": "Actively managed fund flows",
+  "height": 8,
+  "series": [{ "values": [20, 10, -20, -60, -120, -180, -260, -340, -420, -520, -600] }]
+}
+```
+
+```
+┌───────────────────────────────────────────────────────────────────────┐
+│                      Actively managed fund flows                      │
+├───────────────────────────────────────────────────────────────────────┤
+│      20 ┤████████████████████████████████████████████████████████████ │
+│  -68.57 ┤             ███████████████████████████████████████████████ │
+│ -157.14 ┤                       █████████████████████████████████████ │
+│ -245.71 ┤                                ████████████████████████████ │
+│ -334.29 ┤                                      ██████████████████████ │
+│ -422.86 ┤                                             ███████████████ │
+│ -511.43 ┤                                                  ██████████ │
+│    -600 ┤                                                        ████ │
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+Like line, `area` picks up `style: "halftone"`/`"ascii"` for the fill glyph, and multiple overlaid series are told apart with a shade/letter per series (the first series painted on top of the rest wherever they overlap).
+
+### area (stacked)
+
+`stacked: true` bands series cumulatively from zero instead of overlaying them — each series' own contribution to the running total, not its raw value, is what's visible at any point.
+
+```json
+{
+  "chartType": "area",
+  "title": "Mobile data traffic (stacked)",
+  "height": 8,
+  "stacked": true,
+  "style": "ascii",
+  "labels": ["2014", "2015", "2016", "2017", "2018", "2019"],
+  "series": [
+    { "name": "Other", "values": [1, 2, 3, 5, 8, 12] },
+    { "name": "Video", "values": [0.2, 0.4, 0.8, 1.5, 2.5, 4] }
+  ]
+}
+```
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                    Mobile data traffic (stacked)                    │
+├─────────────────────────────────────────────────────────────────────┤
+│    16 ┤                                                         ::: │
+│ 13.71 ┤                                                     ::::::: │
+│ 11.43 ┤                                                 ::::::::### │
+│  9.14 ┤                                           ::::::########### │
+│  6.86 ┤                                     ::::::################# │
+│  4.57 ┤                             ::::::::####################### │
+│  2.29 ┤                 ########################################### │
+│     0 ┤############################################################ │
+│        14       2015        2016        2017        2018        201 │
+│                                                                     │
+│ # Other   : Video                                                   │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### dotplot
+
+A Cleveland dot plot: one row per category, a marker at each series' value, connected to the left edge by a light leader line. Unlike vbar/hbar, the value axis zooms to the data's actual range instead of always including 0 — position carries the value, not a filled run's length. This mirrors Bloomberg's "2016 APARTMENT RENT GROWTH FORECAST" chart (city names positioned along a percentage axis with dashed leader lines).
+
+```json
+{
+  "chartType": "dotplot",
+  "title": "2016 apartment rent growth forecast",
+  "width": 30,
+  "labels": ["Oakland", "San Francisco", "Seattle", "Denver", "Chicago", "Detroit"],
+  "series": [{ "values": [5.2, 4.8, 4.4, 3.6, 2.8, 2.2] }]
+}
+```
+
+```
+┌─────────────────────────────────────────────────────┐
+│         2016 apartment rent growth forecast         │
+├─────────────────────────────────────────────────────┤
+│ Oakland       │ ·····························● 5.20 │
+│ San Francisco │ ·························●···· 4.80 │
+│ Seattle       │ ·····················●········ 4.40 │
+│ Denver        │ ··············●··············· 3.60 │
+│ Chicago       │ ······●······················· 2.80 │
+│ Detroit       │ ●····························· 2.20 │
+│ value axis: [2.20, 5.20]                            │
+└─────────────────────────────────────────────────────┘
+```
+
+With more than one series, every category overlays one marker per series on the same row — each series gets its own shape (`●`, `○`, `◆`, `◇`, …), same ramp as scatter's cell-mode markers — and the trailing per-row value is dropped in favor of a legend, since a single number wouldn't say which series it belonged to.
 
 ### scatter (cell resolution, two groups)
 
@@ -542,96 +935,11 @@ With `"useColor": "on"` cells render as colored `███` blocks along a blue�
 
 Boxplot values are computed automatically from the raw sample population you pass in — you don't precompute quartiles yourself.
 
-## Tool reference
+## Documentation
 
-Single tool: **`render_chart`**.
+- [Tool reference](docs/reference.md) — every field `render_chart` accepts, what each `chartType` expects in `series`, and how diverging bars work
+- [Development](docs/development.md) — building, running, Docker, and wiring it into an MCP client
 
-| field       | type              | applies to                          | notes                                                                 |
-|-------------|-------------------|--------------------------------------|------------------------------------------------------------------------|
-| `chartType` | string, required  | all                                   | `sparkline`, `vbar`, `hbar`, `line`, `scatter`, `dual_axis`, `pie`, `histogram`, `heatmap`, `boxplot` |
-| `series`    | array, required   | all                                   | see below — meaning depends on `chartType`                             |
-| `labels`    | string[]          | vbar, hbar, histogram, heatmap        | category labels / column headers                                       |
-| `title`     | string            | all                                   | shown centered above the chart                                         |
-| `width`     | int               | most types                            | defaults vary by chart type; for `vbar`, thickens each bar/column to fill the requested width; for `hbar`, sets the max bar length |
-| `height`    | int               | most types                            | defaults vary by chart type                                            |
-| `border`    | string            | all                                   | `none`, `ascii`, `light` (default), `heavy`, `double`, `rounded`       |
-| `mode`      | string            | line, scatter, dual_axis              | `cell` (default), `quad`, `braille`                                    |
-| `stacked`   | bool              | vbar, hbar                            | stack series instead of grouping them side by side                     |
-| `bins`      | int               | histogram                             | default 10                                                              |
-| `useColor`  | string            | all                                   | `auto` (default, same as off — output goes to an agent, not a terminal), `on`, `off` |
-| `threshold` | number            | line                                  | draws a dashed horizontal reference line at this y-value                |
-| `showPoints`| bool              | line                                  | marks each data point with a glyph on top of the line (and switches the connector to a thin dot) |
-| `pointChar` | string            | line, with showPoints                 | override the point glyph for every series (default: a large circle `●`, with a distinct shape per additional series) |
+## Credits
 
-Each entry in `series` has `name`, `values`, and `points` — which ones you fill in depends on `chartType`:
-
-- `sparkline`, `line`, `histogram`: `values` is the sample sequence
-- `vbar`, `hbar`: `values` holds one number per category (aligned with `labels`)
-- `scatter`, `dual_axis` (as points): `points` holds `{x, y}` samples — `dual_axis` actually takes two `values` series, one per axis
-- `pie`: `values` sums to the slice's magnitude, `name` is its label
-- `heatmap`: `values` is one matrix row, `name` is the row label, `labels` are column headers
-- `boxplot`: `values` is the raw sample population — min/Q1/median/Q3/max are computed for you
-
-## Build & run
-
-Requires Go 1.27+.
-
-```sh
-go build -o ascii-charts-mcp .
-./ascii-charts-mcp
-```
-
-The server speaks MCP over stdio, so it's meant to be launched by an MCP client (Claude Desktop, Claude Code, etc.), not run interactively by hand.
-
-Run the example gallery (used to generate the examples above):
-
-```sh
-go run ./cmd/gallery
-```
-
-Run the tests:
-
-```sh
-go test ./...
-```
-
-## Docker
-
-Build the image:
-
-```sh
-docker build -t ascii-charts-mcp .
-```
-
-This produces a ~9 MB image (`FROM scratch`, statically linked, no libc). Run it manually with `-i` so the MCP client's stdio actually reaches the container:
-
-```sh
-docker run -i --rm ascii-charts-mcp
-```
-
-## Using it from an MCP client
-
-Point your client's MCP server config at the built binary:
-
-```json
-{
-  "mcpServers": {
-    "ascii-charts": {
-      "command": "/path/to/ascii-charts-mcp"
-    }
-  }
-}
-```
-
-Or run it through Docker instead of a local binary:
-
-```json
-{
-  "mcpServers": {
-    "ascii-charts": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "ascii-charts-mcp"]
-    }
-  }
-}
-```
+The `halftone`/`ascii` bar styles and the `dotted` line style were reverse-engineered from Bloomberg Businessweek's [**The Year Ahead 2016: 50 Companies to Watch**](https://www.bloomberg.com/graphics/year-ahead-2016/) — a scrollytelling piece that renders all of its charts as styled ASCII/Unicode art. If you're looking for inspiration for what a text chart can look like, start there.

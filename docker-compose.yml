@@ -1,0 +1,54 @@
+networks:
+  ascii-charts:
+    name: ascii-charts-mcp
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    networks: [ascii-charts]
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ascii_charts}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ascii_charts}
+      POSTGRES_DB: ${POSTGRES_DB:-ascii_charts}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      # Exposed so a locally-run (non-Docker) binary can point DATABASE_URL
+      # at localhost:5432. Drop this if the db should stay compose-internal.
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ascii_charts}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # The always-on MCP server: PORT set below switches the same binary from
+  # its default stdio mode into a long-running HTTP server exposing the
+  # streamable-HTTP MCP transport at /mcp (see runHTTP in main.go), plus a
+  # plain /healthz this service's own healthcheck (and any external load
+  # balancer) can probe. On the same network as db, so DATABASE_URL below
+  # reaches it by service name — no published db port needed for this to
+  # work, that's only for a native (non-Docker) binary or local debugging.
+  web:
+    build: .
+    restart: unless-stopped
+    networks: [ascii-charts]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: "8080"
+      DATABASE_URL: postgres://${POSTGRES_USER:-ascii_charts}:${POSTGRES_PASSWORD:-ascii_charts}@db:5432/${POSTGRES_DB:-ascii_charts}?sslmode=disable
+    ports:
+      - "8080:8080"
+    healthcheck:
+      # FROM scratch means no shell/curl inside the image — the binary
+      # checks itself instead (see the "healthcheck" subcommand in main.go).
+      test: ["CMD", "/ascii-charts-mcp", "healthcheck"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  db-data:

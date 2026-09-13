@@ -16,6 +16,21 @@ var shades = []rune{' ', '░', '▒', '▓', '█'}
 // pie slices visually distinct from each other without relying on color.
 var fills = []rune{'█', '▓', '▒', '░', '▚', '▞'}
 
+// halftoneFills are per-series fill glyphs for style:"halftone" bars —
+// lighter, stippled shades (no solid block) evoking the dot-matrix/printed
+// look of old financial-terminal charts, instead of flat solid columns.
+var halftoneFills = []rune{'▓', '▒', '░', '▚', '▞', ':'}
+
+// asciiFills are per-series fill glyphs for style:"ascii" bars: plain
+// letters/punctuation instead of Unicode block-shade characters, each
+// chosen for how much of its cell it visually fills. Bloomberg Businessweek's
+// "Year Ahead" ASCII graphics tile bars this way (e.g. "### Total  ::: Shell
+// ||| BP", literal repeated glyphs named in the legend) — every glyph here
+// is plain ASCII, so it renders identically in any monospace font, unlike
+// the Unicode block/shade glyphs the other bar styles use (see the README
+// note on Consolas and similar fonts missing those glyphs).
+var asciiFills = []rune{'#', 'X', 'H', 'W', '=', ':', '|', '.'}
+
 // markers are per-series point glyphs for scatter charts in cell mode.
 var markers = []rune{'●', '○', '◆', '◇', '▲', '△', '■', '□', '▼', '▽'}
 

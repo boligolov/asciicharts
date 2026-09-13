@@ -72,10 +72,21 @@ func renderDualAxis(in Input) (string, error) {
 	}
 	body := strings.TrimSuffix(sb.String(), "\n")
 
-	legend := fmt.Sprintf("left:  %s %s\nright: %s %s",
-		colorize(string(dualAxisGlyphs[0]), seriesColor(0), colorOn), seriesLabel(in.Series[0], 0),
-		colorize(string(dualAxisGlyphs[1]), seriesColor(1), colorOn), seriesLabel(in.Series[1], 1),
-	)
+	// dualAxisGlyphs only reaches the canvas in cell mode (canvas.setDot
+	// ignores ch for quad/braille, packing sub-character bits instead), so
+	// the legend below only claims that glyph distinction when it's real.
+	var legend string
+	if mode != ModeCell && !colorOn {
+		legend = plainNameList([]string{
+			"left: " + seriesLabel(in.Series[0], 0),
+			"right: " + seriesLabel(in.Series[1], 1),
+		}, width)
+	} else {
+		legend = fmt.Sprintf("left:  %s %s\nright: %s %s",
+			colorize(string(dualAxisGlyphs[0]), seriesColor(0), colorOn), seriesLabel(in.Series[0], 0),
+			colorize(string(dualAxisGlyphs[1]), seriesColor(1), colorOn), seriesLabel(in.Series[1], 1),
+		)
+	}
 
 	return body + "\n\n" + legend, nil
 }

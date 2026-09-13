@@ -43,5 +43,5 @@ func renderHistogram(in Input) (string, error) {
 		labels[i] = fmt.Sprintf("%s..%s", formatValue(lo), formatValue(hi))
 	}
 
-	return renderHorizontalBars(labels, counts, in.Width), nil
+	return renderHorizontalBars(labels, counts, in.Width, barFillRamp(in.Style)), nil
 }

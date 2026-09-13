@@ -1,0 +1,46 @@
+# Tool reference
+
+Two tools: **`render_chart`** and **`feedback`**. Both work identically whether the server is reached over stdio or over the HTTP transport's `/mcp` endpoint (see [Development](development.md#http-transport)).
+
+## `render_chart`
+
+| field       | type              | applies to                          | notes                                                                 |
+|-------------|-------------------|--------------------------------------|------------------------------------------------------------------------|
+| `chartType` | string, required  | all                                   | `sparkline`, `vbar`, `hbar`, `line`, `area`, `scatter`, `dual_axis`, `pie`, `histogram`, `heatmap`, `boxplot`, `dotplot` |
+| `series`    | array, required   | all                                   | see below — meaning depends on `chartType`                             |
+| `labels`    | string[]          | vbar, hbar, histogram, heatmap, dotplot | category labels / column headers                                     |
+| `title`     | string            | all                                   | shown centered above the chart                                         |
+| `width`     | int               | most types                            | defaults vary by chart type; for `vbar`, thickens each bar/column to fill the requested width; for `hbar`/`dotplot`, sets the axis width |
+| `height`    | int               | most types                            | defaults vary by chart type                                            |
+| `border`    | string            | all                                   | `none`, `ascii`, `light` (default), `heavy`, `double`, `rounded`       |
+| `mode`      | string            | line, scatter, dual_axis              | `cell` (default), `quad`, `braille`                                    |
+| `style`     | string            | vbar, hbar, histogram, line, area     | vbar/hbar/histogram/area: `solid` (default), `halftone` (stippled Unicode shades per series instead of flat blocks) or `ascii` (plain-ASCII letters per series: `#`, `X`, `H`, `W`, `=`, `:`, `|`, `.`). line: `solid` (default) or `dotted` (sparse `+`-plotted trend line) |
+| `stacked`   | bool              | vbar, hbar, area                      | stack series (bars side-by-side per category, or area bands cumulative from zero) instead of grouping/overlaying |
+| `bins`      | int               | histogram                             | default 10                                                              |
+| `useColor`  | string            | all                                   | `auto` (default, same as off — output goes to an agent, not a terminal), `on`, `off` |
+| `threshold` | number            | line                                  | draws a dashed horizontal reference line at this y-value                |
+| `showPoints`| bool              | line                                  | marks each data point with a glyph on top of the line (and switches the connector to a thin dot) |
+| `pointChar` | string            | line, with showPoints                 | override the point glyph for every series (default: a large circle `●`, with a distinct shape per additional series) |
+
+Each entry in `series` has `name`, `values`, and `points` — which ones you fill in depends on `chartType`:
+
+- `sparkline`, `line`, `area`, `histogram`: `values` is the sample sequence
+- `vbar`, `hbar`, `dotplot`: `values` holds one number per category (aligned with `labels`) — vbar/hbar draw multiple series grouped or stacked, dotplot always overlays them on the same row
+- `scatter`, `dual_axis` (as points): `points` holds `{x, y}` samples — `dual_axis` actually takes two `values` series, one per axis
+- `pie`: `values` sums to the slice's magnitude, `name` is its label
+- `heatmap`: `values` is one matrix row, `name` is the row label, `labels` are column headers
+- `boxplot`: `values` is the raw sample population — min/Q1/median/Q3/max are computed for you
+
+## Diverging bars
+
+`vbar` and `hbar` render a **diverging** chart automatically the instant any value in the data is negative: instead of every bar starting at the bottom row (or left edge), the zero baseline moves to wherever `0` actually falls in the value range, and bars grow toward either side of it — a dashed/`|` guide marks the baseline itself. A chart where every value is non-negative renders exactly as before; this isn't an opt-in flag, just what negative data does. `area` gets the same treatment for overlaid (non-stacked) series. Stacked vbar/hbar/area still assume non-negative values.
+
+## `feedback`
+
+| field     | type              | notes                                                    |
+|-----------|-------------------|-----------------------------------------------------------|
+| `message` | string, required  | free-text feedback for the maintainer; at most 256 characters, rejected (not truncated) if longer, and rejected if blank |
+
+Returns `{ "received": true }` on success. If no database is configured (see [Development](development.md)), the message is still accepted and acknowledged but isn't persisted anywhere — the tool never fails just because statistics aren't wired up.
+
+See the [README](../README.md) for annotated examples of every chart type and style.

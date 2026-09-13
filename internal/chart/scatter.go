@@ -65,22 +65,31 @@ func renderScatter(in Input) (string, error) {
 	body := strings.Join(rows, "\n")
 	body += fmt.Sprintf("\nx: [%s, %s]  y: [%s, %s]", formatValue(minX), formatValue(maxX), formatValue(minY), formatValue(maxY))
 	if len(in.Series) > 1 {
-		body += "\n" + scatterLegend(in.Series, mode, colorOn)
+		body += "\n" + scatterLegend(in.Series, mode, colorOn, width)
 	}
 
 	return body, nil
 }
 
-func scatterLegend(series []Series, mode Mode, colorOn bool) string {
-	parts := make([]string, len(series))
+// scatterLegend matches what renderScatter actually plotted: real per-series
+// markers in cell mode (setMarker stamps them outright), but in quad/braille
+// every series shares the same sub-character bits — with no color to fall
+// back on, a swatch there would claim a distinction the chart doesn't draw.
+func scatterLegend(series []Series, mode Mode, colorOn bool, width int) string {
+	names := make([]string, len(series))
 	for i, s := range series {
-		var glyph rune
-		if mode == ModeCell {
-			glyph = markers[i%len(markers)]
-		} else {
-			glyph = fills[i%len(fills)]
-		}
-		parts[i] = fmt.Sprintf("%s %s", colorize(string(glyph), seriesColor(i), colorOn), seriesLabel(s, i))
+		names[i] = seriesLabel(s, i)
+	}
+	if mode != ModeCell && !colorOn {
+		return plainNameList(names, width)
+	}
+	ramp := markers
+	if mode != ModeCell {
+		ramp = fills
+	}
+	parts := make([]string, len(names))
+	for i, name := range names {
+		parts[i] = fmt.Sprintf("%s %s", colorize(string(ramp[i%len(ramp)]), seriesColor(i), colorOn), name)
 	}
 	return strings.Join(parts, "   ")
 }

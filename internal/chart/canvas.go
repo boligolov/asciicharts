@@ -133,6 +133,43 @@ func (c *canvas) line(x0, y0, x1, y1 int, ch rune, color int) {
 	}
 }
 
+// lineDotted draws a straight segment like line, but only lights every
+// other pixel along the path (always including the endpoint), giving a
+// sparse plotted-dot trace instead of a solid connecting stroke — the
+// "+"-plotted trend line look of old dot-matrix terminal charts.
+func (c *canvas) lineDotted(x0, y0, x1, y1 int, ch rune, color int) {
+	dx := absInt(x1 - x0)
+	dy := -absInt(y1 - y0)
+	sx, sy := 1, 1
+	if x0 > x1 {
+		sx = -1
+	}
+	if y0 > y1 {
+		sy = -1
+	}
+	err := dx + dy
+	x, y := x0, y0
+	step := 0
+	for {
+		if step%2 == 0 || (x == x1 && y == y1) {
+			c.setDot(x, y, ch, color)
+		}
+		if x == x1 && y == y1 {
+			break
+		}
+		e2 := 2 * err
+		if e2 >= dy {
+			err += dy
+			x += sx
+		}
+		if e2 <= dx {
+			err += dx
+			y += sy
+		}
+		step++
+	}
+}
+
 func (c *canvas) charAt(x, y int) rune {
 	if c.cellChar[y][x] != 0 {
 		return c.cellChar[y][x]
