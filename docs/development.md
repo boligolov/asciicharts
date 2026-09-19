@@ -8,7 +8,7 @@ server/                 the MCP server (installed as the `asciicharts_server` pa
 skills/asciicharts/     the skill: SKILL.md, scripts/, references/ — see docs/skill.md
 deploy/                 Dockerfile, docker-compose (dev and prod), Caddyfile, .env.example
 tests/                  pytest suite; tests/golden/ pins renderer output; tests/skill_evals/ holds the skill's evals
-scripts/                sync_skill.py, package_skill.py, gallery.py
+scripts/                sync_skill.py, package_skill.py, gallery_refresh.py, gallery_toc.py
 docs/                   this file, gallery.md (every chart rendered), skill.md
 TODO.md  LICENSE  pyproject.toml
 ```
@@ -30,7 +30,7 @@ Render a chart from JSON:
 
 ```sh
 echo '{"chartType":"sparkline","series":[{"values":[1,3,2,5]}]}' | python asciicharts.py -
-python scripts/gallery.py            # every chart type and style
+python asciicharts.py --list           # every chart type with an example spec
 ```
 
 Run the MCP server:
@@ -61,7 +61,7 @@ pytest
 python scripts/sync_skill.py
 ```
 
-`tests/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (regenerate the outputs with `python scripts/gallery.py`, the contents list with `python scripts/gallery_toc.py`) and `python scripts/sync_skill.py` copies it into the skill.
+`tests/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn, refresh every printed output with `python scripts/gallery_refresh.py`, the contents list with `python scripts/gallery_toc.py`; a test fails if either is stale) and `python scripts/sync_skill.py` copies it into the skill.
 
 ## Docker
 

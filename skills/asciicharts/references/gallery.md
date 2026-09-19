@@ -1,7 +1,7 @@
 # Gallery
 
 One example of every chart type and style. Every block below is real output of `asciicharts.py`.
-In the source repository, `python scripts/gallery.py` regenerates them all and the test suite pins the output.
+In the source repository a test checks that each printed output is exactly what the renderer produces for the spec above it.
 
 Highlights: **12 chart types**; grouped, stacked and **diverging** bars/areas (negative values grow
 the other way from a zero baseline); **6 border styles**; **`halftone`**, **`ascii`** and **`dotted`**
@@ -43,7 +43,7 @@ styles; optional ANSI 256-color output.
 
 ## Examples
 
-Generate all of these yourself with `python scripts/gallery.py`.
+Each spec is printed above its output: save it as `spec.json` and run `python asciicharts.py spec.json` to reproduce any example.
 
 > [!NOTE]
 > These examples use Unicode beyond plain ASCII: box-drawing frames, block and shade characters (`█▓▒░▌▄`) for bars, simple geometric markers (`●○▲■`) and — only with `style: "fine"` and in sparklines — eighth blocks (`▏▎▍▌▋▊▉`, `▁▂▃▅▆▇`). GitHub's own rendering and most terminals (iTerm2, Windows Terminal, Ghostty, …) have full glyph coverage and show these perfectly aligned. Some fonts do not: Consolas, Courier New and Lucida Console — the defaults of many Windows editors — lack the eighth blocks, and silently substitute another font for just those characters, which throws off column alignment even though the text is correct. The telltale sign is a crooked right border on an otherwise rectangular chart. Every line genuinely has the same character count (the test suite checks this), so a jagged wall means the viewer, not the generator. Everything except `fine` bars and sparklines is drawn with glyphs that Consolas and Courier New contain; if one of those examples looks ragged in your editor, view this file on GitHub or switch to a font with full coverage (**Cascadia Code**, **JetBrains Mono**, **Noto Sans Mono**, **DejaVu Sans Mono**).
@@ -51,7 +51,7 @@ Generate all of these yourself with `python scripts/gallery.py`.
 ### sparkline
 
 ```json
-{ "chartType": "sparkline", "series": [{ "name": "latency", "values": [4, 6, 5, 9, 3, 7, 8, 2, 6, 9, 4] }] }
+{ "chartType": "sparkline", "border": "none", "series": [{ "name": "latency", "values": [4, 6, 5, 9, 3, 7, 8, 2, 6, 9, 4] }] }
 ```
 
 ```
@@ -155,16 +155,16 @@ With more than one series, each gets its own shade (`█`, `▓`, `▒`, …) ev
 ╔══════════════════════════════╗
 ║ Revenue by quarter (stacked) ║
 ╠══════════════════════════════╣
-║           ▓                  ║
-║           ▓                  ║
-║     ▓     ▓                  ║
-║     ▓  ▓  █                  ║
-║     █  ▓  █                  ║
-║  ▓  █  █  █                  ║
-║  ▓  █  █  █                  ║
-║  █  █  █  █                  ║
-║  █  █  █  █                  ║
-║  █  █  █  █                  ║
+║          ▓                   ║
+║          ▓                   ║
+║    ▓     ▓                   ║
+║    ▓  ▓  █                   ║
+║    █  ▓  █                   ║
+║ ▓  █  █  █                   ║
+║ ▓  █  █  █                   ║
+║ █  █  █  █                   ║
+║ █  █  █  █                   ║
+║ █  █  █  █                   ║
 ║ Q1 Q2 Q3 Q4                  ║
 ║                              ║
 ║ █ Product   ▓ Services       ║

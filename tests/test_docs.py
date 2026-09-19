@@ -71,3 +71,34 @@ def test_readme_links_to_the_gallery_right_under_the_title():
 
 def test_the_skills_copy_of_the_gallery_is_the_docs_gallery():
     assert (ROOT / "docs" / "gallery.md").read_bytes() == (ROOT / "skills" / "asciicharts" / "references" / "gallery.md").read_bytes()
+
+
+def _fenced(text):
+    blocks, cur, lang = [], None, None
+    for line in text.split("\n"):
+        if line.startswith("```"):
+            if cur is None:
+                cur, lang = [], line[3:].strip()
+            else:
+                blocks.append((lang, "\n".join(cur)))
+                cur = None
+        elif cur is not None:
+            cur.append(line)
+    return blocks
+
+
+def test_every_gallery_output_is_current():
+    """The printed output under each spec is exactly what the renderer produces today."""
+    import subprocess
+    import sys
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "gallery_refresh.py"), "--check"], capture_output=True, encoding="utf-8")
+    assert r.returncode == 0, r.stderr
+
+
+def test_the_doc_gallery_shows_exactly_the_golden_examples():
+    import json
+    from asciicharts import render_chart
+    blocks = _fenced((ROOT / "docs" / "gallery.md").read_text(encoding="utf-8"))
+    printed = [c for lang, c in blocks if lang != "json"]
+    golden = json.loads((ROOT / "tests" / "golden" / "gallery.json").read_text(encoding="utf-8"))
+    assert sorted(render_chart(x["spec"]) for x in golden) == sorted(printed)  # same examples (the doc groups them by chart type)
