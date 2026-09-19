@@ -15,8 +15,7 @@ Everything below applies equally to the tool arguments, to the dict you pass to 
 | `width`     | int               | most types                            | defaults vary by chart type; for `vbar`, thickens each bar/column to fill the requested width; for `hbar`/`dotplot`, sets the axis width |
 | `height`    | int               | most types                            | defaults vary by chart type                                            |
 | `border`    | string            | all                                   | `none`, `ascii`, `light` (default), `heavy`, `double`, `rounded`       |
-| `mode`      | string            | line, scatter, dual_axis              | `cell` (default), `quad`, `braille`                                    |
-| `style`     | string            | vbar, hbar, histogram, line, area     | vbar/hbar/histogram/area: `solid` (default), `halftone` (stippled Unicode shades per series instead of flat blocks) or `ascii` (plain-ASCII characters per series: `#`, `X`, `H`, `W`, `=`, `:`, `|`, `.`, then `@`, `%`, `&`, `$`, `M`, `N`, `D`, `O`, `U`, `S`, `G`, `Z`, `/`, `\`, `!` from the 9th series on). line: `solid` (default) or `dotted` (sparse `+`-plotted trend line) |
+| `style`     | string            | vbar, hbar, histogram, line, area     | vbar/hbar/histogram/area: `solid` (default; bars end on whole character cells), `fine` (hbar/histogram/single-series vbar: bars end on eighth-block glyphs for sub-cell precision, needs a font that has them — Consolas does not; a vbar with several series always uses whole rows, one fill glyph per series), `halftone` (stippled Unicode shades per series instead of flat blocks) or `ascii` (plain-ASCII characters per series: `#`, `X`, `H`, `W`, `=`, `:`, `|`, `.`, then `@`, `%`, `&`, `$`, `M`, `N`, `D`, `O`, `U`, `S`, `G`, `Z`, `/`, `\`, `!` from the 9th series on). line: `solid` (default) or `dotted` (sparse `+`-plotted trend line) |
 | `stacked`   | bool              | vbar, hbar, area                      | stack series (bars side-by-side per category, or area bands cumulative from zero) instead of grouping/overlaying |
 | `bins`      | int               | histogram                             | default 10                                                              |
 | `useColor`  | string            | all                                   | `auto` (default, same as off — output goes to an agent, not a terminal), `on`, `off` |
@@ -59,4 +58,4 @@ Takes no arguments. Returns the catalogue of chart types — one entry per `char
 
 It is the same data as `python asciicharts.py --list` and `asciicharts.list_charts()`. The `options` lists are checked by the test suite against the renderers: a listed option changes the output for that chart, and an unlisted one does not.
 
-See `gallery.md` (next to this file) for an annotated example of every chart type and style.
+See `gallery.md` (next to this file; also `docs/gallery.md` in the source repository) for an annotated example of every chart type and style.

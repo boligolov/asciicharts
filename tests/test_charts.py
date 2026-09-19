@@ -59,18 +59,6 @@ def test_multi_series_cell_line_distinct_without_color():
     assert "█" in body_of(out) and "▓" in body_of(out)
 
 
-def test_braille_multi_series_legend_does_not_claim_shape_without_color():
-    out = render_chart({"chartType": "line", "mode": "braille", "height": 4, "series": [
-        {"name": "A", "values": [1, 2, 1, 2]}, {"name": "B", "values": [2, 1, 2, 1]}]})
-    assert "can't be told apart" in out
-
-
-def test_braille_multi_series_with_color_keeps_swatch_legend():
-    out = render_chart({"chartType": "line", "mode": "braille", "useColor": "on", "height": 4, "series": [
-        {"name": "A", "values": [1, 2, 1, 2]}, {"name": "B", "values": [2, 1, 2, 1]}]})
-    assert "can't be told apart" not in out and "\x1b[38;5;" in out
-
-
 def rows(out):
     return out.split("\n")
 
@@ -132,7 +120,6 @@ def test_float_rounding_is_half_away_from_zero_like_go():
     ({"chartType": "line", "series": []}, "at least one entry"),
     ({"chartType": "nope", "series": [{"values": [1]}]}, 'unknown chartType "nope"'),
     ({"chartType": "vbar", "border": "wavy", "series": [{"values": [1]}]}, 'invalid border "wavy"'),
-    ({"chartType": "line", "mode": "x", "series": [{"values": [1, 2]}]}, 'invalid mode "x"'),
     ({"chartType": "line", "style": "x", "series": [{"values": [1, 2]}]}, 'invalid style "x"'),
     ({"chartType": "line", "useColor": "x", "series": [{"values": [1, 2]}]}, 'invalid useColor "x"'),
     ({"chartType": "line", "series": [{"values": [1]}]}, "at least two values"),
@@ -163,7 +150,7 @@ def test_too_much_data_is_rejected():
 
 
 def test_max_size_chart_renders_quickly():
-    out = render_chart({"chartType": "line", "mode": "braille", "width": 500, "height": 200,
+    out = render_chart({"chartType": "line", "width": 500, "height": 200,
                         "series": [{"values": list(range(1000))}]})
     assert len(out.split("\n")) == 200 + 2  # plus the top and bottom border
 
@@ -214,3 +201,94 @@ def test_label_wider_than_the_plot_does_not_crash():
     out = render_chart({"chartType": "line", "border": "none", "width": 3, "height": 3, "labels": ["abcdefgh", "z"],
                         "series": [{"values": [1, 2]}]})
     assert out
+
+
+# --- whole-block bars ------------------------------------------------------
+
+FRACTIONAL_BLOCKS = "▏▎▍▋▊▉▁▂▃▅▆▇"  # eighth blocks: missing from Consolas / Courier New / Lucida Console
+
+
+def bar_specs(style=None):
+    extra = {"style": style} if style else {}
+    return {
+        "hbar": {"chartType": "hbar", "border": "none", "labels": ["a", "b", "c", "d"], "series": [{"values": [62, 21, 12, 5]}], **extra},
+        "hbar grouped": {"chartType": "hbar", "border": "none", "labels": ["a", "b"], "series": [{"name": "x", "values": [62, 21.7]}, {"name": "y", "values": [12.3, 5]}], **extra},
+        "vbar": {"chartType": "vbar", "border": "none", "height": 7, "labels": ["a", "b", "c", "d"], "series": [{"values": [62, 21, 12, 5]}], **extra},
+        "vbar grouped": {"chartType": "vbar", "border": "none", "height": 7, "labels": ["a", "b"], "series": [{"name": "x", "values": [62, 21.7]}, {"name": "y", "values": [12.3, 5]}], **extra},
+        "histogram": {"chartType": "histogram", "border": "none", "bins": 6, "series": [{"values": [12, 15, 14, 18, 20, 22, 21, 25, 30, 28, 35, 40, 55, 60, 18, 19, 22]}], **extra},
+    }
+
+
+@pytest.mark.parametrize("name", list(bar_specs()))
+def test_default_bars_end_on_whole_blocks(name):
+    out = render_chart(bar_specs()[name])
+    assert not [c for c in out if c in FRACTIONAL_BLOCKS], out
+
+
+# vbar with several series is drawn with a different fill glyph per series (█ ▓ ▒ ░), which has no
+# fractional variants, so "fine" only changes single-series vbar; every other bar chart honours it.
+@pytest.mark.parametrize("name", [n for n in bar_specs() if n != "vbar grouped"])
+def test_fine_style_keeps_eighth_block_precision(name):
+    out = render_chart(bar_specs("fine")[name])
+    assert [c for c in out if c in FRACTIONAL_BLOCKS], name
+    assert render_chart(bar_specs("fine")[name]) != render_chart(bar_specs()[name])
+
+
+def test_whole_block_lengths_are_rounded_not_truncated():
+    # 21/62*40 = 13.55 -> 14 cells; 12/62*40 = 7.74 -> 8; 5/62*40 = 3.2 -> 3
+    lines = render_chart(bar_specs()["hbar"]).split("\n")
+    assert [l.split(" │ ")[1].count("█") for l in lines] == [40, 14, 8, 3]
+
+
+def test_a_nonzero_value_never_disappears_but_zero_stays_empty():
+    out = render_chart({"chartType": "hbar", "border": "none", "labels": ["big", "tiny", "zero"],
+                        "series": [{"values": [1000, 0.4, 0]}]})
+    big, tiny, zero = out.split("\n")
+    assert big.count("█") == 40 and tiny.count("█") == 1 and zero.count("█") == 0
+    out = render_chart({"chartType": "vbar", "border": "none", "height": 5, "labels": ["a", "b", "c"],
+                        "series": [{"values": [1000, 0.4, 0]}]})
+    rows = out.split("\n")[:5]
+    assert [sum(r[i] == "█" for r in rows) for i in (0, 2, 4)] == [5, 1, 0]
+
+
+def test_style_fine_is_accepted_and_ignored_by_charts_without_bars():
+    spec = {"chartType": "line", "border": "none", "series": [{"values": [1, 3, 2]}]}
+    assert render_chart({**spec, "style": "fine"}) == render_chart(spec)
+
+
+# --- glyphs that survive default fonts ---------------------------------------
+# Verified against the character maps of Consolas and Courier New (the default monospace fonts of many
+# Windows editors). A glyph a font lacks is drawn from another font with a different width, which makes the
+# right edge of an otherwise rectangular chart ragged.
+SAFE_FILLS = set("█▓▒░▌▄▐▀")
+SAFE_MARKERS = set("●○▲■□▼♦◊►◄")
+
+
+def test_fill_and_marker_tables_only_contain_font_safe_glyphs():
+    import asciicharts
+    assert set(asciicharts.FILLS) <= SAFE_FILLS and len(set(asciicharts.FILLS)) == len(asciicharts.FILLS) >= 6
+    assert set(asciicharts.HALFTONE_FILLS) <= SAFE_FILLS | {":"} and len(set(asciicharts.HALFTONE_FILLS)) >= 6
+    assert set(asciicharts.MARKERS) <= SAFE_MARKERS and len(set(asciicharts.MARKERS)) >= 6
+
+
+def test_default_output_uses_only_font_safe_glyphs():
+    """Across the whole golden corpus, everything except sparklines and style "fine" (both use eighth
+    blocks, documented as needing a capable font) stays inside ASCII, Latin-1, box drawing and the safe sets."""
+    checked = 0
+    for case in load("corpus.json"):
+        spec = case["spec"]
+        if "out" not in case or spec["chartType"] == "sparkline" or spec.get("style") == "fine":
+            continue
+        for ch in set(case["out"]):
+            ok = ord(ch) < 0x100 or "─" <= ch <= "╿" or ch in SAFE_FILLS or ch in SAFE_MARKERS
+            assert ok, f"{ch!r} (U+{ord(ch):04X}) in the output of {spec}"
+        checked += 1
+    assert checked > 200
+
+
+def test_series_glyphs_stay_distinct_for_up_to_eight_series():
+    from asciicharts import FILLS
+    out = render_chart({"chartType": "hbar", "border": "none", "stacked": True, "width": 80, "labels": ["a"],
+                        "series": [{"name": f"s{i}", "values": [10]} for i in range(8)]})
+    row = out.split("\n")[0].split(" │ ")[1].rsplit(" ", 1)[0]
+    assert row == "".join(g * 10 for g in FILLS[:8])

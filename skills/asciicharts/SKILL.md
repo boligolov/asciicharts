@@ -93,15 +93,14 @@ column instead of being dropped silently — clean or filter the file first, or 
 
 Required: `chartType`, `series` (each `{name, values}` or `{name, points}`). Optional, the ones you'll
 use most: `title`, `labels`, `border` (`none` is the most compact), `width`/`height` (max 500/200),
-`stacked`, `style`, `mode`, `threshold`, `showPoints`, `bins`. Every option, the limits and the error
+`stacked`, `style`, `threshold`, `showPoints`, `bins`. Every option, the limits and the error
 messages are in [references/reference.md](references/reference.md); every chart rendered, with the
 spec that made it, is in [references/gallery.md](references/gallery.md) — look there to choose a style.
 
 ## Making it read well
 
-- **Use `"style": "ascii"` when you don't know where the text will be shown.** Block, quadrant and braille glyphs (`█ ▌ ▞ ⣿`) need a font with good coverage; some default editor fonts (Consolas) substitute them and the right edge looks ragged. The `ascii` style (bars, histogram, area, and `cell`-mode line charts) draws with plain `# X H W = : | .` — 23 distinct characters, so even a dozen series stay distinguishable — with `|` separators and `+` axis ticks; add `"border": "ascii"` and the whole chart, frame included, is pure ASCII. (The default line chart and the `quad`/`braille` modes use Unicode glyphs.)
+- **Use `"style": "ascii"` when you don't know where the text will be shown.** Default bars use only whole `█` blocks and series use glyphs that even Consolas has, so charts are safe in nearly every font; only `"style": "fine"` bars and sparklines use eighth blocks that some default editor fonts lack, which then substitute them and make the right edge look ragged. The `ascii` style (bars, histogram, area and line charts) draws with plain `# X H W = : | .` — 23 distinct characters, so even a dozen series stay distinguishable — with `|` separators and `+` axis ticks; add `"border": "ascii"` and the whole chart, frame included, is pure ASCII.
 - **Keep it around 60–80 columns** for chat, commit messages and PR text; the default widths already fit.
-- **Several series in `quad`/`braille` mode can't be told apart without color** because their dots share cells. Use the default `cell` mode (each series gets its own glyph), or `useColor: "on"` only when the output goes to a real terminal — ANSI codes show as garbage in a reply.
 - **Sort and trim before plotting.** A ranking of 40 bars is unreadable; `--sort -x --limit 10` (or sort in your own code) says more than all of them.
 - **Label things.** A `title` and named series cost nothing and remove the guessing; legends appear automatically for several series.
 - **Whole numbers print without decimals, others with two.** Round or scale (thousands, ms→s) yourself if the raw values are noisy.

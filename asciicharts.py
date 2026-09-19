@@ -24,7 +24,7 @@ Command line (JSON spec from a file, stdin, or --json)::
                                          # straight from a CSV; see --csv --help
 
 Spec fields (identical to the MCP tool): chartType, series, labels, title,
-width, height, border, mode, style, stacked, bins, useColor, threshold,
+width, height, border, style, stacked, bins, useColor, threshold,
 showPoints, pointChar. See skills/asciicharts/SKILL.md and its references/reference.md.
 """
 
@@ -70,7 +70,7 @@ CHARTS = {
     "line": {
         "summary": "One or more lines with a value axis. Optional dashed threshold and per-point markers.",
         "series": "values: the samples in order (at least 2 per series). One line per series. labels (optional) become x-axis labels.",
-        "options": ["labels", "width", "height", "mode", "style", "threshold", "showPoints", "pointChar"],
+        "options": ["labels", "width", "height", "style", "threshold", "showPoints", "pointChar"],
         "example": {"chartType": "line", "series": [{"values": [12, 18, 15, 30, 42, 38]}]},
     },
     "area": {
@@ -82,14 +82,14 @@ CHARTS = {
     "scatter": {
         "summary": "(x, y) points only, one marker shape per series.",
         "series": "points: a list of {x, y} objects (values is not used). One marker set per series.",
-        "options": ["width", "height", "mode"],
+        "options": ["width", "height"],
         "example": {"chartType": "scatter",
                     "series": [{"name": "A", "points": [{"x": 1, "y": 2}, {"x": 2, "y": 4}, {"x": 3, "y": 3}]}]},
     },
     "dual_axis": {
         "summary": "Two lines over one x-axis, each with its own y-axis (left and right) for series on different scales.",
         "series": "Exactly two series, each with values (at least 2). The first uses the left axis, the second the right.",
-        "options": ["width", "height", "mode"],
+        "options": ["width", "height"],
         "example": {"chartType": "dual_axis", "series": [{"name": "Temp", "values": [10, 12, 15, 14]},
                                                          {"name": "Humidity", "values": [80, 78, 65, 70]}]},
     },
@@ -195,8 +195,11 @@ def _pad_center(s: str, width: int) -> str:
 EIGHTHS_UP = [" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
 EIGHTHS_LEFT = [" ", "▏", "▎", "▍", "▌", "▋", "▊", "▉", "█"]
 SHADES = [" ", "░", "▒", "▓", "█"]
-FILLS = ["█", "▓", "▒", "░", "▚", "▞"]
-HALFTONE_FILLS = ["▓", "▒", "░", "▚", "▞", ":"]
+# Per-series fill glyphs and point markers are limited to characters that the default monospace
+# fonts of Windows editors (Consolas, Courier New) actually contain; a glyph a font lacks is drawn
+# from another font with a different width and makes the right edge of the chart ragged.
+FILLS = ["█", "▓", "▒", "░", "▌", "▄", "▐", "▀"]
+HALFTONE_FILLS = ["▓", "▒", "░", "▌", "▄", "▐", "▀", ":"]
 # Per-series glyphs for style "ascii": plain ASCII, so they line up in any font.
 # The first eight are the original Bloomberg-style ramp; the rest only come into
 # play from the 9th series on. They are ordered dense-to-light so that
@@ -209,7 +212,7 @@ ASCII_MARKERS = ["o", "x", "*", "+", "^", "v", "@", "%", "&", "$"]
 # Area charts often have thin bands stacked on a much larger first one, so ':'
 # (lighter than 'X') reads better as the second glyph there.
 AREA_ASCII_FILLS = ["#", ":", "H", "W", "=", "X", "|", "."] + _ASCII_EXTRA
-MARKERS = ["●", "○", "◆", "◇", "▲", "△", "■", "□", "▼", "▽"]
+MARKERS = ["●", "○", "▲", "■", "□", "▼", "♦", "◊", "►", "◄"]
 PALETTE256 = [39, 208, 40, 201, 51, 226]
 THRESHOLD_COLOR = 244
 HEAT_RAMP = [21, 27, 33, 39, 45, 51, 87, 123, 159, 195, 226, 220, 214, 208, 202, 196]
@@ -217,23 +220,6 @@ HEAT_CELL_WIDTH = 3
 SPARK_TICKS = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]
 DUAL_AXIS_GLYPHS = ["█", "▒"]
 PIE_ASPECT = 2.0
-
-QUAD_CHARS = [
-    " ", "▘", "▝", "▀",
-    "▖", "▌", "▞", "▛",
-    "▗", "▚", "▐", "▜",
-    "▄", "▙", "▟", "█",
-]
-QUAD_BIT = {(0, 0): 8, (1, 0): 4, (0, 1): 2, (1, 1): 1}
-BRAILLE_BIT = [[0x01, 0x02, 0x04, 0x40], [0x08, 0x10, 0x20, 0x80]]
-BRAILLE_BASE = 0x2800
-
-NO_SHAPE_CAVEAT = (
-    "quad/braille dots from every series share the same sub-character bits and "
-    "can't be told apart by shape — pass useColor: \"on\" to tell them apart, "
-    "or use mode: \"cell\""
-)
-
 
 # --------------------------------------------------------------------------
 # Color
@@ -412,55 +398,25 @@ def _named_legend(names, color_on: bool, ramp=FILLS) -> str:
     return _join_legend(f"{_legend_swatch(i, color_on, ramp)} {n}" for i, n in enumerate(names))
 
 
-def _wrap_text(s: str, width: int):
-    words = s.split()
-    if not words:
-        return []
-    lines = [words[0]]
-    for w in words[1:]:
-        if len(lines[-1]) + 1 + len(w) > width:
-            lines.append(w)
-        else:
-            lines[-1] += " " + w
-    return lines
-
-
-def _plain_name_list(names, width: int) -> str:
-    return ", ".join(names) + "\n(" + "\n".join(_wrap_text(NO_SHAPE_CAVEAT, max(width, 40))) + ")"
-
-
 # --------------------------------------------------------------------------
 # Canvas (line / scatter / dual_axis)
 # --------------------------------------------------------------------------
 
 class _Canvas:
-    def __init__(self, mode: str, width: int, height: int):
-        self.mode = mode
+    """A grid of characters that line, scatter and dual_axis charts draw onto."""
+
+    def __init__(self, width: int, height: int):
         self.width, self.height = width, height
-        self.sub_x, self.sub_y = {"quad": (2, 2), "braille": (2, 4)}.get(mode, (1, 1))
-        self.bits = [[0] * width for _ in range(height)]
         self.cell_char = [[""] * width for _ in range(height)]
         self.cell_color = [[-1] * width for _ in range(height)]
 
-    def pixel_width(self):
-        return self.width * self.sub_x
-
-    def pixel_height(self):
-        return self.height * self.sub_y
-
     def set_dot(self, px, py, ch, color):
-        if px < 0 or py < 0 or px >= self.pixel_width() or py >= self.pixel_height():
+        """Fill one cell with ch (a full block if ch is empty); out-of-range cells are ignored."""
+        if px < 0 or py < 0 or px >= self.width or py >= self.height:
             return
-        cx, cy = px // self.sub_x, py // self.sub_y
-        dx, dy = px % self.sub_x, py % self.sub_y
-        if self.mode == "quad":
-            self.bits[cy][cx] |= QUAD_BIT[(dx, dy)]
-        elif self.mode == "braille":
-            self.bits[cy][cx] |= BRAILLE_BIT[dx][dy]
-        else:
-            self.cell_char[cy][cx] = ch or "█"
+        self.cell_char[py][px] = ch or "█"
         if color >= 0:
-            self.cell_color[cy][cx] = color
+            self.cell_color[py][px] = color
 
     def set_marker(self, cx, cy, ch, color):
         if cx < 0 or cy < 0 or cx >= self.width or cy >= self.height:
@@ -492,16 +448,7 @@ class _Canvas:
             step += 1
 
     def char_at(self, x, y):
-        if self.cell_char[y][x] != "":
-            return self.cell_char[y][x]
-        if self.mode == "cell":
-            return " "
-        b = self.bits[y][x]
-        if b == 0:
-            return " "
-        if self.mode == "braille":
-            return chr(BRAILLE_BASE + b)
-        return QUAD_CHARS[b]
+        return self.cell_char[y][x] or " "
 
     def render(self, color_on: bool):
         return [
@@ -604,7 +551,6 @@ def _normalize(spec: dict) -> dict:
         "width": _int(spec, "width", MAX_WIDTH),
         "height": _int(spec, "height", MAX_HEIGHT),
         "border": _text(spec, "border"),
-        "mode": _text(spec, "mode"),
         "style": _text(spec, "style"),
         "stacked": bool(spec.get("stacked")),
         "bins": _int(spec, "bins", MAX_BINS),
@@ -734,16 +680,20 @@ def _render_bar(inp):
     color_on = inp["color"]
     ramp = _bar_fill_ramp(inp["style"])
 
+    # Bars end on whole character cells by default. The fractional block glyphs used for
+    # sub-cell precision (eighths) are missing from common default fonts such as Consolas,
+    # where they make the right edge of a chart ragged; style "fine" opts back in.
+    fine = inp["style"] == "fine"
     if inp["chartType"] == "vbar":
-        return _render_vbar(labels, names, matrix, inp["width"], height, inp["stacked"], color_on, ramp)
+        return _render_vbar(labels, names, matrix, inp["width"], height, inp["stacked"], color_on, ramp, fine)
     if len(names) == 1:
-        return _render_horizontal_bars(labels, matrix[0], width, ramp)
+        return _render_horizontal_bars(labels, matrix[0], width, ramp, fine)
     if inp["stacked"]:
         return _render_hbar_stacked(labels, names, matrix, width, color_on, ramp)
-    return _render_hbar_grouped(labels, names, matrix, width, color_on, ramp)
+    return _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine)
 
 
-def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp):
+def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, fine=False):
     num_cat, num_series = len(labels), len(matrix)
     gap = 1
     bars_per_group = 1 if stacked else num_series
@@ -832,10 +782,12 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp):
                 v = matrix[s][c]
                 color = color_of(s)
 
-                if effective is not None:
-                    ch = effective[s % len(effective)]
+                if effective is not None or not fine:
+                    ch = effective[s % len(effective)] if effective is not None else "█"
                     if not diverging:
                         rows = _round(v / max_val * height)
+                        if v > 0 and rows == 0:
+                            rows = 1  # a non-zero value never disappears
                         for w in range(bar_width):
                             for r in range(min(rows, height)):
                                 grid[height - 1 - r][col_start + w] = ch
@@ -903,11 +855,13 @@ def _diverging_bar_run(zero_col, val_col, width, fill):
     return "".join(row)
 
 
-def _render_bar_run(length: float, max_width: int, fill) -> str:
+def _render_bar_run(length: float, max_width: int, fill, fine=False) -> str:
     length = max(length, 0)
-    if fill:
+    if fill or not fine:
         full = min(_round(length), max_width)
-        return fill * full + " " * (max_width - full)
+        if length > 0 and full == 0:
+            full = 1  # a non-zero value never disappears
+        return (fill or "█") * full + " " * (max_width - full)
     full = min(int(length), max_width)
     frac = length - full
     s = EIGHTHS_LEFT[8] * full
@@ -919,7 +873,7 @@ def _render_bar_run(length: float, max_width: int, fill) -> str:
     return s + " " * (max_width - full)
 
 
-def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp):
+def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=False):
     min_val = max_val = 0.0
     for row in matrix:
         for v in row:
@@ -940,7 +894,7 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp):
                 val_col = _round((v - min_val) / (max_val - min_val) * width)
                 bar = _diverging_bar_run(zero_col, val_col, width, fill or "█")
             else:
-                bar = _render_bar_run(v / max_val * width, width, fill)
+                bar = _render_bar_run(v / max_val * width, width, fill, fine)
             color = _series_color(s) if color_on else -1
             lines.append(f"  {name}{' ' * (max_name_w - len(name))} {_sep(ramp)} {_colorize(bar, color, color_on)} {_fmt(v)}")
         blocks.append("\n".join(lines))
@@ -1003,7 +957,7 @@ def _render_hbar_stacked(labels, names, matrix, width, color_on, ramp):
     return "\n".join(lines) + "\n\n" + legend
 
 
-def _render_horizontal_bars(labels, values, width, ramp):
+def _render_horizontal_bars(labels, values, width, ramp, fine=False):
     if width <= 0:
         width = 40
     max_label = max(len(l) for l in labels)
@@ -1025,23 +979,20 @@ def _render_horizontal_bars(labels, values, width, ramp):
         return "\n".join(lines)
     for i, v in enumerate(values):
         pad = " " * (max_label - len(labels[i]))
-        lines.append(f"{labels[i]}{pad} {_sep(ramp)} {_render_bar_run(v / max_val * width, width, fill)} {_fmt(v)}")
+        lines.append(f"{labels[i]}{pad} {_sep(ramp)} {_render_bar_run(v / max_val * width, width, fill, fine)} {_fmt(v)}")
     return "\n".join(lines)
 
 
-def _line_legend(series, mode, show_points, color_on, width, ascii_style=False):
+def _line_legend(series, show_points, color_on, ascii_style=False):
     names = [_series_label(s, i) for i, s in enumerate(series)]
     if show_points:
         return _named_legend(names, color_on, ASCII_MARKERS if ascii_style else MARKERS)
-    if mode != "cell" and not color_on:
-        return _plain_name_list(names, width)
     return _named_legend(names, color_on, ASCII_FILLS if ascii_style else FILLS)
 
 
 def _render_line(inp):
     height = inp["height"] or 10
     width = inp["width"] or 60
-    mode = inp["mode"] or "cell"
     series = inp["series"]
     for i, s in enumerate(series):
         if len(s["values"]) < 2:
@@ -1053,19 +1004,19 @@ def _render_line(inp):
         lo, hi = min(lo, threshold), max(hi, threshold)
     color_on = inp["color"]
 
-    c = _Canvas(mode, width, height)
-    pw, ph = c.pixel_width(), c.pixel_height()
+    c = _Canvas(width, height)
+    pw, ph = width, height
     dotted = inp["style"] == "dotted"
-    ascii_style = inp["style"] == "ascii"  # plain ASCII glyphs and axis (cell mode; quad/braille stay dot glyphs)
+    ascii_style = inp["style"] == "ascii"  # plain ASCII glyphs and axis
     multi = len(series) > 1
 
     for si, s in enumerate(series):
         color = _series_color(si) if color_on else -1
         if inp["showPoints"]:
             line_char = "." if ascii_style else "·"
-        elif ascii_style and mode == "cell":
+        elif ascii_style:
             line_char = ASCII_FILLS[si % len(ASCII_FILLS)]
-        elif multi and mode == "cell":
+        elif multi:
             line_char = FILLS[si % len(FILLS)]
         elif dotted:
             line_char = "+"
@@ -1082,7 +1033,7 @@ def _render_line(inp):
             prev = (x, y)
 
     if threshold is not None:
-        row = _y_pixel(threshold, lo, hi, c.pixel_height()) // c.sub_y
+        row = _y_pixel(threshold, lo, hi, height)
         tcolor = THRESHOLD_COLOR if color_on else -1
         for x in range(c.width):
             if x % 2 == 0:
@@ -1097,7 +1048,7 @@ def _render_line(inp):
             n = len(s["values"])
             for i, v in enumerate(s["values"]):
                 x, y = _x_pixel(i, n, pw), _y_pixel(v, lo, hi, ph)
-                c.set_marker(x // c.sub_x, y // c.sub_y, marker, color)
+                c.set_marker(x, y, marker, color)
 
     axis_labels, axis_w = _left_axis_labels(lo, hi, height)
     rows = c.render(color_on)
@@ -1108,7 +1059,7 @@ def _render_line(inp):
     if x:
         body += "\n" + x
     if multi:
-        body += "\n\n" + _line_legend(series, mode, inp["showPoints"], color_on, width, ascii_style)
+        body += "\n\n" + _line_legend(series, inp["showPoints"], color_on, ascii_style)
     if threshold is not None:
         note = f"- - threshold: {_fmt(threshold)}"
         body += ("   " + note) if len(series) > 1 else ("\n\n" + note)
@@ -1268,7 +1219,6 @@ def _render_dotplot(inp):
 def _render_scatter(inp):
     width = inp["width"] or 60
     height = inp["height"] or 15
-    mode = inp["mode"] or "cell"
     series = inp["series"]
 
     pts = []
@@ -1285,29 +1235,20 @@ def _render_scatter(inp):
         max_y = min_y + 1
 
     color_on = inp["color"]
-    c = _Canvas(mode, width, height)
-    pw, ph = c.pixel_width(), c.pixel_height()
+    c = _Canvas(width, height)
+    pw, ph = width, height
     for si, s in enumerate(series):
         color = _series_color(si) if color_on else -1
         for px_, py_ in s["points"]:
             px = _round((px_ - min_x) / (max_x - min_x) * (pw - 1))
             py = ph - 1 - _round((py_ - min_y) / (max_y - min_y) * (ph - 1))
-            if mode == "cell":
-                c.set_marker(px, py, MARKERS[si % len(MARKERS)], color)
-            else:
-                c.set_dot(px, py, "", color)
+            c.set_marker(px, py, MARKERS[si % len(MARKERS)], color)
 
     body = "\n".join(c.render(color_on))
     body += f"\nx: [{_fmt(min_x)}, {_fmt(max_x)}]  y: [{_fmt(min_y)}, {_fmt(max_y)}]"
     if len(series) > 1:
         names = [_series_label(s, i) for i, s in enumerate(series)]
-        if mode != "cell" and not color_on:
-            body += "\n" + _plain_name_list(names, width)
-        else:
-            ramp = MARKERS if mode == "cell" else FILLS
-            body += "\n" + "   ".join(
-                f"{_colorize(ramp[i % len(ramp)], _series_color(i), color_on)} {n}"
-                for i, n in enumerate(names))
+        body += "\n" + _named_legend(names, color_on, MARKERS)
     return body
 
 
@@ -1321,10 +1262,9 @@ def _render_dual_axis(inp):
 
     height = inp["height"] or 10
     width = inp["width"] or 60
-    mode = inp["mode"] or "cell"
     color_on = inp["color"]
-    c = _Canvas(mode, width, height)
-    pw, ph = c.pixel_width(), c.pixel_height()
+    c = _Canvas(width, height)
+    pw, ph = width, height
 
     mins, maxs = [0.0, 0.0], [0.0, 0.0]
     for si, s in enumerate(series):
@@ -1348,11 +1288,8 @@ def _render_dual_axis(inp):
         f"{left[r]:>{left_w}} ┤{l}├ {right[r]:<{right_w}}" for r, l in enumerate(rows))
 
     n0, n1 = _series_label(series[0], 0), _series_label(series[1], 1)
-    if mode != "cell" and not color_on:
-        legend = _plain_name_list(["left: " + n0, "right: " + n1], width)
-    else:
-        legend = (f"left:  {_colorize(DUAL_AXIS_GLYPHS[0], _series_color(0), color_on)} {n0}\n"
-                  f"right: {_colorize(DUAL_AXIS_GLYPHS[1], _series_color(1), color_on)} {n1}")
+    legend = (f"left:  {_colorize(DUAL_AXIS_GLYPHS[0], _series_color(0), color_on)} {n0}\n"
+              f"right: {_colorize(DUAL_AXIS_GLYPHS[1], _series_color(1), color_on)} {n1}")
     return body + "\n\n" + legend
 
 
@@ -1433,7 +1370,7 @@ def _render_histogram(inp):
     for i in range(bins):
         b_lo = lo + i * bin_width
         labels.append(f"{_fmt(b_lo)}..{_fmt(b_lo + bin_width)}")
-    return _render_horizontal_bars(labels, counts, inp["width"], _bar_fill_ramp(inp["style"]))
+    return _render_horizontal_bars(labels, counts, inp["width"], _bar_fill_ramp(inp["style"]), inp["style"] == "fine")
 
 
 def _render_heatmap(inp):
@@ -1552,10 +1489,8 @@ def render_chart(spec: dict) -> str:
         raise ChartError("series must contain at least one entry")
     if inp["border"] not in ("", "none", "ascii", "light", "heavy", "double", "rounded"):
         raise ChartError(f"invalid border {_q(inp['border'])} (expected one of: none, ascii, light, heavy, double, rounded)")
-    if inp["mode"] not in ("", "cell", "quad", "braille"):
-        raise ChartError(f"invalid mode {_q(inp['mode'])} (expected one of: cell, quad, braille)")
-    if inp["style"] not in ("", "solid", "halftone", "ascii", "dotted"):
-        raise ChartError(f"invalid style {_q(inp['style'])} (expected one of: solid, halftone, ascii, dotted)")
+    if inp["style"] not in ("", "solid", "fine", "halftone", "ascii", "dotted"):
+        raise ChartError(f"invalid style {_q(inp['style'])} (expected one of: solid, fine, halftone, ascii, dotted)")
     if inp["useColor"] not in ("", "auto", "on", "off"):
         raise ChartError(f"invalid useColor {_q(inp['useColor'])} (expected one of: auto, on, off)")
 
@@ -1570,7 +1505,7 @@ def render_chart(spec: dict) -> str:
 # --------------------------------------------------------------------------
 
 # Options that may be set from the command line with --set key=value.
-CSV_SETTABLE = ("title", "width", "height", "border", "mode", "style", "stacked", "bins", "useColor",
+CSV_SETTABLE = ("title", "width", "height", "border", "style", "stacked", "bins", "useColor",
                 "threshold", "showPoints", "pointChar")
 
 _NUM_THOUSANDS = re.compile(r"^-?\d{1,3}(,\d{3})+(\.\d+)?$")

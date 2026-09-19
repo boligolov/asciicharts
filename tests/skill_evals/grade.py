@@ -15,7 +15,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 FENCE = re.compile(r"```[^\n]*\n(.*?)```", re.S)
-BLOCK_OR_BRAILLE = re.compile("[▀-▟⠀-⣿]")
+BLOCK_GLYPHS = re.compile("[▀-▟]")
 
 
 def code_blocks(text):
@@ -101,8 +101,8 @@ def check_email(reply, run_dir):
     out = []
     out.append(("The reply contains a chart (a fence is not needed in a plain-text email)", len(block.strip()) > 50 and "2024" in block,
                 f"{len(block)} chars"))
-    bad = sorted(set(BLOCK_OR_BRAILLE.findall(block)))
-    out.append(("The chart uses no block, shade or braille characters (font-safe)", not bad and len(block) > 50,
+    bad = sorted(set(BLOCK_GLYPHS.findall(block)))
+    out.append(("The chart uses no block or shade characters (font-safe)", not bad and len(block) > 50,
                 f"offending glyphs: {''.join(bad) or 'none'}"))
     cats = [c for c in ("Support", "Billing", "Onboarding", "Docs") if c in block]
     out.append(("All four categories appear in the chart", len(cats) == 4, f"found: {cats}"))

@@ -1,15 +1,17 @@
 # asciicharts
 
+**[See the gallery →](docs/gallery.md)** every chart type and style, rendered: bars (grouped, stacked, diverging), lines, areas, pies, heatmaps, box plots, Unicode and pure-ASCII looks. All real output.
+
 Turn numbers into a text chart — ASCII/Unicode, no image, no plotting library, just a string an agent can drop straight into a reply.
 
 ```
 ┌───────────────────────────────────────────────────────┐
-│                     Browser share                     │
+│                Build time by stage (s)                │
 ├───────────────────────────────────────────────────────┤
-│ Chrome  │ ████████████████████████████████████████ 62 │
-│ Firefox │ █████████████▌                           21 │
-│ Safari  │ ███████▋                                 12 │
-│ Other   │ ███▏                                     5  │
+│ Compile │ ████████████████████████████████████████ 64 │
+│ Test    │ ████████████████████                     32 │
+│ Lint    │ ██████████                               16 │
+│ Package │ █████                                    8  │
 └───────────────────────────────────────────────────────┘
 ```
 
@@ -21,19 +23,19 @@ One renderer, three ways to use it:
 | **`asciicharts.py`** as a library / CLI | your own scripts | nothing but Python 3 |
 | **[MCP server](server/README.md)** (`server/`, Docker) | any MCP client, or a shared always-on deployment | the `mcp` package |
 
-Everything is hand-rolled — line drawing, quadrant/braille sub-character packing, bar scaling, pie rasterization, box-and-whisker math — so `asciicharts.py` is a single dependency-free file you can copy anywhere.
+Everything is hand-rolled — line drawing, bar scaling, pie rasterization, box-and-whisker math — so `asciicharts.py` is a single dependency-free file you can copy anywhere.
 
 ## Charts
 
 12 chart types: `sparkline`, `vbar`, `hbar`, `line`, `area`, `scatter`, `dual_axis`, `pie`, `histogram`, `heatmap`, `boxplot`, `dotplot`.
 
 - **vbar / hbar / area**: single, grouped or stacked. Negative values automatically **diverge** — bars grow both ways from a zero baseline, stacked ones too.
-- **line / scatter / dual_axis**: `cell`, `quad` (2×2 dots) or `braille` (2×4 dots) resolution; line adds threshold and per-point markers.
+- **line / scatter / dual_axis**: line adds a dashed threshold and per-point markers; every series gets its own glyph.
 - **Styles**: `halftone` (stippled shades), `ascii` (plain `# X H W = : | .` and 15 more for up to 23 series, renders in any font), `dotted` line trend.
 - **6 border styles** with a centered title; optional ANSI 256-color.
 - **Safe to expose**: input is validated and size-limited (width ≤ 500, height ≤ 200, 50k values), errors are readable one-liners.
 
-See **[the gallery](skills/asciicharts/references/gallery.md)** for every chart rendered, and **[the reference](skills/asciicharts/references/reference.md)** for every option.
+See **[the gallery](docs/gallery.md)** for every chart rendered, and **[the reference](skills/asciicharts/references/reference.md)** for every option.
 
 ## Use as a skill
 
@@ -125,7 +127,7 @@ Anonymous usage statistics (chart type, style, size buckets, success/failure —
 
 ## Fonts
 
-The block (`▏▎▍▌`), quadrant (`▘▝▖▗`) and braille (`⠀`–`⣿`) glyphs need a font that covers them. GitHub and most terminals (iTerm2, Windows Terminal, Ghostty, …) do; some editors' **default** monospace fonts — Consolas in VS Code and PyCharm on Windows — silently substitute a fallback for just those characters, which makes the right border of an otherwise rectangular chart look crooked (worst with `mode: "braille"`). Every line really has the same number of characters (the tests check it) — a ragged wall means the viewer, not the generator. Use a font with full coverage (Cascadia Code, JetBrains Mono, Noto Sans Mono, DejaVu Sans Mono), or `"style": "ascii"` / `"border": "ascii"`, which use only plain characters.
+Default output is built to survive any font: bars end on whole `█` blocks, frames use light box-drawing lines, series use glyphs found in Consolas and Courier New, and `"style": "ascii"` / `"border": "ascii"` use nothing but plain characters. Two things need a font that has more: the eighth blocks of `"style": "fine"` (`▏▎▍▋▊▉`) and of sparklines (`▁▂▃▅▆▇`) are missing from Consolas, Courier New and Lucida Console, the default monospace fonts of many Windows editors, which then substitute another font for just those characters and make the right border of an otherwise rectangular chart look crooked. Every line really has the same number of characters (the tests check it) — a ragged wall means the font, not the generator. GitHub and most terminals (iTerm2, Windows Terminal, Ghostty, …) are fine; otherwise use Cascadia Code, JetBrains Mono, Noto Sans Mono or DejaVu Sans Mono, or stay with the defaults.
 
 ## Development
 

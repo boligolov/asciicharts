@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render one example of every chart type/style (the source of skills/asciicharts/references/gallery.md).
+"""Render one example of every chart type/style (the source of docs/gallery.md).
 
     python scripts/gallery.py
 """

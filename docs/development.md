@@ -9,7 +9,7 @@ skills/asciicharts/     the skill: SKILL.md, scripts/, references/ — see docs/
 deploy/                 Dockerfile, docker-compose (dev and prod), Caddyfile, .env.example
 tests/                  pytest suite; tests/golden/ pins renderer output; tests/skill_evals/ holds the skill's evals
 scripts/                sync_skill.py, package_skill.py, gallery.py
-docs/                   this file, skill.md
+docs/                   this file, gallery.md (every chart rendered), skill.md
 TODO.md  LICENSE  pyproject.toml
 ```
 
@@ -61,7 +61,7 @@ pytest
 python scripts/sync_skill.py
 ```
 
-`tests/test_skill.py` fails when the copies differ. The docs that ship with the skill (`references/reference.md`, `references/gallery.md`) are edited in place; the gallery is regenerated with `python scripts/gallery.py`.
+`tests/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (regenerate the outputs with `python scripts/gallery.py`, the contents list with `python scripts/gallery_toc.py`) and `python scripts/sync_skill.py` copies it into the skill.
 
 ## Docker
 
@@ -148,7 +148,7 @@ The server can record anonymous usage statistics in Postgres. **It does nothing 
 | `ASCIICHARTS_STATS` | `on` (also `1`, `true`, `yes`) — anything else, or unset, means off |
 | `DATABASE_URL` | a standard Postgres DSN, e.g. `postgres://user:pass@host:5432/db` |
 
-With both set, the server connects on startup, creates its schema if missing (`chart_events` — see `server/store.py`) and records one row per `render_chart` call: chart type, style, mode, border, color on/off, series count, bucketed point count and output size, success/failure, and the error message on failure.
+With both set, the server connects on startup, creates its schema if missing (`chart_events` — see `server/store.py`) and records one row per `render_chart` call: chart type, style, border, color on/off, series count, bucketed point count and output size, success/failure, and the error message on failure.
 
 It never records the data you chart — no `values`, `labels` or `title`. Statistics can never stop the server from working: if the flag is on but `DATABASE_URL` is missing, `asyncpg` isn't installed, or the database is unreachable, the server logs a warning and runs without them; a failed insert is logged and ignored. The startup log says which way it went (`usage statistics: enabled` / `disabled`).
 

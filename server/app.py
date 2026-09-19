@@ -81,7 +81,7 @@ LIST_CHARTS_DESCRIPTION = (
 RENDER_CHART_DESCRIPTION = (
     "Render numeric data as an ASCII/Unicode text chart. Supports sparkline, vbar, hbar, line, area, scatter, "
     "dual_axis, pie, histogram, heatmap, boxplot and dotplot, with an optional title, border frame (none/ascii/light/"
-    "heavy/double/rounded), sub-character resolution for line/scatter/dual_axis (cell/quad/braille), bar/area fill "
+    "heavy/double/rounded), bar/area fill "
     "style (solid/halftone/ascii) and line style (solid/dotted), a dashed threshold line and configurable per-point "
     "markers for line charts, a target chart width (vbar/hbar scale to fill it), automatic diverging bars for "
     "negative values (including stacked), and optional ANSI 256-color output. Returns the chart as plain text — put "
@@ -151,8 +151,7 @@ def build_server(stats: Store | None = None) -> MCPServer:
         width: Annotated[int | None, Field(ge=0, le=asciicharts.MAX_WIDTH, description="chart width in characters (default depends on chart type)")] = None,
         height: Annotated[int | None, Field(ge=0, le=asciicharts.MAX_HEIGHT, description="chart height in rows (default depends on chart type)")] = None,
         border: Annotated[Literal["none", "ascii", "light", "heavy", "double", "rounded"] | None, Field(description="border style (default: light)")] = None,
-        mode: Annotated[Literal["cell", "quad", "braille"] | None, Field(description="sub-character resolution for line/scatter/dual_axis: cell (1 point per character), quad (2x2 via quadrant blocks) or braille (2x4 via braille dots); default: cell")] = None,
-        style: Annotated[Literal["solid", "halftone", "ascii", "dotted"] | None, Field(description="visual style. vbar/hbar/histogram/area: solid (default; flat blocks, sub-character precision on bars), halftone (lighter stippled Unicode shades per series) or ascii (plain-ASCII characters per series — #, X, H, W, =, :, |, . then @ % & $ M N D O U S G Z / \\ ! — that render identically in any monospace font). line: solid (default) or dotted (sparse plotted-dot trend line)")] = None,
+        style: Annotated[Literal["solid", "fine", "halftone", "ascii", "dotted"] | None, Field(description="visual style. vbar/hbar/histogram/area: solid (default; flat blocks, bars end on whole character cells), fine (bars end on eighth-block glyphs for sub-cell precision; needs a font that has them, which Consolas does not), halftone (lighter stippled Unicode shades per series) or ascii (plain-ASCII characters per series — #, X, H, W, =, :, |, . then @ % & $ M N D O U S G Z / \\ ! — that render identically in any monospace font). line: solid (default) or dotted (sparse plotted-dot trend line)")] = None,
         stacked: Annotated[bool | None, Field(description="for vbar/hbar/area with multiple series, stack them (cumulative from zero; negative values stack the other way) instead of grouping/overlaying")] = None,
         bins: Annotated[int | None, Field(ge=0, le=asciicharts.MAX_BINS, description="number of buckets for histogram charts (default: 10)")] = None,
         useColor: Annotated[Literal["auto", "on", "off"] | None, Field(description="ANSI 256-color output (default: auto, which is equivalent to off since tool output is plain text for an agent, not a terminal)")] = None,
@@ -162,14 +161,14 @@ def build_server(stats: Store | None = None) -> MCPServer:
     ) -> str:
         args = dict(
             chartType=chartType, labels=labels, title=title, width=width, height=height, border=border,
-            mode=mode, style=style, stacked=stacked, bins=bins, useColor=useColor, threshold=threshold,
+            style=style, stacked=stacked, bins=bins, useColor=useColor, threshold=threshold,
             showPoints=showPoints, pointChar=pointChar,
         )
         spec = {k: v for k, v in args.items() if v is not None}
         spec["series"] = [s.model_dump(exclude_none=True) for s in series]
 
         event = ChartEvent(
-            chart_type=chartType, style=style or "", mode=mode or "", border=border or "",
+            chart_type=chartType, style=style or "", border=border or "",
             use_color=useColor == "on", series_count=len(series),
         )
         try:

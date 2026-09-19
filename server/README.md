@@ -46,8 +46,7 @@ Renders one chart and returns it as text (put it in a code block so it stays ali
 | `title` | string | shown centred above the chart |
 | `width`, `height` | int | characters / rows; at most 500 / 200 |
 | `border` | enum | `none` `ascii` `light` (default) `heavy` `double` `rounded` |
-| `mode` | enum | line/scatter/dual_axis resolution: `cell` (default) `quad` `braille` |
-| `style` | enum | `solid` (default) `halftone` `ascii` (pure-ASCII, up to 23 distinct series glyphs) `dotted` (line) |
+| `style` | enum | `solid` (default; whole-block bars) `fine` (eighth-block bar ends) `halftone` `ascii` (pure-ASCII, up to 23 distinct series glyphs) `dotted` (line) |
 | `stacked` | bool | stack series in vbar/hbar/area (negative values stack the other way) |
 | `bins` | int | histogram buckets (default 10) |
 | `useColor` | enum | `auto` `on` `off` — ANSI 256-colour; leave off for a chat reply |
@@ -56,23 +55,23 @@ Renders one chart and returns it as text (put it in a code block so it stays ali
 
 The complete reference (defaults, every option, limits, errors) is in
 [`skills/asciicharts/references/reference.md`](../skills/asciicharts/references/reference.md), and every chart
-rendered is in the [gallery](../skills/asciicharts/references/gallery.md).
+rendered is in the [gallery](../docs/gallery.md).
 
 Example call and result:
 
 ```json
-{ "chartType": "hbar", "title": "Browser share", "labels": ["Chrome", "Firefox", "Safari", "Other"],
-  "series": [{ "values": [62, 21, 12, 5] }] }
+{ "chartType": "hbar", "title": "Build time by stage (s)", "labels": ["Compile", "Test", "Lint", "Package"],
+  "series": [{ "values": [64, 32, 16, 8] }] }
 ```
 
 ```
 ┌───────────────────────────────────────────────────────┐
-│                     Browser share                     │
+│                Build time by stage (s)                │
 ├───────────────────────────────────────────────────────┤
-│ Chrome  │ ████████████████████████████████████████ 62 │
-│ Firefox │ █████████████▌                           21 │
-│ Safari  │ ███████▋                                 12 │
-│ Other   │ ███▏                                     5  │
+│ Compile │ ████████████████████████████████████████ 64 │
+│ Test    │ ████████████████████                     32 │
+│ Lint    │ ██████████                               16 │
+│ Package │ █████                                    8  │
 └───────────────────────────────────────────────────────┘
 ```
 
@@ -151,7 +150,7 @@ script directly (needs a shell and Python), the server works from any MCP client
 ## Usage statistics
 
 Off by default. With `ASCIICHARTS_STATS=on` and `DATABASE_URL` set, the server creates a `chart_events`
-table and records one anonymous row per `render_chart` call: chart type, style, mode, border, colour on/off,
+table and records one anonymous row per `render_chart` call: chart type, style, border, colour on/off,
 series count, bucketed point count and output size, success/failure and the error message. It **never**
 stores what you chart — no values, labels or titles. It can never break a request: if the flag is on but
 the database is missing or unreachable, the server logs a warning and runs without statistics.

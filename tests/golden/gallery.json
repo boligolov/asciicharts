@@ -273,6 +273,31 @@
   }
  },
  {
+  "name": "hbar (fine style)",
+  "spec": {
+   "chartType": "hbar",
+   "title": "Browser share (fine)",
+   "border": "light",
+   "style": "fine",
+   "labels": [
+    "Chrome",
+    "Firefox",
+    "Safari",
+    "Other"
+   ],
+   "series": [
+    {
+     "values": [
+      62,
+      21,
+      12,
+      5
+     ]
+    }
+   ]
+  }
+ },
+ {
   "name": "hbar (stacked)",
   "spec": {
    "chartType": "hbar",
@@ -441,7 +466,7 @@
   }
  },
  {
-  "name": "line (cell)",
+  "name": "line",
   "spec": {
    "chartType": "line",
    "title": "CPU load",
@@ -521,53 +546,6 @@
       27.5,
       29,
       30
-     ]
-    }
-   ]
-  }
- },
- {
-  "name": "line (braille, two series)",
-  "spec": {
-   "chartType": "line",
-   "title": "Temperature: forecast vs actual",
-   "border": "heavy",
-   "mode": "braille",
-   "width": 50,
-   "height": 10,
-   "series": [
-    {
-     "name": "forecast",
-     "values": [
-      10,
-      12,
-      15,
-      14,
-      18,
-      20,
-      19,
-      17,
-      15,
-      13,
-      12,
-      11
-     ]
-    },
-    {
-     "name": "actual",
-     "values": [
-      11,
-      13,
-      14,
-      16,
-      17,
-      19,
-      21,
-      18,
-      16,
-      14,
-      13,
-      10
      ]
     }
    ]
@@ -672,101 +650,13 @@
   }
  },
  {
-  "name": "scatter (cell, two groups)",
+  "name": "scatter (two groups)",
   "spec": {
    "chartType": "scatter",
    "title": "Height vs weight",
    "border": "light",
    "width": 40,
    "height": 14,
-   "series": [
-    {
-     "name": "group A",
-     "points": [
-      {
-       "x": 158,
-       "y": 52
-      },
-      {
-       "x": 160,
-       "y": 55
-      },
-      {
-       "x": 162,
-       "y": 54
-      },
-      {
-       "x": 165,
-       "y": 60
-      },
-      {
-       "x": 167,
-       "y": 58
-      },
-      {
-       "x": 170,
-       "y": 65
-      },
-      {
-       "x": 172,
-       "y": 68
-      },
-      {
-       "x": 163,
-       "y": 62
-      }
-     ]
-    },
-    {
-     "name": "group B",
-     "points": [
-      {
-       "x": 175,
-       "y": 80
-      },
-      {
-       "x": 178,
-       "y": 78
-      },
-      {
-       "x": 180,
-       "y": 85
-      },
-      {
-       "x": 183,
-       "y": 88
-      },
-      {
-       "x": 185,
-       "y": 90
-      },
-      {
-       "x": 182,
-       "y": 82
-      },
-      {
-       "x": 188,
-       "y": 92
-      },
-      {
-       "x": 177,
-       "y": 86
-      }
-     ]
-    }
-   ]
-  }
- },
- {
-  "name": "scatter (quad, colored groups)",
-  "spec": {
-   "chartType": "scatter",
-   "title": "Height vs weight",
-   "border": "light",
-   "mode": "quad",
-   "width": 40,
-   "height": 14,
-   "useColor": "on",
    "series": [
     {
      "name": "group A",

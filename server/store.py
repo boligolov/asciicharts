@@ -24,7 +24,6 @@ CREATE TABLE IF NOT EXISTS chart_events (
     created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
     chart_type         TEXT NOT NULL,
     style              TEXT NOT NULL DEFAULT '',
-    mode               TEXT NOT NULL DEFAULT '',
     border             TEXT NOT NULL DEFAULT '',
     use_color          BOOLEAN NOT NULL DEFAULT false,
     series_count       INT NOT NULL DEFAULT 0,
@@ -43,7 +42,6 @@ class ChartEvent:
 
     chart_type: str
     style: str = ""
-    mode: str = ""
     border: str = ""
     use_color: bool = False
     series_count: int = 0
@@ -98,10 +96,10 @@ class Store:
         try:
             await self._pool.execute(
                 """INSERT INTO chart_events
-                   (chart_type, style, mode, border, use_color, series_count,
+                   (chart_type, style, border, use_color, series_count,
                     point_count_bucket, output_size_bucket, success, error_message, server_version)
-                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)""",
-                e.chart_type, e.style, e.mode, e.border, e.use_color, e.series_count,
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)""",
+                e.chart_type, e.style, e.border, e.use_color, e.series_count,
                 e.point_count_bucket, e.output_size_bucket, e.success, e.error_message, self._version,
             )
         except Exception as exc:  # noqa: BLE001
