@@ -1,0 +1,45 @@
+{
+  "skill_name": "asciicharts",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "top8-p99-from-csv",
+      "prompt": "I've got a CSV of API endpoint latencies at {INPUT}/api_latency.csv. Give me the 8 slowest endpoints by p99 as a text chart I can paste into a PR description, plus one sentence on what stands out.",
+      "expected_output": "A chart of exactly the 8 highest-p99 endpoints, slowest first, values printed, and one sentence of takeaway.",
+      "files": [
+        "api_latency.csv"
+      ]
+    },
+    {
+      "id": 1,
+      "eval_name": "monthly-trend-readme",
+      "prompt": "Here are our monthly active users for 2025 (in thousands): Jan 12.4, Feb 12.9, Mar 13.1, Apr 14.8, May 15.2, Jun 15.0, Jul 16.4, Aug 17.9, Sep 18.3, Oct 19.6, Nov 20.8, Dec 21.9. I want a small trend chart for the README - no images, it has to be plain text.",
+      "expected_output": "A plain-text trend chart of the 12 months with labelled months and visible min/max.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "eval_name": "plain-text-email-survey",
+      "prompt": "I need to paste a chart into a plain-text email that will be read in all sorts of mail clients - some of them use fonts that don't have block or shade characters at all. Survey results, % answering 'satisfied': for 2024 Support 78, Billing 64, Onboarding 71, Docs 52; for 2025 Support 82, Billing 61, Onboarding 79, Docs 58. Compare the two years by category.",
+      "expected_output": "A font-safe chart comparing 2024 vs 2025 for the four categories with a legend and printed values.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "eval_name": "stacked-refunds-neg",
+      "prompt": "Cash flow by quarter, in $k: Product 30, 45, 25, 60; Services 15, 20, 18, 25; Refunds -12, -20, -30, -5 (Q1 through Q4). I want a chart for a commit message that shows the inflows stacked upward and the refunds hanging down from a zero line, so the net effect of refunds is visible. Plain text please.",
+      "expected_output": "see grade.py",
+      "files": []
+    },
+    {
+      "id": 4,
+      "eval_name": "messy-csv-pie",
+      "prompt": "There's a CSV of regional revenue at {INPUT}/market_share.csv. Make a pie chart of each region's share of total revenue for a Slack post (plain text) and list the percentages. Skip regions that have no revenue figure.",
+      "expected_output": "see grade.py",
+      "files": [
+        "market_share.csv"
+      ]
+    }
+  ],
+  "note": "Each prompt is followed at run time by: 'Save your final reply to me, exactly as you'd send it, to the file {OUT}/reply.md.' Grade with tests/skill_evals/grade.py."
+}

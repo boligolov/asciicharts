@@ -1,0 +1,23 @@
+[
+  {"query": "ok so i pulled the p99s for our 12 services from grafana into a csv (~/Downloads/svc_p99.csv, cols: service, p99_ms, region). can you show me which are the worst 5 in a way I can paste into the incident channel", "should_trigger": true},
+  {"query": "I'm writing the README for my rust crate and want a little bar chart of benchmark results vs the other libs: ours 1.2ms, serde_json 2.9ms, simd-json 1.1ms, json-rust 3.4ms. no images pls, github renders text fine", "should_trigger": true},
+  {"query": "summarize this test run for the PR description: 412 passed, 9 failed, 31 skipped, 4 flaky. would be nicer to see it as a picture than as numbers", "should_trigger": true},
+  {"query": "here's daily signups for the last 14 days: 42, 51, 38, 60, 72, 68, 44, 47, 55, 61, 79, 85, 80, 52 - is there a trend? draw it so i can eyeball it right in the terminal", "should_trigger": true},
+  {"query": "quick histogram of these response times in ms please: 120 134 98 101 250 99 105 480 111 130 125 97 102 640 118", "should_trigger": true},
+  {"query": "can you plot memory usage over the 10 checkpoints from my soak test: 512, 530, 561, 590, 640, 720, 810, 950, 1180, 1500 (MB)? need to see the shape of the growth, and it has to work over ssh", "should_trigger": true},
+  {"query": "share of revenue by plan: free 0, starter 18%, pro 47%, enterprise 35% - put it in the slack message as a pie or whatever works in plain text", "should_trigger": true},
+  {"query": "compare Q1-Q4 for product A and B side by side (A: 30, 45, 40, 60; B: 35, 50, 55, 70), I'll paste it into the commit body", "should_trigger": true},
+  {"query": "profit by region, some are negative (EMEA +40, APAC -12, LATAM +8, NA -25). I want the losses to jump out - text is fine, it's going in a changelog", "should_trigger": true},
+  {"query": "i have a heatmap-ish thing in mind: errors by weekday and time slot. mon 20 35 80, tue 25 40 90, wed 22 38 85, thu 30 45 95, fri 18 30 60 (morning/afternoon/evening). show it in plain text for the on-call handoff doc", "should_trigger": true},
+
+  {"query": "write a matplotlib script that plots the loss curve from train.log and saves it as loss.png at 300 dpi", "should_trigger": false},
+  {"query": "explain the difference between a histogram and a bar chart to my intern, she keeps mixing them up", "should_trigger": false},
+  {"query": "build me an interactive plotly dashboard of sales by region with dropdown filters and hover tooltips, I'll host it on our intranet", "should_trigger": false},
+  {"query": "write a SQL query (postgres) that gives the top 10 customers by revenue in the last quarter, joined with the accounts table", "should_trigger": false},
+  {"query": "convert this csv to a markdown table so I can drop it in the wiki: name,role,team\\nAna,SRE,Infra\\nBo,Dev,Web", "should_trigger": false},
+  {"query": "the x-axis labels on my recharts BarChart are overlapping when there are more than 8 bars, how do i rotate them 45 degrees", "should_trigger": false},
+  {"query": "generate a cool ascii art banner that says WELCOME for my CLI tool's startup screen, block letters", "should_trigger": false},
+  {"query": "compute the mean, median and p95 of these latencies and tell me if the distribution looks skewed: 120, 134, 98, 101, 250, 99, 105, 480, 111, 130", "should_trigger": false},
+  {"query": "review my pandas code that groups sales by month and computes a rolling 3 month average, I think the window is off by one", "should_trigger": false},
+  {"query": "in my seaborn notebook the boxplot uses the default palette, switch it to a colorblind-safe one and make the whiskers 1.5 IQR", "should_trigger": false}
+]

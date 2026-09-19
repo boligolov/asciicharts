@@ -1,111 +1,173 @@
 # Development
 
-## Build & run
+## Repository layout
 
-Requires Go 1.27+.
-
-```sh
-go build -o ascii-charts-mcp .
-./ascii-charts-mcp
+```
+asciicharts.py          the renderer: one file, standard library only (also shipped inside the skill)
+server/                 the MCP server (installed as the `asciicharts_server` package) — see server/README.md
+skills/asciicharts/     the skill: SKILL.md, scripts/, references/ — see docs/skill.md
+deploy/                 Dockerfile, docker-compose (dev and prod), Caddyfile, .env.example
+tests/                  pytest suite; tests/golden/ pins renderer output; tests/skill_evals/ holds the skill's evals
+scripts/                sync_skill.py, package_skill.py, gallery.py
+docs/                   this file, skill.md
+TODO.md  LICENSE  pyproject.toml
 ```
 
-By default the server speaks MCP over stdio, so it's meant to be launched by an MCP client (Claude Desktop, Claude Code, etc.), not run interactively by hand. Setting the `PORT` environment variable switches it to a long-running HTTP server instead — see [HTTP transport](#http-transport) below.
+## Setup
 
-Run the example gallery (used to generate the examples in the README):
-
-```sh
-go run ./cmd/gallery
-```
-
-Run the tests:
+Python 3.10+ (developed and tested on 3.12).
 
 ```sh
-go test ./...
+python -m venv .venv
+.venv/bin/pip install -e ".[stats,dev]"      # Windows: .venv\Scripts\pip
 ```
+
+`asciicharts.py` itself needs nothing but the standard library — the dependencies (`mcp`, optionally `asyncpg`) are only for the server.
+
+## Run
+
+Render a chart from JSON:
+
+```sh
+echo '{"chartType":"sparkline","series":[{"values":[1,3,2,5]}]}' | python asciicharts.py -
+python scripts/gallery.py            # every chart type and style
+```
+
+Run the MCP server:
+
+```sh
+python -m asciicharts_server              # stdio — meant to be launched by an MCP client (same: asciicharts-mcp)
+PORT=8080 python -m asciicharts_server    # streamable HTTP at :8080/mcp, health check at /healthz
+```
+
+## Tests
+
+```sh
+pytest
+```
+
+- `tests/test_charts.py` — the renderers. `tests/golden/` holds outputs captured from the original Go implementation this project was ported from (the gallery plus a 350-case corpus of random specs and their exact output), so every chart is pinned byte-for-byte. If you change how something is drawn on purpose, regenerate the affected golden files and review the diff.
+- `tests/test_server.py` — the MCP server (`server/`) in-process, over real stdio, and over real HTTP. The tests import the installed `asciicharts_server` package, so run `pip install -e ".[stats,dev]"` first (`tests/conftest.py` says so if you forget).
+- `tests/test_store.py` — the optional statistics store.
+- `tests/test_csv.py` — CSV input (`--csv`).
+- `tests/test_catalog.py` — the chart catalogue (`list_charts` / `--list`) against the renderers.
+- `tests/test_skill.py` — the skill folder: valid frontmatter, self-contained links, the commands `SKILL.md` shows actually run, and its example output is current.
+
+### The skill folder
+
+`skills/asciicharts/` must be self-contained (it is copied, zipped or uploaded on its own), but the renderer and the licence live at the repository root because the MCP server, the tests and pip use them. So the skill holds *copies*: after editing `asciicharts.py` or `LICENSE`, run
+
+```sh
+python scripts/sync_skill.py
+```
+
+`tests/test_skill.py` fails when the copies differ. The docs that ship with the skill (`references/reference.md`, `references/gallery.md`) are edited in place; the gallery is regenerated with `python scripts/gallery.py`.
 
 ## Docker
 
-Build the image:
-
 ```sh
-docker build -t ascii-charts-mcp .
+docker build -f deploy/Dockerfile -t asciicharts .    # from the repository root
 ```
 
-This produces a ~9 MB image (`FROM scratch`, statically linked, no libc). Run it manually with `-i` so the MCP client's stdio actually reaches the container:
+Stdio (default) — run with `-i` so the client's stdio reaches the container:
 
 ```sh
-docker run -i --rm ascii-charts-mcp
+docker run -i --rm asciicharts
 ```
+
+HTTP — set `PORT`:
+
+```sh
+docker run --rm -e PORT=8080 -p 8080:8080 asciicharts
+curl localhost:8080/healthz          # ok
+```
+
+The image has no `curl`; `asciicharts-mcp healthcheck` is a subcommand of the server itself that GETs its own `/healthz` and exits 0/1 (used by the compose files in `deploy/`).
+
+## Production deployment
+
+`deploy/docker-compose.prod.yml` + `deploy/Caddyfile` run the server behind HTTPS on your own domain:
+
+```
+internet ──80/443──▶ Caddy ──▶ web (MCP server, :8080 internal) ─ ─▶ db (Postgres, internal; only if statistics are on)
+```
+
+1. Point your domain's DNS record at the host (ports 80 and 443 must be reachable from the internet).
+2. `cp deploy/.env.example deploy/.env` and set `DOMAIN`. Compose refuses to start without it.
+3. `docker compose -f deploy/docker-compose.prod.yml up -d --build` (from the repository root)
+4. Your MCP endpoint is `https://<DOMAIN>/mcp` (health: `https://<DOMAIN>/healthz`).
+
+To deploy a prebuilt image instead of building on the host, push it to your registry, set `IMAGE=registry.example.com/asciicharts:1.0.0` in `deploy/.env`, and run `docker compose -f deploy/docker-compose.prod.yml pull && docker compose -f deploy/docker-compose.prod.yml up -d`.
+
+What it sets up, and why:
+
+- **Only Caddy is published** (80/443). The server (and Postgres, if you enable [statistics](#statistics-optional-off-by-default)) live on the internal network. This is the main difference from the dev `deploy/docker-compose.yml`, which publishes Postgres on `:5432` with a default password.
+- **Automatic certificates.** Caddy obtains and renews the Let's Encrypt certificate itself; keep the `caddy-data` volume so it isn't re-issued on every deploy. Plain HTTP redirects to HTTPS.
+- **Only `/mcp` and `/healthz` are forwarded**; any other path is a 404 at the proxy. Request bodies over 1 MB get a 413 (the server logs a harmless "client disconnected" when the proxy cuts such a request off).
+- **Hardened container:** read-only filesystem, all Linux capabilities dropped, `no-new-privileges`, non-root user.
+- **No authentication.** The server is meant to be a public utility: both tools are stateless and bounded (see [Limits](../skills/asciicharts/references/reference.md#limits)), and it stores nothing you send — only anonymous usage counters, and only if you configure a database. If you need it private, put access control in front (Caddy `basic_auth`, an IP allow-list, or your platform's ingress).
+- **Host header check off.** The MCP SDK's DNS-rebinding check only makes sense for a server bound to localhost; a public server is reached under your domain name, so it is not enabled.
+
+To try the whole stack locally without a domain, set `DOMAIN=localhost` (Caddy issues a certificate from its own CA, so clients must trust it or skip verification).
 
 ## Using it from an MCP client
 
-Point your client's MCP server config at the built binary:
+Local process (needs the package installed, e.g. `pip install .` or `uvx --from . asciicharts-mcp`):
 
 ```json
-{
-  "mcpServers": {
-    "ascii-charts": {
-      "command": "/path/to/ascii-charts-mcp"
-    }
-  }
-}
+{ "mcpServers": { "asciicharts": { "command": "asciicharts-mcp" } } }
 ```
 
-Or run it through Docker instead of a local binary:
+Through Docker:
 
 ```json
-{
-  "mcpServers": {
-    "ascii-charts": {
-      "command": "docker",
-      "args": ["run", "-i", "--rm", "ascii-charts-mcp"]
-    }
-  }
-}
+{ "mcpServers": { "asciicharts": { "command": "docker", "args": ["run", "-i", "--rm", "asciicharts"] } } }
 ```
 
-If it's running as the HTTP server described below, point a client that supports the streamable-HTTP MCP transport at its URL instead of launching a process:
+Against a running HTTP server:
 
 ```json
-{
-  "mcpServers": {
-    "ascii-charts": {
-      "url": "http://localhost:8080/mcp"
-    }
-  }
-}
+{ "mcpServers": { "asciicharts": { "url": "http://localhost:8080/mcp" } } }
 ```
 
 ## HTTP transport
 
-Setting the `PORT` environment variable (e.g. `PORT=8080`) switches the server from its default stdio mode to a long-running HTTP server, so one running instance can serve multiple clients over the network instead of a client launching its own process per session:
+Setting `PORT` switches the server from stdio to a long-running HTTP server, so one instance can serve many clients:
 
-- `/mcp` — the [streamable-HTTP MCP transport](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#streamable-http); both `render_chart` and `feedback` work exactly the same as over stdio
-- `/healthz` — plain 200 OK, for container/orchestrator health checks
+- `/mcp` — the [streamable-HTTP MCP transport](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#streamable-http); `list_charts` and `render_chart` behave exactly as over stdio
+- `/healthz` — plain `200 ok`, for container/orchestrator probes
 
-The handler runs in `Stateless` mode (see [`StreamableHTTPOptions`](https://pkg.go.dev/github.com/modelcontextprotocol/go-sdk/mcp#StreamableHTTPOptions)): no `Mcp-Session-Id` tracking, no server-initiated requests — this server never needs to push anything to a client outside of answering a tool call, so there's no session state worth keeping between requests. stdio mode is unaffected either way; `PORT` unset (the default) still gets you the original per-process stdio server.
+It runs in **stateless** mode: no session tracking, no server-initiated messages — the server never needs to push anything outside of answering a tool call, so there is no session state worth keeping between requests. It binds `0.0.0.0` and does not enable the SDK's DNS-rebinding (Host header) check, which assumes a localhost-only server; put it behind your reverse proxy/ingress and restrict access there.
 
-The image has no shell (`FROM scratch`), so its own `docker healthcheck` can't run `curl`/`wget` — instead, `ascii-charts-mcp healthcheck` is a subcommand of the same binary that GETs its own `/healthz` and exits 0/1 accordingly (see `docker-compose.yml`'s `web` service).
+## Statistics (optional, off by default)
 
-## Statistics database (optional)
+The server can record anonymous usage statistics in Postgres. **It does nothing of the kind unless you turn it on**, and it needs both settings:
 
-If the `DATABASE_URL` environment variable is set (a standard Postgres DSN, e.g. `postgres://user:pass@host:5432/dbname?sslmode=disable`), the server connects to Postgres on startup, creates its schema if missing (`chart_events`, `feedback` — see `internal/store/store.go`), and records:
+| variable | value |
+|---|---|
+| `ASCIICHARTS_STATS` | `on` (also `1`, `true`, `yes`) — anything else, or unset, means off |
+| `DATABASE_URL` | a standard Postgres DSN, e.g. `postgres://user:pass@host:5432/db` |
 
-- one row per `render_chart` call: chart type, style, mode, border, color on/off, series count, bucketed point-count and output-size, success/failure, and the error message on failure
-- one row per `feedback` call: the message text
+With both set, the server connects on startup, creates its schema if missing (`chart_events` — see `server/store.py`) and records one row per `render_chart` call: chart type, style, mode, border, color on/off, series count, bucketed point count and output size, success/failure, and the error message on failure.
 
-It never records the actual data you chart — no `values`, `labels`, or `title` content. If `DATABASE_URL` is unset, or the database is unreachable at startup, the server logs a warning and runs exactly the same without it — a database is always optional, never required.
-
-`docker-compose.yml` brings up the full stack — Postgres plus the HTTP server from above, both on one named network (`ascii-charts-mcp`) so `web` reaches `db` by service name — with sensible defaults (copy `.env.example` to `.env` to override the Postgres credentials):
+It never records the data you chart — no `values`, `labels` or `title`. Statistics can never stop the server from working: if the flag is on but `DATABASE_URL` is missing, `asyncpg` isn't installed, or the database is unreachable, the server logs a warning and runs without them; a failed insert is logged and ignored. The startup log says which way it went (`usage statistics: enabled` / `disabled`).
 
 ```sh
-docker compose up -d
+ASCIICHARTS_STATS=on DATABASE_URL=postgres://user:pass@localhost:5432/db python -m asciicharts_server
 ```
 
-That publishes `db` on `localhost:5432` and `web` on `localhost:8080` (`/mcp`, `/healthz`), and `web`'s `DATABASE_URL` is already wired to `db`. Point an HTTP-capable MCP client at `http://localhost:8080/mcp` (see above) and it's fully working, stats included — nothing else to configure.
-
-If you'd rather run the server yourself (native binary, or your own `docker run -i` in stdio mode) against just the database, bring up `db` on its own and set `DATABASE_URL` to its published `localhost:5432`:
+**Local dev stack.** `deploy/docker-compose.yml` exists to exercise this, so it starts Postgres and turns statistics **on** (set `ASCIICHARTS_STATS=off` to run it without). Copy `deploy/.env.example` to `deploy/.env` to override the Postgres credentials:
 
 ```sh
-docker compose up -d db
+docker compose -f deploy/docker-compose.yml up -d --build
+```
+
+That publishes `db` on `localhost:5432` and `web` on `localhost:8080` (`/mcp`, `/healthz`), with `web`'s `DATABASE_URL` already wired to `db`. To run the server yourself against just the database: `docker compose -f deploy/docker-compose.yml up -d db`, then set the two variables above.
+
+**Production stack.** `deploy/docker-compose.prod.yml` starts only Caddy and the server by default — no database, no statistics. To enable them, set in `deploy/.env`:
+
+```
+ASCIICHARTS_STATS=on
+COMPOSE_PROFILES=stats        # starts the db service
+POSTGRES_PASSWORD=<strong secret>
 ```

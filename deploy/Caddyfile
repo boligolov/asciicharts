@@ -1,0 +1,26 @@
+# Reverse proxy for docker-compose.prod.yml. {$DOMAIN} comes from the environment;
+# Caddy gets and renews the HTTPS certificate for it automatically and redirects
+# plain HTTP to HTTPS.
+#
+# Only the two paths the server actually has are forwarded; everything else is a 404
+# here and never reaches the application.
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Chart specs are small; don't let anyone stream megabytes at the server.
+	request_body {
+		max_size 1MB
+	}
+
+	@app path /mcp /mcp/* /healthz
+	handle @app {
+		reverse_proxy web:8080 {
+			# MCP replies may be a server-sent event stream: don't buffer it.
+			flush_interval -1
+		}
+	}
+
+	handle {
+		respond "not found" 404
+	}
+}

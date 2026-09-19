@@ -1,3 +1,13 @@
 .git
+.gitattributes
 .idea
-*.md
+.venv
+__pycache__
+*.pyc
+.pytest_cache
+.env
+ref
+tests
+docs
+deploy
+skills

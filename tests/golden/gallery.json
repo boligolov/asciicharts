@@ -1,0 +1,1266 @@
+[
+ {
+  "name": "sparkline",
+  "spec": {
+   "chartType": "sparkline",
+   "border": "none",
+   "series": [
+    {
+     "name": "latency",
+     "values": [
+      4,
+      6,
+      5,
+      9,
+      3,
+      7,
+      8,
+      2,
+      6,
+      9,
+      4
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "vbar (grouped)",
+  "spec": {
+   "chartType": "vbar",
+   "title": "Revenue by quarter",
+   "border": "rounded",
+   "height": 10,
+   "series": [
+    {
+     "name": "2025",
+     "values": [
+      30,
+      45,
+      40,
+      60
+     ]
+    },
+    {
+     "name": "2026",
+     "values": [
+      35,
+      50,
+      55,
+      70
+     ]
+    }
+   ],
+   "labels": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4"
+   ]
+  }
+ },
+ {
+  "name": "vbar (wide)",
+  "spec": {
+   "chartType": "vbar",
+   "title": "Revenue by quarter (width: 60)",
+   "border": "rounded",
+   "height": 10,
+   "width": 60,
+   "series": [
+    {
+     "name": "2025",
+     "values": [
+      30,
+      45,
+      40,
+      60
+     ]
+    },
+    {
+     "name": "2026",
+     "values": [
+      35,
+      50,
+      55,
+      70
+     ]
+    }
+   ],
+   "labels": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4"
+   ]
+  }
+ },
+ {
+  "name": "vbar (stacked)",
+  "spec": {
+   "chartType": "vbar",
+   "title": "Revenue by quarter (stacked)",
+   "border": "double",
+   "stacked": true,
+   "height": 10,
+   "labels": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4"
+   ],
+   "series": [
+    {
+     "name": "Product",
+     "values": [
+      30,
+      45,
+      40,
+      60
+     ]
+    },
+    {
+     "name": "Services",
+     "values": [
+      15,
+      20,
+      18,
+      25
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "vbar (halftone)",
+  "spec": {
+   "chartType": "vbar",
+   "title": "Revenue by quarter (halftone)",
+   "border": "rounded",
+   "height": 10,
+   "style": "halftone",
+   "series": [
+    {
+     "name": "2025",
+     "values": [
+      30,
+      45,
+      40,
+      60
+     ]
+    },
+    {
+     "name": "2026",
+     "values": [
+      35,
+      50,
+      55,
+      70
+     ]
+    }
+   ],
+   "labels": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4"
+   ]
+  }
+ },
+ {
+  "name": "vbar (ascii)",
+  "spec": {
+   "chartType": "vbar",
+   "title": "Revenue by quarter (ascii)",
+   "border": "rounded",
+   "height": 10,
+   "style": "ascii",
+   "series": [
+    {
+     "name": "2025",
+     "values": [
+      30,
+      45,
+      40,
+      60
+     ]
+    },
+    {
+     "name": "2026",
+     "values": [
+      35,
+      50,
+      55,
+      70
+     ]
+    }
+   ],
+   "labels": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4"
+   ]
+  }
+ },
+ {
+  "name": "vbar (diverging)",
+  "spec": {
+   "chartType": "vbar",
+   "title": "Subscriber growth YoY (diverging)",
+   "border": "rounded",
+   "height": 10,
+   "style": "ascii",
+   "series": [
+    {
+     "name": "Satellite TV",
+     "values": [
+      -6,
+      -8,
+      -5,
+      -9,
+      -7,
+      -4,
+      -8
+     ]
+    },
+    {
+     "name": "Third-party",
+     "values": [
+      3,
+      5,
+      2,
+      8,
+      4,
+      6,
+      9
+     ]
+    }
+   ],
+   "labels": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4",
+    "Q5",
+    "Q6",
+    "Q7"
+   ]
+  }
+ },
+ {
+  "name": "hbar (single)",
+  "spec": {
+   "chartType": "hbar",
+   "title": "Browser share",
+   "border": "light",
+   "series": [
+    {
+     "values": [
+      62,
+      21,
+      12,
+      5
+     ]
+    }
+   ],
+   "labels": [
+    "Chrome",
+    "Firefox",
+    "Safari",
+    "Other"
+   ]
+  }
+ },
+ {
+  "name": "hbar (stacked)",
+  "spec": {
+   "chartType": "hbar",
+   "title": "Revenue by region (stacked)",
+   "border": "light",
+   "stacked": true,
+   "labels": [
+    "EMEA",
+    "APAC",
+    "Americas"
+   ],
+   "series": [
+    {
+     "name": "Product",
+     "values": [
+      40,
+      25,
+      55
+     ]
+    },
+    {
+     "name": "Services",
+     "values": [
+      15,
+      20,
+      18
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "hbar (diverging)",
+  "spec": {
+   "chartType": "hbar",
+   "title": "Estimated sales growth (diverging)",
+   "border": "light",
+   "series": [
+    {
+     "values": [
+      -8.2,
+      4.9,
+      27.6,
+      -42.8,
+      7.8
+     ]
+    }
+   ],
+   "labels": [
+    "ABB",
+    "Aetna",
+    "Apple",
+    "Bankers Pet.",
+    "Biogen"
+   ]
+  }
+ },
+ {
+  "name": "hbar (ascii, grouped)",
+  "spec": {
+   "chartType": "hbar",
+   "title": "Share of analysts' ratings that are a buy",
+   "border": "light",
+   "style": "ascii",
+   "labels": [
+    "04/01/15",
+    "06/01/15",
+    "08/01/15",
+    "10/01/15"
+   ],
+   "series": [
+    {
+     "name": "Shell",
+     "values": [
+      22,
+      25,
+      24,
+      30
+     ]
+    },
+    {
+     "name": "Total",
+     "values": [
+      34,
+      30,
+      32,
+      30
+     ]
+    },
+    {
+     "name": "BP",
+     "values": [
+      15,
+      12,
+      18,
+      22
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "hbar (halftone, stacked)",
+  "spec": {
+   "chartType": "hbar",
+   "title": "Revenue by region (halftone)",
+   "border": "light",
+   "stacked": true,
+   "style": "halftone",
+   "labels": [
+    "EMEA",
+    "APAC",
+    "Americas"
+   ],
+   "series": [
+    {
+     "name": "Product",
+     "values": [
+      40,
+      25,
+      55
+     ]
+    },
+    {
+     "name": "Services",
+     "values": [
+      15,
+      20,
+      18
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "hbar (ascii, single)",
+  "spec": {
+   "chartType": "hbar",
+   "title": "Data center switching market share",
+   "border": "light",
+   "style": "ascii",
+   "series": [
+    {
+     "values": [
+      61,
+      9,
+      6,
+      4,
+      4,
+      4,
+      3,
+      2
+     ]
+    }
+   ],
+   "labels": [
+    "Cisco",
+    "HPE",
+    "Arista",
+    "Huawei",
+    "Juniper",
+    "Dell",
+    "Lenovo",
+    "Brocade"
+   ]
+  }
+ },
+ {
+  "name": "line (cell)",
+  "spec": {
+   "chartType": "line",
+   "title": "CPU load",
+   "border": "light",
+   "height": 8,
+   "series": [
+    {
+     "values": [
+      12,
+      18,
+      15,
+      30,
+      42,
+      38,
+      50,
+      45,
+      60,
+      55,
+      48,
+      35
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "line (threshold + points)",
+  "spec": {
+   "chartType": "line",
+   "title": "Response time vs SLA",
+   "border": "light",
+   "height": 8,
+   "threshold": 50,
+   "showPoints": true,
+   "series": [
+    {
+     "values": [
+      20,
+      25,
+      22,
+      30,
+      45,
+      38,
+      55,
+      60,
+      48,
+      35,
+      30,
+      28
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "line (dotted, Bloomberg-style)",
+  "spec": {
+   "chartType": "line",
+   "title": "Apple revenue",
+   "border": "light",
+   "height": 10,
+   "width": 50,
+   "style": "dotted",
+   "series": [
+    {
+     "name": "iPhone",
+     "values": [
+      15,
+      16,
+      17.5,
+      19,
+      20,
+      21.5,
+      23,
+      24.5,
+      26,
+      27.5,
+      29,
+      30
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "line (braille, two series)",
+  "spec": {
+   "chartType": "line",
+   "title": "Temperature: forecast vs actual",
+   "border": "heavy",
+   "mode": "braille",
+   "width": 50,
+   "height": 10,
+   "series": [
+    {
+     "name": "forecast",
+     "values": [
+      10,
+      12,
+      15,
+      14,
+      18,
+      20,
+      19,
+      17,
+      15,
+      13,
+      12,
+      11
+     ]
+    },
+    {
+     "name": "actual",
+     "values": [
+      11,
+      13,
+      14,
+      16,
+      17,
+      19,
+      21,
+      18,
+      16,
+      14,
+      13,
+      10
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "area (single series)",
+  "spec": {
+   "chartType": "area",
+   "title": "Actively managed fund flows",
+   "border": "light",
+   "height": 8,
+   "series": [
+    {
+     "values": [
+      20,
+      10,
+      -20,
+      -60,
+      -120,
+      -180,
+      -260,
+      -340,
+      -420,
+      -520,
+      -600
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "area (stacked)",
+  "spec": {
+   "chartType": "area",
+   "title": "Mobile data traffic (stacked)",
+   "border": "light",
+   "height": 8,
+   "stacked": true,
+   "style": "ascii",
+   "series": [
+    {
+     "name": "Other",
+     "values": [
+      1,
+      2,
+      3,
+      5,
+      8,
+      12
+     ]
+    },
+    {
+     "name": "Video",
+     "values": [
+      0.2,
+      0.4,
+      0.8,
+      1.5,
+      2.5,
+      4
+     ]
+    }
+   ],
+   "labels": [
+    "2014",
+    "2015",
+    "2016",
+    "2017",
+    "2018",
+    "2019"
+   ]
+  }
+ },
+ {
+  "name": "dotplot",
+  "spec": {
+   "chartType": "dotplot",
+   "title": "2016 apartment rent growth forecast",
+   "border": "light",
+   "width": 30,
+   "labels": [
+    "Oakland",
+    "San Francisco",
+    "Seattle",
+    "Denver",
+    "Chicago",
+    "Detroit"
+   ],
+   "series": [
+    {
+     "values": [
+      5.2,
+      4.8,
+      4.4,
+      3.6,
+      2.8,
+      2.2
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "scatter (cell, two groups)",
+  "spec": {
+   "chartType": "scatter",
+   "title": "Height vs weight",
+   "border": "light",
+   "width": 40,
+   "height": 14,
+   "series": [
+    {
+     "name": "group A",
+     "points": [
+      {
+       "x": 158,
+       "y": 52
+      },
+      {
+       "x": 160,
+       "y": 55
+      },
+      {
+       "x": 162,
+       "y": 54
+      },
+      {
+       "x": 165,
+       "y": 60
+      },
+      {
+       "x": 167,
+       "y": 58
+      },
+      {
+       "x": 170,
+       "y": 65
+      },
+      {
+       "x": 172,
+       "y": 68
+      },
+      {
+       "x": 163,
+       "y": 62
+      }
+     ]
+    },
+    {
+     "name": "group B",
+     "points": [
+      {
+       "x": 175,
+       "y": 80
+      },
+      {
+       "x": 178,
+       "y": 78
+      },
+      {
+       "x": 180,
+       "y": 85
+      },
+      {
+       "x": 183,
+       "y": 88
+      },
+      {
+       "x": 185,
+       "y": 90
+      },
+      {
+       "x": 182,
+       "y": 82
+      },
+      {
+       "x": 188,
+       "y": 92
+      },
+      {
+       "x": 177,
+       "y": 86
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "scatter (quad, colored groups)",
+  "spec": {
+   "chartType": "scatter",
+   "title": "Height vs weight",
+   "border": "light",
+   "mode": "quad",
+   "width": 40,
+   "height": 14,
+   "useColor": "on",
+   "series": [
+    {
+     "name": "group A",
+     "points": [
+      {
+       "x": 158,
+       "y": 52
+      },
+      {
+       "x": 160,
+       "y": 55
+      },
+      {
+       "x": 162,
+       "y": 54
+      },
+      {
+       "x": 165,
+       "y": 60
+      },
+      {
+       "x": 167,
+       "y": 58
+      },
+      {
+       "x": 170,
+       "y": 65
+      },
+      {
+       "x": 172,
+       "y": 68
+      },
+      {
+       "x": 163,
+       "y": 62
+      }
+     ]
+    },
+    {
+     "name": "group B",
+     "points": [
+      {
+       "x": 175,
+       "y": 80
+      },
+      {
+       "x": 178,
+       "y": 78
+      },
+      {
+       "x": 180,
+       "y": 85
+      },
+      {
+       "x": 183,
+       "y": 88
+      },
+      {
+       "x": 185,
+       "y": 90
+      },
+      {
+       "x": 182,
+       "y": 82
+      },
+      {
+       "x": 188,
+       "y": 92
+      },
+      {
+       "x": 177,
+       "y": 86
+      }
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "dual_axis",
+  "spec": {
+   "chartType": "dual_axis",
+   "title": "Temperature (left) vs humidity (right)",
+   "border": "light",
+   "height": 8,
+   "series": [
+    {
+     "name": "Temp °C",
+     "values": [
+      10,
+      12,
+      15,
+      14,
+      18,
+      20,
+      19
+     ]
+    },
+    {
+     "name": "Humidity %",
+     "values": [
+      80,
+      78,
+      65,
+      70,
+      60,
+      55,
+      58
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "pie",
+  "spec": {
+   "chartType": "pie",
+   "title": "Browser share",
+   "border": "rounded",
+   "width": 32,
+   "height": 16,
+   "series": [
+    {
+     "name": "Chrome",
+     "values": [
+      62
+     ]
+    },
+    {
+     "name": "Firefox",
+     "values": [
+      21
+     ]
+    },
+    {
+     "name": "Safari",
+     "values": [
+      12
+     ]
+    },
+    {
+     "name": "Other",
+     "values": [
+      5
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "histogram",
+  "spec": {
+   "chartType": "histogram",
+   "title": "Response times (ms)",
+   "border": "double",
+   "bins": 6,
+   "series": [
+    {
+     "values": [
+      12,
+      15,
+      14,
+      18,
+      20,
+      22,
+      21,
+      25,
+      30,
+      28,
+      35,
+      40,
+      55,
+      60,
+      18,
+      19,
+      22
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "heatmap",
+  "spec": {
+   "chartType": "heatmap",
+   "title": "Traffic by hour",
+   "border": "light",
+   "labels": [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri"
+   ],
+   "series": [
+    {
+     "name": "9am",
+     "values": [
+      20,
+      35,
+      25,
+      40,
+      30
+     ]
+    },
+    {
+     "name": "1pm",
+     "values": [
+      55,
+      60,
+      58,
+      62,
+      50
+     ]
+    },
+    {
+     "name": "5pm",
+     "values": [
+      80,
+      70,
+      90,
+      85,
+      95
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "boxplot",
+  "spec": {
+   "chartType": "boxplot",
+   "title": "Test scores by class",
+   "border": "light",
+   "width": 50,
+   "series": [
+    {
+     "name": "Class A",
+     "values": [
+      55,
+      60,
+      62,
+      65,
+      70,
+      72,
+      75,
+      80,
+      85,
+      95
+     ]
+    },
+    {
+     "name": "Class B",
+     "values": [
+      40,
+      50,
+      58,
+      60,
+      63,
+      65,
+      68,
+      70,
+      78,
+      99
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "vbar (stacked, diverging)",
+  "spec": {
+   "chartType": "vbar",
+   "title": "Cash flow by quarter (stacked)",
+   "border": "rounded",
+   "height": 12,
+   "stacked": true,
+   "style": "ascii",
+   "labels": [
+    "Q1",
+    "Q2",
+    "Q3",
+    "Q4"
+   ],
+   "series": [
+    {
+     "name": "Product",
+     "values": [
+      30,
+      45,
+      25,
+      60
+     ]
+    },
+    {
+     "name": "Services",
+     "values": [
+      15,
+      20,
+      18,
+      25
+     ]
+    },
+    {
+     "name": "Refunds",
+     "values": [
+      -12,
+      -20,
+      -30,
+      -5
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "hbar (stacked, diverging)",
+  "spec": {
+   "chartType": "hbar",
+   "title": "Revenue vs refunds by region",
+   "border": "light",
+   "stacked": true,
+   "width": 40,
+   "labels": [
+    "EMEA",
+    "APAC",
+    "Americas"
+   ],
+   "series": [
+    {
+     "name": "Product",
+     "values": [
+      40,
+      25,
+      55
+     ]
+    },
+    {
+     "name": "Refunds",
+     "values": [
+      -15,
+      -20,
+      -8
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "area (stacked, diverging)",
+  "spec": {
+   "chartType": "area",
+   "title": "Inflows vs outflows",
+   "border": "light",
+   "height": 9,
+   "width": 40,
+   "stacked": true,
+   "style": "ascii",
+   "series": [
+    {
+     "name": "In",
+     "values": [
+      1,
+      3,
+      5,
+      4,
+      6
+     ]
+    },
+    {
+     "name": "Out",
+     "values": [
+      -1,
+      -2,
+      -4,
+      -3,
+      -1
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "name": "hbar (ascii, 12 series, stacked)",
+  "spec": {
+   "chartType": "hbar",
+   "title": "Traffic by channel (12 series)",
+   "border": "light",
+   "style": "ascii",
+   "stacked": true,
+   "width": 48,
+   "labels": [
+    "EMEA",
+    "APAC",
+    "Americas"
+   ],
+   "series": [
+    {
+     "name": "Direct",
+     "values": [
+      9,
+      9,
+      9
+     ]
+    },
+    {
+     "name": "Search",
+     "values": [
+      9,
+      11,
+      10
+     ]
+    },
+    {
+     "name": "Email",
+     "values": [
+      9,
+      8,
+      11
+     ]
+    },
+    {
+     "name": "Social",
+     "values": [
+      10,
+      11,
+      13
+     ]
+    },
+    {
+     "name": "Referral",
+     "values": [
+      6,
+      8,
+      7
+     ]
+    },
+    {
+     "name": "Ads",
+     "values": [
+      7,
+      6,
+      9
+     ]
+    },
+    {
+     "name": "Affiliate",
+     "values": [
+      7,
+      8,
+      10
+     ]
+    },
+    {
+     "name": "Video",
+     "values": [
+      8,
+      6,
+      5
+     ]
+    },
+    {
+     "name": "Podcast",
+     "values": [
+      4,
+      8,
+      6
+     ]
+    },
+    {
+     "name": "Events",
+     "values": [
+      5,
+      6,
+      8
+     ]
+    },
+    {
+     "name": "Print",
+     "values": [
+      5,
+      3,
+      9
+     ]
+    },
+    {
+     "name": "Other",
+     "values": [
+      6,
+      6,
+      4
+     ]
+    }
+   ]
+  }
+ }
+]
