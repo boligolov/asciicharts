@@ -236,19 +236,19 @@ With more than one series, each gets its own shade (`█`, `▓`, `▒`, …) ev
 ╭────────────────────────────╮
 │ Revenue by quarter (ascii) │
 ├────────────────────────────┤
-│           X                │
-│          #X                │
-│        X #X                │
-│     X  X #X                │
-│    #X #X #X                │
-│  X #X #X #X                │
-│ #X #X #X #X                │
-│ #X #X #X #X                │
-│ #X #X #X #X                │
-│ #X #X #X #X                │
+│ ,, ,, ,, ,@                │
+│ ,, ,, ,, #@                │
+│ ,, ,, ,@ #@                │
+│ ,, ,@ ,@ #@                │
+│ ,, #@ #@ #@                │
+│ ,@ #@ #@ #@                │
+│ #@ #@ #@ #@                │
+│ #@ #@ #@ #@                │
+│ #@ #@ #@ #@                │
+│ #@ #@ #@ #@                │
 │ Q1 Q2 Q3 Q4                │
 │                            │
-│ # 2025   X 2026            │
+│ # 2025   @ 2026            │
 ╰────────────────────────────╯
 ```
 
@@ -275,19 +275,19 @@ Any negative value switches vbar/hbar into a **diverging** chart: instead of eve
 ╭───────────────────────────────────╮
 │ Subscriber growth YoY (diverging) │
 ├───────────────────────────────────┤
-│                    X              │
-│           X     X  X              │
-│     X     X     X  X              │
-│  X  X  X  X  X  X  X              │
-│  X  X  X  X  X  X  X              │
-│ #X-#X-#X-#X-#X-#X-#X              │
+│                    @              │
+│           @     @  @              │
+│     @     @     @  @              │
+│  @  @  @  @  @  @  @              │
+│  @  @  @  @  @  @  @              │
+│ #@-#@-#@-#@-#@-#@-#@              │
 │ #  #  #  #  #  #  #               │
 │ #  #  #  #  #  #  #               │
 │ #  #     #  #     #               │
 │    #     #        #               │
 │ Q1 Q2 Q3 Q4 Q5 Q6 Q7              │
 │                                   │
-│ # Satellite TV   X Third-party    │
+│ # Satellite TV   @ Third-party    │
 ╰───────────────────────────────────╯
 ```
 
@@ -348,21 +348,21 @@ With `stacked: true`, positive values stack upward from the zero baseline and ne
 ╭────────────────────────────────────╮
 │   Cash flow by quarter (stacked)   │
 ├────────────────────────────────────┤
-│          X                         │
-│          X                         │
-│    X     X                         │
-│    X     #                         │
-│ X  #  X  #                         │
-│ X  #  X  #                         │
+│          @                         │
+│          @                         │
+│    @     @                         │
+│    @     #                         │
+│ @  #  @  #                         │
+│ @  #  @  #                         │
 │ #  #  #  #                         │
 │ #  #  #  #                         │
 │ #  #  #  #                         │
-│ H  H  H  H                         │
-│    H  H                            │
-│       H                            │
+│ %  %  %  %                         │
+│    %  %                            │
+│       %                            │
 │ Q1 Q2 Q3 Q4                        │
 │                                    │
-│ # Product   X Services   H Refunds │
+│ # Product   @ Services   % Refunds │
 ╰────────────────────────────────────╯
 ```
 
@@ -510,13 +510,13 @@ Single-series bars all use the same glyph (`#`, the densest in the ramp); groupe
 │          Data center switching market share           │
 ├───────────────────────────────────────────────────────┤
 │ Cisco   | ######################################## 61 │
-│ HPE     | ######                                   9  │
-│ Arista  | ####                                     6  │
-│ Huawei  | ###                                      4  │
-│ Juniper | ###                                      4  │
-│ Dell    | ###                                      4  │
-│ Lenovo  | ##                                       3  │
-│ Brocade | #                                        2  │
+│ HPE     | ######,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 9  │
+│ Arista  | ####,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 6  │
+│ Huawei  | ###,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 4  │
+│ Juniper | ###,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 4  │
+│ Dell    | ###,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 4  │
+│ Lenovo  | ##,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 3  │
+│ Brocade | #,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 2  │
 └───────────────────────────────────────────────────────┘
 ```
 
@@ -540,24 +540,24 @@ Single-series bars all use the same glyph (`#`, the densest in the ramp); groupe
 │       Share of analysts' ratings that are a buy       │
 ├───────────────────────────────────────────────────────┤
 │ 04/01/15                                              │
-│   Shell | ##########################               22 │
-│   Total | XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX 34 │
-│   BP    | HHHHHHHHHHHHHHHHHH                       15 │
+│   Shell | ##########################,,,,,,,,,,,,,, 22 │
+│   Total | @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ 34 │
+│   BP    | %%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,, 15 │
 │                                                       │
 │ 06/01/15                                              │
-│   Shell | #############################            25 │
-│   Total | XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX      30 │
-│   BP    | HHHHHHHHHHHHHH                           12 │
+│   Shell | #############################,,,,,,,,,,, 25 │
+│   Total | @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@,,,,, 30 │
+│   BP    | %%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,,,,,,,,, 12 │
 │                                                       │
 │ 08/01/15                                              │
-│   Shell | ############################             24 │
-│   Total | XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX   32 │
-│   BP    | HHHHHHHHHHHHHHHHHHHHH                    18 │
+│   Shell | ############################,,,,,,,,,,,, 24 │
+│   Total | @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@,, 32 │
+│   BP    | %%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,,,,,,, 18 │
 │                                                       │
 │ 10/01/15                                              │
-│   Shell | ###################################      30 │
-│   Total | XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX      30 │
-│   BP    | HHHHHHHHHHHHHHHHHHHHHHHHHH               22 │
+│   Shell | ###################################,,,,, 30 │
+│   Total | @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@,,,,, 30 │
+│   BP    | %%%%%%%%%%%%%%%%%%%%%%%%%%,,,,,,,,,,,,,, 22 │
 └───────────────────────────────────────────────────────┘
 ```
 
@@ -573,12 +573,12 @@ Past eight series the ramp continues with heavier and lighter characters, so a d
 ┌───────────────────────────────────────────────────────────────────────────────────────────────────┐
 │                                  Traffic by channel (12 series)                                   │
 ├───────────────────────────────────────────────────────────────────────────────────────────────────┤
-│ EMEA     | ####XXXXHHHHWWWWW===:::|||....@@%%%&&$$$         85                                    │
-│ APAC     | ####XXXXXHHHHWWWWW====:::||||...@@@@%%%&$$$      90                                    │
-│ Americas | ####XXXXXHHHHHWWWWWW===::::|||||...@@@%%%%&&&&$$ 101                                   │
+│ EMEA     | ####@@@@%%%%&&&&&$$$WWWMMMNNNNHHDDDGGUUU         85                                    │
+│ APAC     | ####@@@@@%%%%&&&&&$$$$WWWMMMMNNNHHHHDDDGUUU      90                                    │
+│ Americas | ####@@@@@%%%%%&&&&&&$$$WWWWMMMMMNNNHHHDDDDGGGGUU 101                                   │
 │                                                                                                   │
-│ # Direct   X Search   H Email   W Social   = Referral   : Ads   | Affiliate   . Video   @ Podcast │
-│ % Events   & Print   $ Other                                                                      │
+│ # Direct   @ Search   % Email   & Social   $ Referral   W Ads   M Affiliate   N Video   H Podcast │
+│ D Events   G Print   U Other                                                                      │
 └───────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 

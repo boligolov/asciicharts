@@ -4,10 +4,8 @@ import re
 
 import pytest
 
-from asciicharts import ASCII_FILLS, AREA_ASCII_FILLS, MAX_LEGEND_WIDTH, render_chart
+from asciicharts import ASCII_FILLS, ASCII_TRACK_FILL, AREA_ASCII_FILLS, MAX_LEGEND_WIDTH, render_chart
 
-ORIGINAL = ["#", "X", "H", "W", "=", ":", "|", "."]
-REQUESTED = ["%", "@", "\\", "/", "&", "$", "!", "M", "N", "D", "O", "U", "S", "G", "Z"]
 N = len(ASCII_FILLS)
 LABELS = ["A", "B", "C"]
 
@@ -18,12 +16,16 @@ def many_series(n=N):
     return [{"name": f"s{i + 1}", "values": [i + 1, n - i, (i * 3) % n + 1]} for i in range(n)]
 
 
-def test_ramp_has_every_requested_glyph_and_keeps_the_original_eight_first():
-    assert ASCII_FILLS[:8] == ORIGINAL
-    assert set(REQUESTED) <= set(ASCII_FILLS)
-    assert len(ASCII_FILLS) == len(set(ASCII_FILLS)) == 8 + len(REQUESTED)
-    assert AREA_ASCII_FILLS[:8] != ORIGINAL  # area keeps its own ordering of the first eight
+def test_ramp_is_one_unified_density_ordered_sequence_of_23_glyphs():
+    """One sequence, not a "core eight + extras" split: '#' leads (it plays the same role FILLS[0]
+    ('█') does — the default single-series bar — and is in fact one of the densest anyway), the
+    rest run dense-to-light so that neighbouring series stay visually distinct at a glance."""
+    assert ASCII_FILLS[0] == "#"
+    assert len(ASCII_FILLS) == len(set(ASCII_FILLS)) == 23
+    assert ASCII_FILLS[-1] == "."  # the lightest mark closes the ramp
+    assert AREA_ASCII_FILLS[1] == ":"  # area swaps in the lighter second glyph for its thin bands
     assert sorted(AREA_ASCII_FILLS) == sorted(ASCII_FILLS)
+    assert ASCII_TRACK_FILL not in ASCII_FILLS  # the track glyph never doubles as a series fill
 
 
 def test_every_glyph_is_printable_ascii_and_not_a_space():
@@ -31,11 +33,11 @@ def test_every_glyph_is_printable_ascii_and_not_a_space():
         assert len(g) == 1 and 32 < ord(g) < 127
 
 
-def test_original_eight_series_output_is_unchanged():
+def test_first_eight_series_get_glyphs_in_ramp_order():
     out = render_chart({"chartType": "hbar", "style": "ascii", "border": "none", "labels": ["A"],
                         "series": [{"name": f"s{i}", "values": [i + 1]} for i in range(8)]})
     fills = [line.split("| ")[1][0] for line in out.split("\n")[1:9]]
-    assert fills == ORIGINAL
+    assert fills == ASCII_FILLS[:8]
 
 
 def bar_glyphs(out):
@@ -51,13 +53,16 @@ def bar_glyphs(out):
 def test_grouped_hbar_gives_each_of_23_series_its_own_glyph():
     out = render_chart({"chartType": "hbar", "style": "ascii", "border": "none", "labels": LABELS,
                         "series": many_series()})
-    assert bar_glyphs(out) == set(ASCII_FILLS)
-    # and each series row uses exactly its own glyph
+    # every fill glyph appears somewhere, plus the comma track trailing the shorter bars
+    assert bar_glyphs(out) - {ASCII_TRACK_FILL} == set(ASCII_FILLS)
+    assert ASCII_TRACK_FILL in bar_glyphs(out)
+    # and each series row uses exactly its own glyph (and, where the bar is short, the track)
     rows = [l for l in out.split("\n") if l.startswith("  s")]
     assert len(rows) == 3 * N
     for i, line in enumerate(rows):
         bar = line.split(" | ", 1)[1].rsplit(" ", 1)[0].strip()
-        assert set(bar) == {ASCII_FILLS[i % N]}, line
+        assert set(bar) <= {ASCII_FILLS[i % N], ASCII_TRACK_FILL}, line
+        assert ASCII_FILLS[i % N] in bar, line
 
 
 def test_stacked_hbar_uses_all_glyphs_in_series_order():
@@ -73,7 +78,8 @@ def test_grouped_vbar_draws_every_glyph():
     out = render_chart({"chartType": "vbar", "style": "ascii", "border": "none", "labels": LABELS,
                         "height": 24, "series": many_series()})
     grid = "\n".join(out.split("\n")[:24])
-    assert set(grid) - {" ", "\n"} == set(ASCII_FILLS)
+    # every fill glyph, plus the comma track above the shorter columns
+    assert set(grid) - {" ", "\n"} == set(ASCII_FILLS) | {ASCII_TRACK_FILL}
 
 
 def test_stacked_vbar_and_area_use_ascii_glyphs_only():
@@ -171,7 +177,8 @@ def test_ascii_style_line_uses_distinct_ascii_glyphs_per_series_and_ascii_marker
     two = [{"name": "a", "values": [1, 4, 2, 6]}, {"name": "b", "values": [6, 2, 5, 1]}]
     out = render_chart({"chartType": "line", "style": "ascii", "border": "none", "height": 8, "series": two})
     body, legend = out.split("\n\n")
-    assert "#" in body and "X" in body and "# a   X b" == legend
+    first, second = ASCII_FILLS[0], ASCII_FILLS[1]
+    assert first in body and second in body and f"{first} a   {second} b" == legend
     out = render_chart({"chartType": "line", "style": "ascii", "border": "none", "showPoints": True, "series": two})
     assert "o" in out and "x" in out and "o a   x b" in out
 

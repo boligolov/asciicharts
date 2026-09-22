@@ -275,20 +275,31 @@ def test_track_covers_the_whole_bar_for_a_zero_value():
     assert "█" not in zero_line and zero_line.count("░") == 40
 
 
-def test_track_is_absent_for_stacked_diverging_ascii_halftone_and_histogram():
+def test_track_is_absent_for_stacked_diverging_halftone_and_histogram():
     common = {"border": "none", "labels": ["a", "b"], "series": [{"values": [10, 4]}]}
     assert "░" not in render_chart({**common, "chartType": "hbar", "stacked": True,
                                     "series": [{"values": [10, 4]}, {"values": [3, 1]}]})
     assert "░" not in render_chart({"chartType": "hbar", "border": "none", "labels": ["a", "b"],
                                     "series": [{"values": [-10, 4]}]})
-    assert "░" not in render_chart({**common, "chartType": "hbar", "style": "ascii"})
-    assert "░" not in render_chart({**common, "chartType": "vbar", "style": "ascii", "height": 5})
     # halftone already tiles "░" as one of its own series shades, but a lone series' unused space
     # must stay blank, not additionally shaded — there is no light-vs-track distinction to make.
     out = render_chart({**common, "chartType": "hbar", "style": "halftone"})
     assert out.split("\n")[1].endswith(" " * 24 + " 4")
     assert "░" not in render_chart({"chartType": "histogram", "border": "none", "bins": 3,
                                     "series": [{"values": [1, 2, 2, 3, 3, 3, 9]}]})
+
+
+def test_ascii_style_gets_its_own_comma_track_never_the_unicode_shade():
+    """style "ascii" gets a track too, but drawn with ',' (ASCII_TRACK_FILL) — a stray, low-ink
+    mark that plain-ASCII output can render — instead of the Unicode '░' every other style uses."""
+    out = render_chart({"chartType": "hbar", "border": "none", "labels": ["a", "b"], "style": "ascii",
+                        "series": [{"values": [10, 4]}]})
+    assert out == "a | ######################################## 10\nb | ################,,,,,,,,,,,,,,,,,,,,,,,, 4"
+    out = render_chart({"chartType": "vbar", "border": "none", "height": 5, "labels": ["a", "b"], "style": "ascii",
+                        "series": [{"values": [10, 4]}]})
+    rows = out.split("\n")[:5]
+    assert [r[0] for r in rows] == ["#", "#", "#", "#", "#"]  # full column: no track needed
+    assert [r[2] for r in rows] == [",", ",", ",", "#", "#"]  # short column: track above the bar
 
 
 def test_track_never_reuses_a_bars_own_fill_glyph():
@@ -304,6 +315,8 @@ def test_track_never_reuses_a_bars_own_fill_glyph():
 def test_track_glyph_is_font_safe():
     import asciicharts
     assert asciicharts.TRACK_FILL in SAFE_FILLS and asciicharts.TRACK_FILL_ALT in SAFE_FILLS
+    assert asciicharts.ASCII_TRACK_FILL not in set(asciicharts.ASCII_FILLS) | set(asciicharts.ASCII_MARKERS)
+    assert ord(asciicharts.ASCII_TRACK_FILL) < 128  # plain ASCII, like every other ascii-style glyph
 
 
 # --- glyphs that survive default fonts ---------------------------------------
