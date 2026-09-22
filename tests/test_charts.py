@@ -256,6 +256,56 @@ def test_style_fine_is_accepted_and_ignored_by_charts_without_bars():
     assert render_chart({**spec, "style": "fine"}) == render_chart(spec)
 
 
+# --- background track (the unused part of a bar, up to the chart's own scale) --------------
+
+def test_track_fills_the_space_after_a_short_bar():
+    out = render_chart({"chartType": "hbar", "border": "none", "labels": ["a", "b"], "series": [{"values": [10, 4]}]})
+    full, short = out.split("\n")
+    assert full == "a │ ████████████████████████████████████████ 10"
+    assert short == "b │ ████████████████░░░░░░░░░░░░░░░░░░░░░░░░ 4"
+    out = render_chart({"chartType": "vbar", "border": "none", "height": 5, "labels": ["a", "b"], "series": [{"values": [10, 4]}]})
+    rows = out.split("\n")[:5]
+    assert [r[0] for r in rows] == ["█", "█", "█", "█", "█"]  # full column: no track needed
+    assert [r[2] for r in rows] == ["░", "░", "░", "█", "█"]  # short column: track above the bar
+
+
+def test_track_covers_the_whole_bar_for_a_zero_value():
+    out = render_chart({"chartType": "hbar", "border": "none", "labels": ["nonzero", "zero"], "series": [{"values": [5, 0]}]})
+    zero_line = out.split("\n")[1]
+    assert "█" not in zero_line and zero_line.count("░") == 40
+
+
+def test_track_is_absent_for_stacked_diverging_ascii_halftone_and_histogram():
+    common = {"border": "none", "labels": ["a", "b"], "series": [{"values": [10, 4]}]}
+    assert "░" not in render_chart({**common, "chartType": "hbar", "stacked": True,
+                                    "series": [{"values": [10, 4]}, {"values": [3, 1]}]})
+    assert "░" not in render_chart({"chartType": "hbar", "border": "none", "labels": ["a", "b"],
+                                    "series": [{"values": [-10, 4]}]})
+    assert "░" not in render_chart({**common, "chartType": "hbar", "style": "ascii"})
+    assert "░" not in render_chart({**common, "chartType": "vbar", "style": "ascii", "height": 5})
+    # halftone already tiles "░" as one of its own series shades, but a lone series' unused space
+    # must stay blank, not additionally shaded — there is no light-vs-track distinction to make.
+    out = render_chart({**common, "chartType": "hbar", "style": "halftone"})
+    assert out.split("\n")[1].endswith(" " * 24 + " 4")
+    assert "░" not in render_chart({"chartType": "histogram", "border": "none", "bins": 3,
+                                    "series": [{"values": [1, 2, 2, 3, 3, 3, 9]}]})
+
+
+def test_track_never_reuses_a_bars_own_fill_glyph():
+    """Grouped vbar's 4th series is drawn in FILLS[3], which is the track glyph itself (░) — the
+    track must fall back to a different shade there so the bar's own end is still visible."""
+    out = render_chart({"chartType": "vbar", "border": "none", "height": 8, "labels": ["a"],
+                        "series": [{"name": f"s{i}", "values": [v]} for i, v in enumerate([10, 10, 10, 4])]})
+    rows = out.split("\n")[:8]
+    fourth_col = [r[3] for r in rows]
+    assert fourth_col[:5] == ["▒"] * 5 and fourth_col[5:] == ["░"] * 3  # ▒ track above, ░ own bar below
+
+
+def test_track_glyph_is_font_safe():
+    import asciicharts
+    assert asciicharts.TRACK_FILL in SAFE_FILLS and asciicharts.TRACK_FILL_ALT in SAFE_FILLS
+
+
 # --- glyphs that survive default fonts ---------------------------------------
 # Verified against the character maps of Consolas and Courier New (the default monospace fonts of many
 # Windows editors). A glyph a font lacks is drawn from another font with a different width, which makes the

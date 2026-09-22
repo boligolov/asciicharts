@@ -34,8 +34,8 @@ python scripts/asciicharts.py --csv latency.csv --chart hbar --values p99 --sort
 │                 Slowest endpoints, p99 ms                 │
 ├───────────────────────────────────────────────────────────┤
 │ /upload   │ ████████████████████████████████████████ 4200 │
-│ /search   │ ██████████████████                       1900 │
-│ /checkout │ █████████                                950  │
+│ /search   │ ██████████████████░░░░░░░░░░░░░░░░░░░░░░ 1900 │
+│ /checkout │ █████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 950  │
 └───────────────────────────────────────────────────────────┘
 ```
 
@@ -101,6 +101,7 @@ spec that made it, is in [references/gallery.md](references/gallery.md) — look
 
 - **Use `"style": "ascii"` when you don't know where the text will be shown.** Default bars use only whole `█` blocks and series use glyphs that even Consolas has, so charts are safe in nearly every font; only `"style": "fine"` bars and sparklines use eighth blocks that some default editor fonts lack, which then substitute them and make the right edge look ragged. The `ascii` style (bars, histogram, area and line charts) draws with plain `# X H W = : | .` — 23 distinct characters, so even a dozen series stay distinguishable — with `|` separators and `+` axis ticks; add `"border": "ascii"` and the whole chart, frame included, is pure ASCII.
 - **Keep it around 60–80 columns** for chat, commit messages and PR text; the default widths already fit.
+- **The `░` behind a bar is normal — it's the rest of the axis, not noise.** hbar/vbar in the default `solid`/`fine` style shade the unused part of each bar up to the chart's own 0..max scale, like a progress-bar track, so a short bar's real size reads at a glance. It's automatic — nothing to set — and absent from stacked/diverging bars, `halftone`, `ascii` and histograms.
 - **Sort and trim before plotting.** A ranking of 40 bars is unreadable; `--sort -x --limit 10` (or sort in your own code) says more than all of them.
 - **Label things.** A `title` and named series cost nothing and remove the guessing; legends appear automatically for several series.
 - **Whole numbers print without decimals, others with two.** Round or scale (thousands, ms→s) yourself if the raw values are noisy.

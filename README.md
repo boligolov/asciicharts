@@ -21,12 +21,12 @@ $ python asciicharts.py --csv latency.csv --chart hbar --values p99 --sort -p99 
 │                 Slowest endpoints, p99 ms                 │
 ├───────────────────────────────────────────────────────────┤
 │ /upload   │ ████████████████████████████████████████ 4200 │
-│ /search   │ ██████████████████                       1900 │
-│ /checkout │ █████████                                950  │
+│ /search   │ ██████████████████░░░░░░░░░░░░░░░░░░░░░░ 1900 │
+│ /checkout │ █████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 950  │
 └───────────────────────────────────────────────────────────┘
 ```
 
-Paste that into a pull request, a Slack thread or a commit body and it lines up — it is just text.
+The light `░` track behind each bar is the rest of the axis — `/checkout` is visibly a fifth of `/upload`, not just "some blank space that might mean anything." Paste that into a pull request, a Slack thread or a commit body and it lines up — it is just text.
 
 ## Why it earns a place in your toolbox
 

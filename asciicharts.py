@@ -200,6 +200,18 @@ SHADES = [" ", "░", "▒", "▓", "█"]
 # from another font with a different width and makes the right edge of the chart ragged.
 FILLS = ["█", "▓", "▒", "░", "▌", "▄", "▐", "▀"]
 HALFTONE_FILLS = ["▓", "▒", "░", "▌", "▄", "▐", "▀", ":"]
+# Background "track" for hbar/vbar bars (solid/fine styles, single-baseline, non-stacked only): the
+# unused part of each bar's own cell run, up to the chart's 0..max scale, shaded like a progress-bar
+# track — so a short bar's true extent against the full axis is visible instead of just fading into
+# blank space. Falls back to the alt (denser) shade on the rare bar whose own fill glyph already is
+# the track glyph (grouped vbar's 4th series, from FILLS above), so a bar's end is never swallowed by
+# a same-glyph background.
+TRACK_FILL = "░"
+TRACK_FILL_ALT = "▒"
+
+
+def _track_glyph(bar_ch: str) -> str:
+    return TRACK_FILL_ALT if bar_ch == TRACK_FILL else TRACK_FILL
 # Per-series glyphs for style "ascii": plain ASCII, so they line up in any font.
 # The first eight are the original Bloomberg-style ramp; the rest only come into
 # play from the 9th series on. They are ordered dense-to-light so that
@@ -684,16 +696,20 @@ def _render_bar(inp):
     # sub-cell precision (eighths) are missing from common default fonts such as Consolas,
     # where they make the right edge of a chart ragged; style "fine" opts back in.
     fine = inp["style"] == "fine"
+    # A background track (see TRACK_FILL) shows each bar's cell run against the full 0..max
+    # scale. Only for the plain single-baseline styles — halftone/ascii already have their own
+    # texture, and stacked/diverging bars have no single "rest of the axis" to shade.
+    track = inp["style"] in ("", "solid", "fine")
     if inp["chartType"] == "vbar":
-        return _render_vbar(labels, names, matrix, inp["width"], height, inp["stacked"], color_on, ramp, fine)
+        return _render_vbar(labels, names, matrix, inp["width"], height, inp["stacked"], color_on, ramp, fine, track)
     if len(names) == 1:
-        return _render_horizontal_bars(labels, matrix[0], width, ramp, fine)
+        return _render_horizontal_bars(labels, matrix[0], width, ramp, fine, track)
     if inp["stacked"]:
         return _render_hbar_stacked(labels, names, matrix, width, color_on, ramp)
-    return _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine)
+    return _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine, track)
 
 
-def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, fine=False):
+def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, fine=False, track=False):
     num_cat, num_series = len(labels), len(matrix)
     gap = 1
     bars_per_group = 1 if stacked else num_series
@@ -788,10 +804,16 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
                         rows = _round(v / max_val * height)
                         if v > 0 and rows == 0:
                             rows = 1  # a non-zero value never disappears
+                        filled = min(rows, height)
                         for w in range(bar_width):
-                            for r in range(min(rows, height)):
-                                grid[height - 1 - r][col_start + w] = ch
-                                cgrid[height - 1 - r][col_start + w] = color
+                            col = col_start + w
+                            for r in range(filled):
+                                grid[height - 1 - r][col] = ch
+                                cgrid[height - 1 - r][col] = color
+                            if track:
+                                pad = _track_glyph(ch)
+                                for r in range(filled, height):
+                                    grid[height - 1 - r][col] = pad
                     else:
                         lo, hi = sorted((zero_row, _y_pixel(v, min_val, max_val, height)))
                         for w in range(bar_width):
@@ -808,9 +830,15 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
                         for r in range(min(full, height)):
                             grid[height - 1 - r][col] = "█"
                             cgrid[height - 1 - r][col] = color
+                        top = min(full, height)
                         if frac > 0 and full < height:
                             grid[height - 1 - full][col] = EIGHTHS_UP[frac]
                             cgrid[height - 1 - full][col] = color
+                            top = full + 1
+                        if track:
+                            pad = _track_glyph("█")
+                            for r in range(top, height):
+                                grid[height - 1 - r][col] = pad
                 else:
                     lo, hi = sorted((zero_row, _y_pixel(v, min_val, max_val, height)))
                     for w in range(bar_width):
@@ -855,13 +883,15 @@ def _diverging_bar_run(zero_col, val_col, width, fill):
     return "".join(row)
 
 
-def _render_bar_run(length: float, max_width: int, fill, fine=False) -> str:
+def _render_bar_run(length: float, max_width: int, fill, fine=False, track=False) -> str:
     length = max(length, 0)
     if fill or not fine:
+        ch = fill or "█"
         full = min(_round(length), max_width)
         if length > 0 and full == 0:
             full = 1  # a non-zero value never disappears
-        return (fill or "█") * full + " " * (max_width - full)
+        pad = _track_glyph(ch) if track else " "
+        return ch * full + pad * (max_width - full)
     full = min(int(length), max_width)
     frac = length - full
     s = EIGHTHS_LEFT[8] * full
@@ -870,10 +900,11 @@ def _render_bar_run(length: float, max_width: int, fill, fine=False) -> str:
         if idx > 0:
             s += EIGHTHS_LEFT[idx]
             full += 1
-    return s + " " * (max_width - full)
+    pad = _track_glyph("█") if track else " "
+    return s + pad * (max_width - full)
 
 
-def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=False):
+def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=False, track=False):
     min_val = max_val = 0.0
     for row in matrix:
         for v in row:
@@ -894,7 +925,7 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=Fals
                 val_col = _round((v - min_val) / (max_val - min_val) * width)
                 bar = _diverging_bar_run(zero_col, val_col, width, fill or "█")
             else:
-                bar = _render_bar_run(v / max_val * width, width, fill, fine)
+                bar = _render_bar_run(v / max_val * width, width, fill, fine, track)
             color = _series_color(s) if color_on else -1
             lines.append(f"  {name}{' ' * (max_name_w - len(name))} {_sep(ramp)} {_colorize(bar, color, color_on)} {_fmt(v)}")
         blocks.append("\n".join(lines))
@@ -957,7 +988,7 @@ def _render_hbar_stacked(labels, names, matrix, width, color_on, ramp):
     return "\n".join(lines) + "\n\n" + legend
 
 
-def _render_horizontal_bars(labels, values, width, ramp, fine=False):
+def _render_horizontal_bars(labels, values, width, ramp, fine=False, track=False):
     if width <= 0:
         width = 40
     max_label = max(len(l) for l in labels)
@@ -979,7 +1010,7 @@ def _render_horizontal_bars(labels, values, width, ramp, fine=False):
         return "\n".join(lines)
     for i, v in enumerate(values):
         pad = " " * (max_label - len(labels[i]))
-        lines.append(f"{labels[i]}{pad} {_sep(ramp)} {_render_bar_run(v / max_val * width, width, fill, fine)} {_fmt(v)}")
+        lines.append(f"{labels[i]}{pad} {_sep(ramp)} {_render_bar_run(v / max_val * width, width, fill, fine, track)} {_fmt(v)}")
     return "\n".join(lines)
 
 
