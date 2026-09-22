@@ -22,6 +22,9 @@ Command line (JSON spec from a file, stdin, or --json)::
     python asciicharts.py --list         # every chart type, how to fill `series`, an example
     python asciicharts.py --csv data.csv --chart hbar --sort -latency --limit 10 --set title="Slowest"
                                          # straight from a CSV; see --csv --help
+    python asciicharts.py --csv data.excsv --chart-name top_categories
+                                         # an ExCSV file's own #chart suggestion, by name
+                                         # (https://github.com/boligolov/excsv)
 
 Spec fields (identical to the MCP tool): chartType, series, labels, title,
 width, height, border, style, stacked, bins, useColor, threshold,
@@ -40,7 +43,8 @@ import re
 import sys
 
 __version__ = "1.0.0"
-__all__ = ["render_chart", "list_charts", "spec_from_csv", "ChartError", "CHART_TYPES", "CHARTS", "__version__"]
+__all__ = ["render_chart", "list_charts", "spec_from_csv", "ChartError", "CHART_TYPES", "CHARTS", "__version__",
+           "parse_excsv", "resolve_excsv_chart", "spec_from_excsv", "list_excsv_charts"]
 
 # The catalogue of chart types: what each draws, how to fill `series`, which
 # options matter, and a minimal spec that renders. It is the single source of
@@ -1725,9 +1729,16 @@ def _parse_set(pairs):
 def _csv_main(argv) -> int:
     p = argparse.ArgumentParser(
         prog="asciicharts.py --csv", add_help=True,
-        description="Draw a chart straight from a CSV file (header row required).")
-    p.add_argument("--csv", required=True, metavar="FILE", help="CSV file, or - for stdin")
-    p.add_argument("--chart", required=True, metavar="TYPE", help="chart type: " + ", ".join(CHART_TYPES))
+        description="Draw a chart straight from a CSV or ExCSV file (header row required).")
+    p.add_argument("--csv", required=True, metavar="FILE", help="CSV/ExCSV file, or - for stdin")
+    p.add_argument("--chart", metavar="TYPE", help="chart type: " + ", ".join(CHART_TYPES)
+                   + " — required for plain CSV; for an ExCSV file with its own #chart "
+                     "suggestion(s), omit this and use --chart-name instead")
+    p.add_argument("--chart-name", metavar="NAME", help="ExCSV only: render this file's own "
+                   "#chart name= suggestion instead of building one with --chart (auto-picks "
+                   "the file's only suggestion if there's exactly one and this is omitted)")
+    p.add_argument("--list-charts", action="store_true",
+                   help="ExCSV only: list the file's #chart suggestions (name, type, title) and exit")
     p.add_argument("--label", metavar="COL", help="column naming the rows/categories (x column for scatter); default: first text column")
     p.add_argument("--values", metavar="COLS", help="comma-separated columns to plot; default: all numeric columns")
     p.add_argument("--sort", metavar="COL", help="sort rows by this column: -COL or COL:desc for descending, COL:asc (default) for ascending")
@@ -1751,12 +1762,589 @@ def _csv_main(argv) -> int:
         else:
             with open(args.csv, encoding="utf-8-sig", newline="") as f:
                 text = f.read()
-        spec = spec_from_csv(text, args.chart, args.label, args.values, args.sort, args.limit, _parse_set(args.set))
+
+        is_excsv = _is_excsv(text)
+
+        if args.list_charts:
+            if not is_excsv:
+                raise ChartError("--list-charts needs an ExCSV file (starting with #!excsv); this looks like plain CSV")
+            charts = list_excsv_charts(text)
+            if not charts:
+                print("(no #chart suggestions in this file)")
+            for c in charts:
+                extra = f' — "{c["title"]}"' if c.get("title") else ""
+                print(f'{c["name"] or "(unnamed)"}  type={c["type"]}{extra}')
+            return 0
+
+        if args.chart and args.chart_name:
+            raise ChartError("--chart and --chart-name are mutually exclusive: --chart builds a "
+                             "chart from the data yourself, --chart-name uses one the file itself suggests")
+
+        if is_excsv and not args.chart:
+            spec = spec_from_excsv(text, args.chart_name, _parse_set(args.set))
+        else:
+            if not args.chart:
+                raise ChartError("--chart TYPE is required (see --list) — or, for an ExCSV file "
+                                 "with its own #chart suggestion(s), --chart-name (see --list-charts)")
+            label, values, data_text = args.label, args.values, text
+            if is_excsv:
+                # Manual mode on an ExCSV file: ignore its #chart suggestions and treat the data
+                # section as plain CSV, but still put its #column role= to use for the defaults
+                # --label/--values would otherwise have to guess (dimension -> label, measure ->
+                # values) when the caller didn't pin them down explicitly.
+                doc = parse_excsv(text)
+                data_text = doc["data_text"]
+                if not label:
+                    dims = [n for n, kv in doc["columns"].items() if kv.get("role") == "dimension"]
+                    label = dims[0] if dims else label
+                if not values:
+                    measures = [n for n, kv in doc["columns"].items() if kv.get("role") == "measure"]
+                    values = ",".join(measures) if measures else values
+            spec = spec_from_csv(data_text, args.chart, label, values, args.sort, args.limit, _parse_set(args.set))
+
         print(json.dumps(spec, ensure_ascii=False) if args.print_spec else render_chart(spec))
         return 0
     except (ChartError, OSError) as e:
         print(f"error: {e}", file=sys.stderr)
         return 1
+
+
+# --------------------------------------------------------------------------
+# ExCSV input (#chart)
+# --------------------------------------------------------------------------
+#
+# ExCSV (https://github.com/boligolov/excsv) is CSV that describes itself: a `#!excsv` header
+# line plus `#`-prefixed meta lines — column types/roles (`#column`), and, since v0.5, chart
+# suggestions (`#chart`) — sitting above an ordinary CSV data section that any ordinary CSV
+# reader still reads unchanged. `#chart type=bar x=category y=amount` names two already-typed
+# columns and a mark; this turns that suggestion directly into a render_chart spec, following
+# the mapping this project is the documented reference renderer for (docs/charts.md in that
+# repo). --csv auto-detects an ExCSV file by its first line and, when it carries #chart
+# suggestions, --chart-name (or auto-pick, if there's only one) renders straight from those
+# instead of you re-specifying --chart/--label/--values yourself.
+#
+# This reads enough of the format to resolve #chart against #column and the data section — not
+# a full ExCSV implementation. Not read at all: #@ file metadata, #$ SQL, #% aggregations (used
+# instead of recomputing, per the format's own advice, but we're a chart renderer, not a
+# validator), checksum=, computed columns, sidecar/zip/pack containers, or the JSON form. A
+# #chart-vega escape-hatch line is recognized and its JSON validated (a malformed one still
+# fails the file), but nothing here speaks Vega-Lite, so it can't be rendered as ASCII.
+
+_EXCSV_DELIM_NAMES = {"comma": ",", "tab": "\t", "pipe": "|", "semicolon": ";"}
+_EXCSV_QUOTE_NAMES = {"none": "", "double": '"', "single": "'"}
+
+# The channel/modifier vocabulary a compact #chart line may carry, beyond type= and name=
+# (consumed separately below). Anything else present is an unknown-attribute warning, not a
+# failure — the same "ignore what you don't recognize" posture as an unknown #column attribute.
+_EXCSV_CHART_ATTRS = {
+    "x", "y", "x2", "y2", "color", "size", "theta", "radius", "shape", "opacity",
+    "column", "row", "detail", "order", "tooltip", "text",
+    "title", "aggregate", "bin", "stack", "sort", "limit", "hole",
+}
+# type= -> the channels that mark requires (docs/charts.md's marks table). point/circle need at
+# least one of x/y and are handled separately, since it's an "either" rather than an "and".
+_EXCSV_MARK_CHANNELS = {
+    "bar": ("x", "y"), "line": ("x", "y"), "area": ("x", "y"), "arc": ("theta",),
+    "rect": ("x", "y", "color"), "boxplot": ("x", "y"), "sparkline": ("y",),
+}
+# Every mark the ExCSV format itself defines (docs/charts.md's marks table) — used to tell a
+# genuinely unrecognized type= (WARN chart_unknown_type at parse time, e.g. a typo or a future
+# mark) apart from one this renderer just doesn't implement yet.
+_EXCSV_SPEC_MARKS = set(_EXCSV_MARK_CHANNELS) | {"point", "circle", "tick", "text"}
+# Marks this renderer knows how to draw. tick/text are valid, spec-recognized suggestions this
+# renderer simply can't act on (no ASCII equivalent) — resolving one of those raises a clear
+# message at render time, not a parse failure; they don't warn chart_unknown_type at parse time
+# the way a mark outside the spec's own vocabulary (like a typo) does.
+_EXCSV_KNOWN_MARKS = set(_EXCSV_MARK_CHANNELS) | {"point", "circle"}
+
+
+def _is_excsv(text: str) -> bool:
+    """Whether text looks like an ExCSV file: its very first line starts with #!excsv."""
+    return text.lstrip("﻿").split("\n", 1)[0].rstrip("\r").startswith("#!excsv")
+
+
+def _excsv_kv(payload: str) -> dict:
+    """Parse `key=value key2="a value with spaces, and a "" for a literal quote"` — the
+    key=value grammar shared by #!excsv, #column and #chart lines."""
+    out, i, n = {}, 0, len(payload)
+    while i < n:
+        while i < n and payload[i].isspace():
+            i += 1
+        if i >= n:
+            break
+        eq = payload.find("=", i)
+        if eq == -1:
+            break
+        key = payload[i:eq].strip()
+        i = eq + 1
+        if i < n and payload[i] == '"':
+            i += 1
+            buf = []
+            while i < n:
+                if payload[i] == '"':
+                    if i + 1 < n and payload[i + 1] == '"':
+                        buf.append('"')
+                        i += 2
+                        continue
+                    i += 1
+                    break
+                buf.append(payload[i])
+                i += 1
+            out[key] = "".join(buf)
+        else:
+            j = i
+            while j < n and not payload[j].isspace():
+                j += 1
+            out[key] = payload[i:j]
+            i = j
+    return out
+
+
+def parse_excsv(text: str) -> dict:
+    """The #!excsv header, #column and #chart meta lines, and the raw data-section text.
+
+    Returns {"header", "columns", "charts", "warnings", "data_text"}. `columns` maps name ->
+    its #column attributes (last #column for a repeated name wins). `charts` is a list of
+    {"kind": "compact", "name", "type", "attrs"} or {"kind": "vega", "name": None, "engine",
+    "raw", "parsed"} entries, in file order. `warnings` are advisory, human-readable strings
+    ending in the spec's own error-kind name in parentheses, e.g. "(chart_duplicate_name)" —
+    nothing in here is fatal. Raises ChartError for the FAIL-severity #chart conditions
+    (chart_missing_type/_name, chart_vega_invalid_json) and for a file that isn't ExCSV at all."""
+    text = text.lstrip("﻿")
+    lines = text.split("\n")
+    if not lines or not lines[0].rstrip("\r").startswith("#!excsv"):
+        raise ChartError("not an ExCSV file: the first line must start with #!excsv")
+    header = _excsv_kv(lines[0].rstrip("\r")[len("#!excsv"):])
+    columns, charts, warnings = {}, [], []
+    seen_names = set()
+    body_start = len(lines)
+    for i in range(1, len(lines)):
+        line = lines[i].rstrip("\r")
+        if not line.startswith("#"):
+            body_start = i
+            break
+        if line.startswith("##"):
+            continue
+        if line.startswith("#column "):
+            kv = _excsv_kv(line[len("#column "):])
+            if kv.get("name"):
+                columns[kv["name"]] = kv
+        elif line.startswith("#chart-"):
+            engine, _, payload = line[len("#chart-"):].partition(":")
+            payload = payload[1:] if payload.startswith(" ") else payload
+            entry = {"kind": "vega", "name": None, "engine": engine, "raw": payload}
+            if engine == "vega":
+                try:
+                    entry["parsed"] = json.loads(payload)
+                except json.JSONDecodeError as e:
+                    raise ChartError(f"line {i + 1}: #chart-vega payload is not valid JSON: "
+                                     f"{e} (chart_vega_invalid_json)")
+            else:
+                warnings.append(f'line {i + 1}: unrecognized #chart-{engine}: engine (chart_unknown_type)')
+            charts.append(entry)
+        elif line.startswith("#chart "):
+            kv = _excsv_kv(line[len("#chart "):])
+            ctype, name = kv.pop("type", None), kv.pop("name", None)
+            if ctype is None:
+                raise ChartError(f"line {i + 1}: #chart is missing type= (chart_missing_type)")
+            if name is None:
+                raise ChartError(f"line {i + 1}: #chart type={ctype} is missing name= (chart_missing_name)")
+            if name in seen_names:
+                warnings.append(f'#chart "{name}": duplicate name=, the later line wins (chart_duplicate_name)')
+            seen_names.add(name)
+            if ctype not in _EXCSV_SPEC_MARKS:
+                warnings.append(f'#chart "{name}": unrecognized type={ctype} (chart_unknown_type)')
+            for attr in sorted(set(kv) - _EXCSV_CHART_ATTRS):
+                warnings.append(f'#chart "{name}": unrecognized attribute "{attr}" (chart_unknown_channel)')
+            charts.append({"kind": "compact", "name": name, "type": ctype,
+                           "attrs": {k: v for k, v in kv.items() if k in _EXCSV_CHART_ATTRS}})
+        # every other "#" line (#@, #$, #%, #index, or anything unrecognized) carries no
+        # chart-relevant information and is skipped, per the format's own "ignore unknown
+        # meta lines" rule.
+    return {"header": header, "columns": columns, "charts": charts, "warnings": warnings,
+            "data_text": "\n".join(lines[body_start:])}
+
+
+def _excsv_dialect(header: dict):
+    """(delim, quote, has_header, null_marker) resolved from the #!excsv header fields."""
+    delim_raw = header.get("delim", "comma")
+    delim = _EXCSV_DELIM_NAMES.get(delim_raw, delim_raw)
+    if len(delim) != 1:
+        raise ChartError(f"ExCSV delimiter {_q(delim_raw)} is not one character; multi-character "
+                         f"delimiters aren't supported here")
+    quote_raw = header.get("quote", "none")
+    quote = _EXCSV_QUOTE_NAMES.get(quote_raw, quote_raw)
+    if quote and len(quote) != 1:
+        raise ChartError(f"ExCSV quote {_q(quote_raw)} is not one character; multi-character "
+                         f"quotes aren't supported here")
+    return delim, quote, header.get("header", "1") != "0", header.get("null")
+
+
+def _excsv_read_data(data_text: str, delim: str, quote: str, has_header: bool):
+    """(col_names, rows) from the data section, in the file's own declared dialect. col_names is
+    [] when has_header is False — the caller resolves names from #column index= instead."""
+    if quote:
+        reader = csv.reader(io.StringIO(data_text), delimiter=delim, quotechar=quote)
+    else:
+        reader = csv.reader(io.StringIO(data_text), delimiter=delim, quoting=csv.QUOTE_NONE)
+    all_rows = [r for r in reader if any(c.strip() for c in r)]
+    if not all_rows or (has_header and len(all_rows) < 2):
+        raise ChartError("the ExCSV file has no data rows")
+    col_names, rows = (all_rows[0], all_rows[1:]) if has_header else ([], all_rows)
+    col_names = [h.strip() for h in col_names]
+    width = max(len(r) for r in rows)
+    return col_names, [r + [""] * (width - len(r)) for r in rows]
+
+
+def _excsv_column_names(doc: dict, col_names: list, width: int) -> list:
+    """Column names aligned to data positions. header=1 already has real ones (the CSV header
+    row); header=0 builds them from #column index=/name= — only named columns are addressable,
+    same restriction #chart channels have (reference by name, never by position)."""
+    if col_names:
+        return col_names
+    names = [""] * width
+    for name, kv in doc["columns"].items():
+        idx = kv.get("index", "")
+        if idx.lstrip("-").isdigit() and 0 <= int(idx) < width:
+            names[int(idx)] = name
+    return names
+
+
+def _excsv_values(col_name: str, col_names: list, rows: list, null_marker):
+    """Raw string values of one column, empty/null-marker cells as None. None (the return value,
+    not a list of them) if the column isn't in the data at all."""
+    if col_name not in col_names:
+        return None
+    ci = col_names.index(col_name)
+    return [None if (r[ci] == "" or r[ci] == null_marker) else r[ci] for r in rows]
+
+
+def _excsv_col_role(doc: dict, col: str) -> str:
+    """A column's analytical role: its own #column role= if declared, else a guess from type=
+    (numeric -> measure, otherwise dimension) — used to infer bar/hbar orientation."""
+    meta = doc["columns"].get(col) or {}
+    if meta.get("role"):
+        return meta["role"]
+    return "measure" if meta.get("type") in ("int", "long", "float", "double", "decimal") else "dimension"
+
+
+def _excsv_channel(doc: dict, col_names: list, attrs: dict, channel: str, chart_name: str):
+    """The column name a #chart channel resolves to (or the count() literal, or None if the
+    channel isn't set). Raises chart_unknown_column if it names something not declared."""
+    ref = attrs.get(channel)
+    if ref is None or ref == "count()":
+        return ref
+    if ref not in doc["columns"]:
+        raise ChartError(f'#chart "{chart_name}": {channel}={_q(ref)} has no #column name= '
+                         f"declaration (chart_unknown_column)")
+    if ref not in col_names:
+        raise ChartError(f'#chart "{chart_name}": {channel}={_q(ref)} is declared with #column '
+                         f"but is not a column in the data section")
+    return ref
+
+
+def _excsv_int_attr(attrs: dict, key: str):
+    v = attrs.get(key)
+    if v is None:
+        return None
+    try:
+        return int(float(v))
+    except ValueError:
+        raise ChartError(f"{key}={_q(v)} is not a number")
+
+
+def _excsv_agg_value(vals: list, agg: str, delim: str) -> float:
+    """One aggregated number from a bucket of raw (already null-filtered-to-None) cell values."""
+    non_null = [v for v in vals if v is not None]
+    if agg == "count":
+        return float(len(vals))
+    if agg == "count_distinct":
+        return float(len(set(non_null)))
+    nums = [n for n in (_parse_cell(v, delim) for v in non_null) if n is not None]
+    if agg == "avg":
+        return _sum(nums) / len(nums) if nums else 0.0
+    if agg == "min":
+        return min(nums) if nums else 0.0
+    if agg == "max":
+        return max(nums) if nums else 0.0
+    return _sum(nums)  # sum — also the default for an agg= value we don't recognize
+
+
+def _excsv_aggregate(keys: list, raw_values: list, agg: str, delim: str):
+    """Group raw_values by keys (equal length), in first-seen key order: [(key, aggregated), ...]."""
+    order, buckets = [], {}
+    for k, v in zip(keys, raw_values):
+        k = "" if k is None else k
+        if k not in buckets:
+            buckets[k] = []
+            order.append(k)
+        buckets[k].append(v)
+    return [(k, _excsv_agg_value(buckets[k], agg, delim)) for k in order]
+
+
+def _excsv_group2(primary_raw: list, secondary_raw: list, value_raw: list, agg: str, delim: str):
+    """Two-level group-by — primary categories x secondary categories, each in first-seen order —
+    aggregating value_raw per (primary, secondary) cell. Used for color-grouped bar/line/area (
+    primary=x, secondary=color) and for rect/heatmap (primary=x, secondary=y). A combination that
+    never occurs aggregates to None, not 0 — the caller decides how to fill that gap."""
+    primaries, p_seen, secondaries, s_seen = [], set(), [], set()
+    buckets = {}
+    for p, s, v in zip(primary_raw, secondary_raw, value_raw):
+        p = "" if p is None else p
+        s = "" if s is None else s
+        if p not in p_seen:
+            p_seen.add(p)
+            primaries.append(p)
+        if s not in s_seen:
+            s_seen.add(s)
+            secondaries.append(s)
+        buckets.setdefault((p, s), []).append(v)
+    grid = {s: [_excsv_agg_value(buckets[(p, s)], agg, delim) if (p, s) in buckets else None
+               for p in primaries] for s in secondaries}
+    return primaries, secondaries, grid
+
+
+def _excsv_order(indices, sort, limit, key):
+    """Index order for a #chart's sort=/limit= modifiers: asc/desc by `key`, then a top-N cutoff."""
+    indices = list(indices)
+    if sort in ("asc", "desc"):
+        indices.sort(key=key, reverse=(sort == "desc"))
+    return indices if limit is None else indices[:limit]
+
+
+def _excsv_sort_limit(pairs: list, sort, limit, by: str):
+    """sort=/limit= over [(key, value), ...]. by="value" ranks by the aggregated number (bar/
+    arc's usual top-N reading of sort=desc); by="key" ranks by the category label itself
+    (line/area/boxplot, whose axis usually has its own natural — often chronological — order
+    that reordering by value would scramble)."""
+    idx = 1 if by == "value" else 0
+    order = _excsv_order(range(len(pairs)), sort, limit, key=lambda i: pairs[i][idx])
+    return [pairs[i] for i in order]
+
+
+def _excsv_bar_spec(doc, x, y, color, attrs, sort, limit, values_of, agg_of, delim):
+    bin_ = attrs.get("bin")
+    if bin_ is not None and y == "count()":
+        xv = [v for v in (_parse_cell(v, delim) for v in values_of(x)) if v is not None]
+        if not xv:
+            raise ChartError(f"column {_q(x)} has no numeric values to bin")
+        spec = {"chartType": "histogram", "series": [{"values": xv}]}
+        bins = _excsv_int_attr(attrs, "bin")
+        if bins and bins != 1:
+            spec["bins"] = bins
+        return spec
+
+    # Orientation follows which side the dimension sits on, not a separate switch: x=dimension
+    # y=measure draws vertical bars, the swap draws horizontal ones.
+    if _excsv_col_role(doc, x) == "measure" and _excsv_col_role(doc, y) != "measure":
+        dim_col, measure_col, orientation = y, x, "hbar"
+    else:
+        dim_col, measure_col, orientation = x, y, "vbar"
+    dim_raw = values_of(dim_col)
+    measure_raw, agg = (dim_raw, "count") if measure_col == "count()" else (values_of(measure_col), agg_of(measure_col))
+
+    if color:
+        cats, cols, grid = _excsv_group2(dim_raw, values_of(color), measure_raw, agg, delim)
+        totals = [_sum(v for v in (grid[c][i] for c in cols) if v is not None) for i in range(len(cats))]
+        order = _excsv_order(range(len(cats)), sort, limit, key=lambda i: totals[i])
+        spec = {"chartType": orientation, "labels": [cats[i] for i in order],
+                "series": [{"name": c, "values": [grid[c][i] or 0.0 for i in order]} for c in cols]}
+        if attrs.get("stack") in ("1", "true"):
+            spec["stacked"] = True
+        return spec
+
+    pairs = _excsv_sort_limit(_excsv_aggregate(dim_raw, measure_raw, agg, delim), sort, limit, "value")
+    return {"chartType": orientation, "labels": [k for k, _ in pairs], "series": [{"values": [v for _, v in pairs]}]}
+
+
+def _excsv_trend_spec(mark, x, y, color, attrs, sort, limit, values_of, agg_of, delim):
+    dim_raw = values_of(x)
+    if color:
+        cats, cols, grid = _excsv_group2(dim_raw, values_of(color), values_of(y), agg_of(y), delim)
+        order = _excsv_order(range(len(cats)), sort, limit, key=lambda i: cats[i])
+        spec = {"chartType": mark, "labels": [cats[i] for i in order],
+                "series": [{"name": c, "values": [grid[c][i] or 0.0 for i in order]} for c in cols]}
+        if mark == "area" and attrs.get("stack") in ("1", "true"):
+            spec["stacked"] = True
+        return spec
+    pairs = _excsv_sort_limit(_excsv_aggregate(dim_raw, values_of(y), agg_of(y), delim), sort, limit, "key")
+    return {"chartType": mark, "labels": [k for k, _ in pairs], "series": [{"values": [v for _, v in pairs]}]}
+
+
+def _excsv_pie_spec(slice_col, theta, sort, limit, values_of, agg_of, delim):
+    if theta == "count()":
+        if not slice_col:
+            raise ChartError("theta=count() needs a slice column (color=, x=, or y=)")
+        slice_raw = values_of(slice_col)
+        pairs = _excsv_aggregate(slice_raw, slice_raw, "count", delim)
+    elif slice_col:
+        pairs = _excsv_aggregate(values_of(slice_col), values_of(theta), agg_of(theta), delim)
+    else:
+        nums = [n for n in (_parse_cell(v, delim) for v in values_of(theta)) if n is not None]
+        pairs = [(str(i + 1), v) for i, v in enumerate(nums)]
+    pairs = _excsv_sort_limit(pairs, sort, limit, "value")
+    return {"chartType": "pie", "series": [{"name": k, "values": [v]} for k, v in pairs]}
+
+
+def _excsv_heatmap_spec(x, y, color, values_of, agg_of, delim):
+    cats, rows_, grid = _excsv_group2(values_of(x), values_of(y), values_of(color), agg_of(color), delim)
+    return {"chartType": "heatmap", "labels": cats,
+            "series": [{"name": r, "values": [grid[r][i] or 0.0 for i in range(len(cats))]} for r in rows_]}
+
+
+def _excsv_boxplot_spec(x, y, sort, limit, values_of, delim):
+    order, groups = [], {}
+    for k, v in zip(values_of(x), values_of(y)):
+        if v is None:
+            continue
+        k = "" if k is None else k
+        n = _parse_cell(v, delim)
+        if n is None:
+            continue
+        if k not in groups:
+            groups[k] = []
+            order.append(k)
+        groups[k].append(n)
+    if sort in ("asc", "desc"):
+        order = sorted(order, reverse=(sort == "desc"))
+    if limit is not None:
+        order = order[:limit]
+    return {"chartType": "boxplot", "series": [{"name": k, "values": groups[k]} for k in order if groups[k]]}
+
+
+def _excsv_scatter_spec(x, y, color, values_of, delim):
+    if x and y:
+        xv = [_parse_cell(v, delim) for v in values_of(x)]
+        yv = [_parse_cell(v, delim) for v in values_of(y)]
+        if color:
+            order, groups = [], {}
+            for a, b, c in zip(xv, yv, values_of(color)):
+                if a is None or b is None:
+                    continue
+                c = c or ""
+                if c not in groups:
+                    groups[c] = []
+                    order.append(c)
+                groups[c].append((a, b))
+            series = [{"name": c, "points": [{"x": a, "y": b} for a, b in groups[c]]} for c in order]
+        else:
+            series = [{"points": [{"x": a, "y": b} for a, b in zip(xv, yv) if a is not None and b is not None]}]
+        return {"chartType": "scatter", "series": series}
+    # Only one of x/y set: a one-axis distribution, not a bivariate scatter (docs/charts.md
+    # "Orientation and variants"). There's no natural category axis to place these against, so
+    # row position stands in for one, same fallback plain CSV uses when it has no text column.
+    vals = [v for v in (_parse_cell(v, delim) for v in values_of(x or y)) if v is not None]
+    return {"chartType": "dotplot", "labels": [str(i + 1) for i in range(len(vals))], "series": [{"values": vals}]}
+
+
+def _find_excsv_chart(doc: dict, name: str | None):
+    compacts = [c for c in doc["charts"] if c["kind"] == "compact"]
+    if name is not None:
+        matches = [c for c in doc["charts"] if c.get("name") == name]
+        if not matches:
+            available = ", ".join(c["name"] for c in compacts) or "(none)"
+            raise ChartError(f"no #chart named {_q(name)} in this file; available: {available}")
+        return matches[-1]  # a duplicate name=: the later line wins for addressing, same as #column
+    if len(compacts) == 1:
+        return compacts[0]
+    if not compacts:
+        if doc["charts"]:
+            raise ChartError("this file only has #chart-vega suggestions, which have no ASCII "
+                             "renderer here; pass --chart TYPE to build your own chart instead")
+        raise ChartError("this file has no #chart suggestions to use automatically; pass --chart "
+                         "TYPE (see --list) or --chart-name NAME")
+    raise ChartError(f"this file suggests {len(compacts)} charts: " + ", ".join(c["name"] for c in compacts)
+                     + " — pick one with --chart-name NAME (see --list-charts), or use --chart TYPE "
+                       "to build your own")
+
+
+def resolve_excsv_chart(doc: dict, name: str | None = None) -> dict:
+    """One #chart suggestion, resolved against #column and the data section, as a render_chart
+    spec — the type=/channel mapping in https://github.com/boligolov/excsv's docs/charts.md.
+    name=None auto-picks the file's only suggestion, or lists the choices if it has several."""
+    entry = _find_excsv_chart(doc, name)
+    if entry["kind"] == "vega":
+        raise ChartError("#chart-vega has no ASCII renderer here; pass --chart TYPE to build "
+                         "your own chart from the data instead")
+    cname, mark, attrs = entry["name"], entry["type"], entry["attrs"]
+    if mark not in _EXCSV_KNOWN_MARKS:
+        raise ChartError(f'#chart "{cname}": type={_q(mark)} has no asciicharts equivalent here '
+                         f"(supported: bar, line, area, point, circle, arc, rect, boxplot, sparkline)")
+
+    delim, quote, has_header, null_marker = _excsv_dialect(doc["header"])
+    col_names, rows = _excsv_read_data(doc["data_text"], delim, quote, has_header)
+    col_names = _excsv_column_names(doc, col_names, len(rows[0]) if rows else 0)
+
+    channels = {c: _excsv_channel(doc, col_names, attrs, c, cname) for c in ("x", "y", "color", "theta")}
+    if mark in ("point", "circle"):
+        if not (channels["x"] or channels["y"]):
+            raise ChartError(f'#chart "{cname}": needs at least one of x=/y= (chart_missing_required_channel)')
+    else:
+        for needed in _EXCSV_MARK_CHANNELS[mark]:
+            if not channels[needed]:
+                raise ChartError(f'#chart "{cname}": type={mark} needs {needed}= (chart_missing_required_channel)')
+    x, y, color, theta = channels["x"], channels["y"], channels["color"], channels["theta"]
+
+    def values_of(col):
+        v = _excsv_values(col, col_names, rows, null_marker)
+        if v is None:
+            raise ChartError(f'#chart "{cname}": column {_q(col)} is declared but not present in the data')
+        return v
+
+    def agg_of(col):
+        return attrs.get("aggregate") or (doc["columns"].get(col) or {}).get("agg") or "sum"
+
+    sort, limit = attrs.get("sort"), _excsv_int_attr(attrs, "limit")
+
+    if mark == "bar":
+        spec = _excsv_bar_spec(doc, x, y, color, attrs, sort, limit, values_of, agg_of, delim)
+    elif mark in ("line", "area"):
+        spec = _excsv_trend_spec(mark, x, y, color, attrs, sort, limit, values_of, agg_of, delim)
+    elif mark == "sparkline":
+        yv = [v for v in (_parse_cell(v, delim) for v in values_of(y)) if v is not None]
+        spec = {"chartType": "sparkline", "series": [{"values": yv}]}
+    elif mark == "arc":
+        spec = _excsv_pie_spec(color or x or y, theta, sort, limit, values_of, agg_of, delim)
+    elif mark == "rect":
+        spec = _excsv_heatmap_spec(x, y, color, values_of, agg_of, delim)
+    elif mark == "boxplot":
+        spec = _excsv_boxplot_spec(x, y, sort, limit, values_of, delim)
+    else:  # point / circle
+        spec = _excsv_scatter_spec(x, y, color, values_of, delim)
+
+    if attrs.get("title"):
+        spec["title"] = attrs["title"]
+    return spec
+
+
+def spec_from_excsv(text: str, chart_name: str | None = None, options: dict | None = None) -> dict:
+    """Parse an ExCSV file and resolve one of its own #chart suggestions into a render_chart
+    spec. chart_name=None auto-picks the file's only suggestion (ChartError, listing the
+    choices, if it has more than one). options works exactly like spec_from_csv's: extra spec
+    fields such as {"border": "none"}, applied after (and so overriding) the chart's own title=."""
+    doc = parse_excsv(text)
+    spec = resolve_excsv_chart(doc, chart_name)
+    for key, val in (options or {}).items():
+        if key not in CSV_SETTABLE:
+            raise ChartError(f"unknown option {_q(key)} (settable: {', '.join(CSV_SETTABLE)})")
+        spec[key] = val
+    return spec
+
+
+def list_excsv_charts(text: str) -> list:
+    """The #chart suggestions in an ExCSV file: [{"name", "type", "title"}, ...] for compact-form
+    lines (a repeated name= keeps only the last one, however it is addressed), plus one
+    {"name": None, "type": "chart-vega"} entry per #chart-vega line — listed for visibility even
+    though it can't be rendered here."""
+    doc = parse_excsv(text)
+    compacts = {}
+    vegas = []
+    for c in doc["charts"]:
+        if c["kind"] == "compact":
+            compacts[c["name"]] = {"name": c["name"], "type": c["type"], "title": c["attrs"].get("title")}
+        else:
+            vegas.append({"name": None, "type": f'chart-{c["engine"]}', "title": None})
+    return list(compacts.values()) + vegas
 
 
 # --------------------------------------------------------------------------

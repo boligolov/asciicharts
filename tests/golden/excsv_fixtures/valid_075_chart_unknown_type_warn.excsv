@@ -1,0 +1,6 @@
+#!excsv version=0.5 header=1 rows=1
+#column name=category type=string  role=dimension
+#column name=amount   type=decimal role=measure agg=sum
+#chart type=radar name=amount_radar x=category y=amount
+category,amount
+widgets,120.00

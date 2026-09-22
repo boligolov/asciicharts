@@ -1,3 +1,7 @@
 # TODO
 
-- [ ] **CSV: support ExCSV.** Let the `--csv` input mode (`spec_from_csv` in `asciicharts.py`) work with ExCSV as a data source, in addition to plain CSV files. *(Scope to confirm: what exactly ExCSV is here and how it should be plugged in.)*
+Nothing outstanding right now.
+
+- [x] ~~CSV: support ExCSV.~~ Done — `--csv`/`spec_from_excsv` auto-detects an ExCSV file
+  (`#!excsv`) and can render one of its own `#chart` suggestions directly (`--chart-name`, or
+  auto-pick when there's only one). See `skills/asciicharts/SKILL.md#from-an-excsv-file`.

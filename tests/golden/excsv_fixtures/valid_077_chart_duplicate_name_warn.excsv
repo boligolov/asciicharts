@@ -1,0 +1,9 @@
+#!excsv version=0.5 header=1 rows=3
+#column name=category type=string  role=dimension
+#column name=amount   type=decimal role=measure agg=sum unit=USD
+#chart type=bar name=amount_by_category x=category y=amount
+#chart type=arc name=amount_by_category theta=amount color=category
+category,amount
+widgets,120.00
+gadgets,300.50
+gizmos,45.00

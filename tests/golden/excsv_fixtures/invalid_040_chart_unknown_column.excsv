@@ -1,0 +1,5 @@
+#!excsv version=0.5 header=1 rows=1
+#column name=category type=string role=dimension
+#chart type=bar name=amount_by_category x=category y=amount
+category
+widgets

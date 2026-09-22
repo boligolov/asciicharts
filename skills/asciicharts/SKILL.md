@@ -1,6 +1,6 @@
 ---
 name: asciicharts
-description: Use this skill to turn a handful of numbers, or a CSV file, into a plain-text chart (Unicode/ASCII) pasted right into the reply — bar, line, area, sparkline, histogram, pie, heatmap, boxplot, scatter, dot plot. Trigger on any request to plot, chart, graph, visualize or draw a histogram or distribution of numbers the user gives inline or in a file, e.g. "quick histogram of these response times", rankings, trends over time, shares of a whole, benchmark results, "top N by X", and whenever a chart would help in a terminal, README, commit message, PR description or code comment, even if the user never says "chart". A dependency-free Python script renders it, so prefer it to describing numbers in prose or hand-drawing ASCII bars. Not for PNG/SVG/image files, interactive dashboards, or plotting-library code (matplotlib, seaborn, pandas), explanations of chart concepts, or stats calculations without a chart. Also use when an `asciicharts` MCP server is connected.
+description: Use this skill to turn a handful of numbers, a CSV file, or an ExCSV file's own #chart suggestion, into a plain-text chart (Unicode/ASCII) pasted right into the reply — bar, line, area, sparkline, histogram, pie, heatmap, boxplot, scatter, dot plot. Trigger on any request to plot, chart, graph, visualize or draw a histogram or distribution of numbers the user gives inline or in a file, e.g. "quick histogram of these response times", rankings, trends over time, shares of a whole, benchmark results, "top N by X", and whenever a chart would help in a terminal, README, commit message, PR description or code comment, even if the user never says "chart". A dependency-free Python script renders it, so prefer it to describing numbers in prose or hand-drawing ASCII bars. Not for PNG/SVG/image files, interactive dashboards, or plotting-library code (matplotlib, seaborn, pandas), explanations of chart concepts, or stats calculations without a chart. Also use when an `asciicharts` MCP server is connected.
 license: MIT
 compatibility: Needs Python 3 on PATH (standard library only, nothing to install).
 ---
@@ -23,7 +23,7 @@ From data you already have, as a JSON spec on stdin (avoids shell-quoting troubl
 echo '{"chartType":"hbar","title":"Browser share","labels":["Chrome","Firefox","Safari"],"series":[{"values":[62,21,12]}]}' | python scripts/asciicharts.py -
 ```
 
-From a CSV file, no JSON needed (see [From a CSV](#from-a-csv)):
+From a CSV file, no JSON needed (see [From a CSV](#from-a-csv), or [From an ExCSV file](#from-an-excsv-file) if the file starts with `#!excsv`):
 
 ```sh
 python scripts/asciicharts.py --csv latency.csv --chart hbar --values p99 --sort -p99 --limit 3 --set title="Slowest endpoints, p99 ms"
@@ -88,6 +88,33 @@ on the chart: bars, lines and areas make each value column a series with the lab
 `pie` makes one slice per row; `heatmap` makes one matrix row per CSV row; `scatter` plots each value
 column against the label (x) column. Rows that don't parse (`n/a`, empty cells) are reported by row and
 column instead of being dropped silently — clean or filter the file first, or pick other `--values`.
+
+## From an ExCSV file
+
+[ExCSV](https://github.com/boligolov/excsv) is CSV that describes itself: a `#!excsv` first line,
+then `#`-prefixed lines above the ordinary CSV rows — column types/roles (`#column`) and, since
+v0.5, chart suggestions (`#chart type=bar x=category y=amount ...`). `--csv` detects this
+automatically (no separate flag) and, when the file has its own `#chart` line(s), renders one of
+those directly instead of you re-specifying `--label`/`--values` yourself:
+
+```sh
+python scripts/asciicharts.py --csv sales.excsv --chart-name top_categories   # by name
+python scripts/asciicharts.py --csv sales.excsv                              # auto-picks the file's only suggestion
+python scripts/asciicharts.py --csv sales.excsv --list-charts                # see what's available: name, type, title
+```
+
+If the file suggests more than one chart and neither `--chart-name` nor an auto-pick applies, the
+error names every choice — pass one of them. `sort=`/`limit=`/`aggregate=`/`color=`/`stack=`
+on the `#chart` line are honored (a `color=` channel becomes grouped or, with `stack=1`, stacked
+series); `#chart type=bar bin=N x=amount y=count()` becomes a `histogram`. A suggestion this
+renderer has no equivalent for (`tick`/`text`, or `#chart-vega`) fails with a clear message —
+pick a different suggestion, or fall back to `--chart TYPE` (below) to build your own from the
+same file's data.
+
+**`--chart TYPE` still works on an ExCSV file** — it ignores any `#chart` suggestions and reads
+just the data rows as plain CSV, the same as a `.csv` file, except `--label`/`--values` default to
+the file's own declared `#column role=dimension`/`role=measure` columns instead of guessing from
+the data when you don't set them yourself.
 
 ## The spec
 

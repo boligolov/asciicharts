@@ -1,0 +1,6 @@
+#!excsv version=0.5 header=1 rows=1
+#column name=category type=string  role=dimension
+#column name=amount   type=decimal role=measure agg=sum
+#chart-vega: {"mark":"arc", invalid json here
+category,amount
+widgets,120.00

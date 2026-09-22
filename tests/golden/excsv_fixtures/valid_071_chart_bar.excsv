@@ -1,0 +1,9 @@
+#!excsv version=0.5 header=1 rows=4
+#column name=category type=string  role=dimension
+#column name=amount   type=decimal role=measure agg=sum unit=USD
+#chart type=bar name=top_categories x=category y=amount sort=desc limit=10 title="Top categories by spend"
+category,amount
+widgets,120.00
+gadgets,300.50
+gizmos,45.00
+widgets,80.00

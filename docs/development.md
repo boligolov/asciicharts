@@ -50,6 +50,7 @@ pytest
 - `tests/test_server.py` — the MCP server (`server/`) in-process, over real stdio, and over real HTTP. The tests import the installed `asciicharts_server` package, so run `pip install -e ".[stats,dev]"` first (`tests/conftest.py` says so if you forget).
 - `tests/test_store.py` — the optional statistics store.
 - `tests/test_csv.py` — CSV input (`--csv`).
+- `tests/test_excsv.py` — [ExCSV](https://github.com/boligolov/excsv) input: `#chart` suggestions resolved into a spec (`--chart-name`/`--list-charts`, `spec_from_excsv`), checked in part against `tests/golden/excsv_fixtures/` — that spec's own `#chart` fixtures, copied verbatim (CC0) from its shared fixture corpus, so this is tested against the format's ground truth rather than only our own assumptions about it.
 - `tests/test_catalog.py` — the chart catalogue (`list_charts` / `--list`) against the renderers.
 - `tests/test_skill.py` — the skill folder: valid frontmatter, self-contained links, the commands `SKILL.md` shows actually run, and its example output is current.
 

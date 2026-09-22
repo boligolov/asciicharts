@@ -114,7 +114,7 @@ python asciicharts.py --csv data.csv --chart hbar --sort -latency --limit 10 --s
 python asciicharts.py --list                                  # every chart type, how to fill it, an example
 ```
 
-`--csv` reads a header row, sniffs `,` `;` tab or `|`, and takes `--label`, `--values`, `--sort`, `--limit`, `--set key=value` and `--print-spec` (see the [skill docs](skills/asciicharts/SKILL.md#from-a-csv)). From Python:
+`--csv` reads a header row, sniffs `,` `;` tab or `|`, and takes `--label`, `--values`, `--sort`, `--limit`, `--set key=value` and `--print-spec` (see the [skill docs](skills/asciicharts/SKILL.md#from-a-csv)). It also auto-detects [ExCSV](https://github.com/boligolov/excsv) — CSV with a `#!excsv` header and its own `#chart type=bar x=category y=amount ...` suggestions — and renders one of those directly with `--chart-name` (`--list-charts` to see what's on offer); see [From an ExCSV file](skills/asciicharts/SKILL.md#from-an-excsv-file). From Python:
 
 ```python
 from asciicharts import render_chart, ChartError

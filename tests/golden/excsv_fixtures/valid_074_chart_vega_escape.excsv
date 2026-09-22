@@ -1,0 +1,8 @@
+#!excsv version=0.5 header=1 rows=3
+#column name=category type=string  role=dimension
+#column name=amount   type=decimal role=measure agg=sum unit=USD
+#chart-vega: {"mark":"arc","encoding":{"theta":{"field":"amount","aggregate":"sum","type":"quantitative"},"color":{"field":"category","type":"nominal"}}}
+category,amount
+widgets,120.00
+gadgets,300.50
+gizmos,45.00

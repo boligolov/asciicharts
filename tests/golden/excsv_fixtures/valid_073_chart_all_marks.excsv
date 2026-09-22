@@ -1,0 +1,22 @@
+#!excsv version=0.5 header=1 rows=5
+#column name=category type=string  role=dimension
+#column name=amount   type=decimal role=measure agg=sum unit=USD
+#column name=discount type=decimal role=measure agg=avg
+#column name=date     type=date    role=time
+#chart type=line name=amount_over_time x=date y=amount title="Amount over time"
+#chart type=area name=amount_area x=date y=amount title="Amount area"
+#chart type=sparkline name=amount_trend y=amount title="Amount trend"
+#chart type=point name=amount_vs_discount x=amount y=discount color=category title="Amount vs discount"
+#chart type=point name=amount_distribution x=amount title="Amount distribution"
+#chart type=circle name=amount_vs_discount_circle x=amount y=discount color=category title="Amount vs discount (circle)"
+#chart type=tick name=amount_ticks x=amount title="Amount ticks"
+#chart type=text name=category_labels x=category y=amount text=category title="Category labels"
+#chart type=bar name=amount_histogram bin=20 x=amount y=count() title="Amount histogram"
+#chart type=rect name=amount_by_category_over_time x=category y=date color=amount aggregate=avg title="Amount by category over time"
+#chart type=boxplot name=amount_by_category x=category y=amount
+category,amount,discount,date
+widgets,120.00,0.05,2026-01-05
+gadgets,300.50,0.10,2026-01-06
+gizmos,45.00,0.00,2026-01-07
+widgets,80.00,0.02,2026-01-08
+gadgets,60.25,0.15,2026-01-09
