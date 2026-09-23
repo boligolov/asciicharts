@@ -898,6 +898,23 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
             max_val = min_val + 1
         diverging = min_val < 0
         zero_row = _clamp(_y_pixel(0, min_val, max_val, height), 0, height - 1)
+        if diverging and height >= 3:
+            # the zero row is the baseline and belongs to no bar, so keep a row free on each side
+            # that has data
+            if max_val > 0:
+                zero_row = max(zero_row, 1)
+            zero_row = min(zero_row, height - 2)
+
+        def diverging_rows(v):
+            """Rows of a diverging bar: strictly above or below the baseline, at least one."""
+            if v == 0:
+                return range(0)
+            row = _y_pixel(v, min_val, max_val, height)
+            if v > 0:
+                top = min(row, zero_row - 1)
+                return range(max(top, 0), zero_row) if zero_row > 0 else range(zero_row, zero_row + 1)
+            bottom = max(row, zero_row + 1)
+            return range(zero_row + 1, min(bottom, height - 1) + 1) if zero_row < height - 1 else range(zero_row, zero_row + 1)
 
         effective = ramp
         if effective is None and num_series > 1:
@@ -926,9 +943,8 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
                                 for r in range(filled, height):
                                     grid[height - 1 - r][col] = pad
                     else:
-                        lo, hi = sorted((zero_row, _y_pixel(v, min_val, max_val, height)))
                         for w in range(bar_width):
-                            for r in range(lo, hi + 1):
+                            for r in diverging_rows(v):
                                 grid[r][col_start + w] = ch
                                 cgrid[r][col_start + w] = color
                     continue
@@ -951,13 +967,12 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
                             for r in range(top, height):
                                 grid[height - 1 - r][col] = pad
                 else:
-                    lo, hi = sorted((zero_row, _y_pixel(v, min_val, max_val, height)))
                     for w in range(bar_width):
-                        for r in range(lo, hi + 1):
+                        for r in diverging_rows(v):
                             grid[r][col_start + w] = "█"
                             cgrid[r][col_start + w] = color
 
-        if diverging and min_val < 0 < max_val:
+        if diverging:
             for x in range(total_w):
                 if grid[zero_row][x] == " ":
                     grid[zero_row][x] = "-"
@@ -979,19 +994,36 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
     return body
 
 
-def _zero_col(min_val, max_val, width):
-    return _round((0 - min_val) / (max_val - min_val) * width)
+def _diverging_scale(min_val, max_val, width):
+    """(zero_col, cells per unit) of a diverging bar row `width` cells wide: one cell is the zero
+    axis, the other width - 1 are shared by the two sides in proportion to the range."""
+    unit = (width - 1) / (max_val - min_val) if width > 1 else 0.0
+    return _clamp(_round(-min_val * unit), 0, max(width - 1, 0)), unit
 
 
-def _diverging_bar_run(zero_col, val_col, width, fill):
-    lo, hi = sorted((zero_col, val_col))
-    lo, hi = _clamp(lo, 0, width), _clamp(hi, 0, width)
+def _diverging_bar_run(v, zero_col, unit, width, fill, axis):
+    """A diverging bar: left of the axis for a negative value, right of it for a positive one,
+    never on it; at least one cell for a non-zero value; nothing for zero."""
     row = [" "] * width
-    for i in range(lo, hi):
-        row[i] = fill
-    if 0 <= zero_col < width and row[zero_col] == " ":
-        row[zero_col] = "|"
+    if width <= 0:
+        return ""
+    row[zero_col] = axis
+    n = _round(abs(v) * unit)
+    if v != 0 and n == 0:
+        n = 1
+    if v > 0:
+        for i in range(zero_col + 1, min(width, zero_col + 1 + n)):
+            row[i] = fill
+    elif v < 0:
+        for i in range(max(0, zero_col - n), zero_col):
+            row[i] = fill
     return "".join(row)
+
+
+def _axis_glyph(ramp) -> str:
+    """The zero axis of a diverging hbar: not the label separator (│ or |), so the two never read
+    as the same line — a broken bar ¦, or + in the pure-ASCII style."""
+    return "+" if _is_ascii_ramp(ramp) else "¦"
 
 
 def _render_bar_run(length: float, max_width: int, fill, fine=False, track=False, ascii_style=False) -> str:
@@ -1023,7 +1055,7 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=Fals
     if max_val == min_val:
         max_val = min_val + 1
     diverging = min_val < 0
-    zero_col = _zero_col(min_val, max_val, width) if diverging else 0
+    zero_col, unit = _diverging_scale(min_val, max_val, width) if diverging else (0, 0.0)
     max_name_w = max(_width(n) for n in names)
 
     blocks = []
@@ -1033,8 +1065,7 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=Fals
             v = matrix[s][c]
             fill = ramp[s % len(ramp)] if ramp else ""
             if diverging:
-                val_col = _round((v - min_val) / (max_val - min_val) * width)
-                bar = _diverging_bar_run(zero_col, val_col, width, fill or "█")
+                bar = _diverging_bar_run(v, zero_col, unit, width, fill or "█", _axis_glyph(ramp))
             else:
                 bar = _render_bar_run(v / max_val * width, width, fill, fine, track, ascii_style)
             color = _series_color(s) if color_on else -1
@@ -1112,11 +1143,10 @@ def _render_horizontal_bars(labels, values, width, ramp, fine=False, track=False
 
     lines = []
     if min_val < 0:
-        zc = _zero_col(min_val, max_val, width)
+        zc, unit = _diverging_scale(min_val, max_val, width)
         for i, v in enumerate(values):
             pad = " " * (max_label - _width(labels[i]))
-            val_col = _round((v - min_val) / (max_val - min_val) * width)
-            bar = _diverging_bar_run(zc, val_col, width, fill or "█")
+            bar = _diverging_bar_run(v, zc, unit, width, fill or "█", _axis_glyph(ramp))
             lines.append(f"{labels[i]}{pad} {_sep(ramp)} {bar} {_fmt(v)}")
         return "\n".join(lines)
     for i, v in enumerate(values):

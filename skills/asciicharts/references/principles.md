@@ -121,8 +121,8 @@ A reader decodes a chart by glyph. If one glyph means two things, the chart lies
 | dotted line | `+` on every other cell | | |
 | point marker, series *i* | `●○▲■□▼♦◊►◄` | `o x * + ^ v @ % & $` | |
 | threshold / reference line | `-` on even columns | `-` | |
-| zero baseline (vbar) | `-` in empty cells | | |
-| zero column (hbar) | `\|` in an empty cell | | |
+| zero baseline (diverging vbar) | `-` across the whole row | `-` | owned by no bar |
+| zero axis (diverging hbar) | `¦` | `+` | owned by no bar; not the separator |
 | label / plot separator | `│` | `\|` | |
 | y-axis tick | `┤` (left), `├` (right axis) | `+` | |
 | dotplot background | `·` | | |
@@ -260,24 +260,38 @@ chart in 2.4.
 ### 4.5 Diverging bars (negative values)
 
 When any value is negative, bars grow both ways from a zero line instead of all starting at the edge.
+**The zero line is an axis and belongs to no bar**: a positive bar starts just past it, a negative one
+ends just before it. Then `+v` and `−v` get the same length, zero draws nothing (not a one-cell stub
+that looks like a small value), and the axis stays visible on every row.
 
-hbar, width `W`:
+hbar, width `W` (one cell is the axis, `W − 1` are shared by both sides):
 
 ```
-zero_col = round((0 − min) / (max − min) × W)
-val_col  = round((v − min) / (max − min) × W)
-fill the cells in [min(zero_col, val_col), max(zero_col, val_col))
-put "|" at zero_col if that cell is still empty
+unit     = (W − 1) / (max − min)                       # cells per data unit; min < 0 ≤ max
+zero_col = clamp(round(−min × unit), 0, W − 1)         # the axis: ¦ (+ in the ascii style)
+cells    = round(|v| × unit), at least 1 if v ≠ 0
+v > 0: the cells right of zero_col;   v < 0: the cells left of it
 ```
 
-vbar, height `H`: `zero_row = y_row(0)` clamped into the plot; fill every row between `zero_row` and
-`y_row(v)` inclusive; write `-` into the empty cells of the zero row.
+```
+up   │           ¦██████████ 10
+zero │           ¦           0
+down │ ██████████¦           -10
+tiny │           ¦█          0.10
+```
+
+The axis glyph is `¦`, not `│` or `|`: those already separate the labels from the bars.
+
+vbar, height `H`: `zero_row = y_row(0)`, kept at least one row from the top when there are positive
+values and one row from the bottom (plots of 3 rows or more), and drawn as `-` across the whole plot. A
+positive bar fills the rows from `y_row(v)` down to just above the baseline, a negative one from just
+below the baseline down to `y_row(v)`; at least one row either way.
 
 ```
         ███    
 ███     ███    
 ███     ███    
-███-███-███-███
+---------------
     ███     ███
             ███
             ███

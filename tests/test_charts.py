@@ -131,6 +131,25 @@ def test_levels_are_equal_buckets_and_blank_is_never_a_value():
     assert spark == "▁██"
 
 
+def test_diverging_bars_leave_the_zero_line_to_the_axis():
+    """The zero row/column belongs to no bar: +v and -v get the same length, zero draws nothing,
+    and a tiny non-zero value still gets one cell."""
+    vbar = rows(render_chart({"chartType": "vbar", "border": "none", "height": 7, "width": 11,
+                              "labels": ["a", "b", "c"], "series": [{"values": [3, 0, -3]}]}))
+    assert vbar[3] == "-" * 11                       # the baseline row, whole
+    assert [r[0] for r in vbar[:7]].count("█") == 3  # +3: three rows above it
+    assert [r[8] for r in vbar[:7]].count("█") == 3  # -3: three rows below it
+    assert all(r[4] != "█" for r in vbar[:7])        # 0: nothing
+    hbar = rows(render_chart({"chartType": "hbar", "border": "none", "width": 21, "labels": ["up", "zero", "down", "tiny"],
+                              "series": [{"values": [10, 0, -10, 0.1]}]}))
+    bars = [r.split(" │ ")[1][:21] for r in hbar]
+    assert [b.index("¦") for b in bars] == [10] * 4  # one axis column for every row
+    assert bars[0].count("█") == bars[2].count("█") == 10 and bars[1].count("█") == 0 and bars[3].count("█") == 1
+    ascii_bar = render_chart({"chartType": "hbar", "style": "ascii", "border": "none", "labels": ["a", "b"],
+                              "series": [{"values": [5, -5]}]})
+    assert "+" in ascii_bar and "¦" not in ascii_bar  # pure ASCII, and not the | separator
+
+
 def test_charts_without_width_fill_the_default_plot_width():
     heat = {"chartType": "heatmap", "border": "none", "labels": ["a", "b", "c"],
             "series": [{"name": "r", "values": [1, 2, 3]}]}
