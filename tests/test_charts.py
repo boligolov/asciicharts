@@ -294,6 +294,13 @@ def test_zero_falls_on_a_labelled_row_with_the_least_widening():
     assert [r.split("┤")[0].strip() for r in rows(same_sign)] == ["4", "3", "2"]  # nothing to widen
 
 
+def test_every_non_zero_pie_slice_owns_at_least_one_cell():
+    out = render_chart({"chartType": "pie", "border": "none", "width": 20, "series": [
+        {"name": "big", "values": [999]}, {"name": "tiny", "values": [1]}, {"name": "zero", "values": [0]}]})
+    disc = out.split("\n\n")[0]
+    assert disc.count("▓") == 1 and "▒" not in disc  # tiny: one cell; zero: none
+
+
 def test_float_rounding_is_half_away_from_zero_like_go():
     # Python's round(2.5) == 2; Go's math.Round(2.5) == 3. Column 0.5 of 5 rows must round up.
     out = render_chart({"chartType": "vbar", "height": 5, "border": "none", "labels": ["a", "b"],

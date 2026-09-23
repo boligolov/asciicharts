@@ -396,7 +396,9 @@ for each cell (x, y):
     glyph = FILLS[slice]
 ```
 
-The legend carries the numbers: `█ Chrome: 62 (62.0%)`, percentages with one decimal.
+A non-zero slice too thin to own any cell (0.1% of a small pie) gets the one inside cell whose angle is
+nearest the middle of its own, taken from a slice with cells to spare: a value never exists only in the
+legend. The legend carries the numbers: `█ Chrome: 62 (62.0%)`, percentages with one decimal.
 
 ### 4.10 Histogram: bins
 

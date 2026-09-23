@@ -1544,14 +1544,14 @@ def _render_pie(inp):
     cx, cy = width / 2, height / 2
     radius = min(width / 2, height / 2 * PIE_ASPECT)
 
-    rows = []
+    # slice index per cell (-1 outside the circle), and each inside cell's angle as a fraction
+    grid = [[-1] * width for _ in range(height)]
+    fracs = {}
     for y in range(height):
-        cells = []
         for x in range(width):
             dx = x + 0.5 - cx
             dy = (y + 0.5 - cy) * PIE_ASPECT
             if math.hypot(dx, dy) > radius:
-                cells.append(" ")
                 continue
             angle = math.atan2(dx, -dy)
             if angle < 0:
@@ -1562,8 +1562,29 @@ def _render_pie(inp):
                 if frac <= cum:
                     sl = i
                     break
-            cells.append(_colorize(FILLS[sl % len(FILLS)], _series_color(sl), color_on))
-        rows.append("".join(cells))
+            grid[y][x] = sl
+            fracs[(x, y)] = frac
+
+    # A slice too thin to own a cell would exist only in the legend. Give it the cell nearest to
+    # the middle of its angle, taken from a slice that has cells to spare.
+    counts = {}
+    for row in grid:
+        for sl in row:
+            counts[sl] = counts.get(sl, 0) + 1
+    for i, v in enumerate(values):
+        if v <= 0 or counts.get(i, 0) > 0 or not fracs:
+            continue
+        mid = (cumulative[i] - v / total / 2) % 1.0
+        candidates = [(min(abs(f - mid), 1 - abs(f - mid)), y, x) for (x, y), f in fracs.items()
+                      if counts.get(grid[y][x], 0) > 1]
+        if candidates:
+            _, y, x = min(candidates)
+            counts[grid[y][x]] -= 1
+            grid[y][x] = i
+            counts[i] = 1
+
+    rows = ["".join(" " if sl < 0 else _colorize(FILLS[sl % len(FILLS)], _series_color(sl), color_on)
+                    for sl in row) for row in grid]
 
     legend = [
         f"{_legend_swatch(i, color_on, FILLS)} {names[i]}: {_fmt(v)} ({v / total * 100:.1f}%)"
