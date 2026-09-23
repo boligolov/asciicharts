@@ -227,7 +227,10 @@ Integer positions use floor division on non-negative integers (`i × (W − 1) /
 | sparkline | each series its own `min .. max` | shape only |
 | boxplot | global `min .. max` across groups | groups comparable |
 
-**A degenerate domain** (`hi == lo`, all values equal) becomes `lo .. lo + 1`, so nothing divides by zero.
+**A degenerate domain** (`hi == lo`, all values equal) becomes `v − 1 .. v + 1`: nothing divides by
+zero, and a flat series sits in the middle of the plot (a flat sparkline is `▄▄▄`) instead of on an edge.
+Printed ranges (dotplot, scatter) still show the data's own `[v, v]`, never the padded one. Bars are the
+exception: they always start at zero, so only all-zero bar data needs a range, `0 .. 1`.
 
 ### 4.3 Mapping a value to a row or column
 

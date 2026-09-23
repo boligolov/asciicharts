@@ -390,9 +390,13 @@ def _series_min_max(series) -> tuple[float, float]:
             hi = max(hi, v)
     if lo == math.inf:
         return 0.0, 1.0
-    if lo == hi:
-        hi = lo + 1
-    return lo, hi
+    return _scale_range(lo, hi)
+
+
+def _scale_range(lo: float, hi: float) -> tuple[float, float]:
+    """A usable scale for data spanning lo..hi. All-equal data gets a range centred on its value,
+    so a flat series sits mid-plot rather than on an edge (lo..lo+1 put it on the bottom row)."""
+    return (lo - 1, hi + 1) if hi == lo else (lo, hi)
 
 
 def _series_max_len(series) -> int:
@@ -702,7 +706,8 @@ def _render_sparkline(inp):
             raise ChartError(f"series {i} {_q(s['name'])} must contain at least one value")
         lo, hi = min(vals), max(vals)
         span = hi - lo
-        spark = "".join(SPARK_TICKS[_level((v - lo) / span, len(SPARK_TICKS)) if span > 0 else 0] for v in vals)
+        # a flat series is a flat line at half height, not on the floor
+        spark = "".join(SPARK_TICKS[_level((v - lo) / span, len(SPARK_TICKS)) if span > 0 else 3] for v in vals)
         spark = _colorize(spark, _series_color(i), inp["color"])
         lines.append(f"{s['name']} {spark}" if s["name"] else spark)
     return "\n".join(lines)
@@ -1373,12 +1378,11 @@ def _render_dotplot(inp):
     color_on = inp["color"]
     num_series = len(names)
 
-    min_val = max_val = matrix[0][0]
+    data_min = data_max = matrix[0][0]
     for row in matrix:
         for v in row:
-            min_val, max_val = min(min_val, v), max(max_val, v)
-    if max_val == min_val:
-        max_val = min_val + 1
+            data_min, data_max = min(data_min, v), max(data_max, v)
+    min_val, max_val = _scale_range(data_min, data_max)
     max_label = max(_width(l) for l in labels)
 
     lines = []
@@ -1396,7 +1400,7 @@ def _render_dotplot(inp):
             line += " " + _fmt(matrix[0][c])
         lines.append(line)
 
-    body = "\n".join(lines) + f"\nvalue axis: [{_fmt(min_val)}, {_fmt(max_val)}]"
+    body = "\n".join(lines) + f"\nvalue axis: [{_fmt(data_min)}, {_fmt(data_max)}]"
     if num_series > 1:
         body += "\n" + _named_legend(names, color_on, MARKERS)
     return body
@@ -1413,12 +1417,10 @@ def _render_scatter(inp):
             raise ChartError(f"series {i} {_q(s['name'])} must contain at least one point")
         pts.extend(s["points"])
 
-    min_x, max_x = min(p[0] for p in pts), max(p[0] for p in pts)
-    min_y, max_y = min(p[1] for p in pts), max(p[1] for p in pts)
-    if max_x == min_x:
-        max_x = min_x + 1
-    if max_y == min_y:
-        max_y = min_y + 1
+    data_x = min(p[0] for p in pts), max(p[0] for p in pts)
+    data_y = min(p[1] for p in pts), max(p[1] for p in pts)
+    min_x, max_x = _scale_range(*data_x)
+    min_y, max_y = _scale_range(*data_y)
 
     color_on = inp["color"]
     c = _Canvas(width, height)
@@ -1431,7 +1433,7 @@ def _render_scatter(inp):
             c.set_marker(px, py, MARKERS[si % len(MARKERS)], color)
 
     body = "\n".join(c.render(color_on))
-    body += f"\nx: [{_fmt(min_x)}, {_fmt(max_x)}]  y: [{_fmt(min_y)}, {_fmt(max_y)}]"
+    body += f"\nx: [{_fmt(data_x[0])}, {_fmt(data_x[1])}]  y: [{_fmt(data_y[0])}, {_fmt(data_y[1])}]"
     if len(series) > 1:
         names = [_series_label(s, i) for i, s in enumerate(series)]
         body += "\n" + _named_legend(names, color_on, MARKERS)
@@ -1583,9 +1585,7 @@ def _render_heatmap(inp):
         raise ChartError(f"labels length ({len(labels)}) must match each row's values length ({num_cols})")
 
     all_vals = [v for s in series for v in s["values"]]
-    lo, hi = min(all_vals), max(all_vals)
-    if hi == lo:
-        hi = lo + 1
+    lo, hi = _scale_range(min(all_vals), max(all_vals))
     color_on = inp["color"]
     row_label_w = max(_width(s["name"]) for s in series)
     # width is the grid's width (row labels excluded), 60 by default like line/area: cells widen
@@ -1632,8 +1632,7 @@ def _render_boxplot(inp):
         summaries.append(fn)
         names.append(_series_label(s, i))
         g_min, g_max = min(g_min, fn[0]), max(g_max, fn[4])
-    if g_max == g_min:
-        g_max = g_min + 1
+    g_min, g_max = _scale_range(g_min, g_max)
     max_name_w = max(_width(n) for n in names)
     color_on = inp["color"]
 

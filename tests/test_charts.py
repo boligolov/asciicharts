@@ -126,7 +126,7 @@ def test_levels_are_equal_buckets_and_blank_is_never_a_value():
                          "series": [{"name": "r", "values": [0, 24, 26, 76, 100]}]})
     assert rows(heat)[1].split() == ["r", "░░░", "░░░", "▒▒▒", "███", "███"]
     flat = render_chart({"chartType": "heatmap", "border": "none", "series": [{"name": "r", "values": [7, 7]}]})
-    assert "░" in flat
+    assert set(flat.split(" ", 1)[1].replace(" ", "")) == {"▓"}  # equal values: one mid-range shade, never blank
     spark = render_chart({"chartType": "sparkline", "border": "none", "series": [{"values": [0, 90, 100]}]})
     assert spark == "▁██"
 
@@ -173,7 +173,7 @@ def test_thresholds_are_dashed_and_named_right_of_the_plot():
 def test_reference_lines_go_behind_the_data():
     out = render_chart({"chartType": "line", "border": "none", "height": 3, "width": 12, "threshold": 5,
                         "series": [{"values": [5, 5]}]})
-    assert rows(out)[2].endswith("┤" + "█" * 12)  # the data line is whole, not cut into -█-█
+    assert rows(out)[1] == "5 ┤" + "█" * 12  # the data line is whole, not cut into -█-█
 
 
 def test_thresholds_on_the_same_row_share_it():
@@ -259,6 +259,18 @@ def test_small_values_keep_two_significant_digits():
     out = render_chart({"chartType": "hbar", "border": "none", "width": 10, "labels": ["a", "b", "c", "d"],
                         "series": [{"values": [0.001, 0.004, 0.5, 26.4]}]})
     assert [r.rsplit(" ", 1)[1] for r in rows(out)] == ["0.0010", "0.0040", "0.50", "26.40"]
+
+
+def test_a_flat_series_sits_mid_plot_and_reports_its_real_range():
+    line = rows(render_chart({"chartType": "line", "border": "none", "height": 5, "width": 10,
+                              "series": [{"values": [5, 5, 5]}]}))
+    assert line[2] == "   5 ┤" + "█" * 10 and line[0].startswith("   6") and line[4].startswith("   4")
+    dot = render_chart({"chartType": "dotplot", "border": "none", "width": 10, "labels": ["a"], "series": [{"values": [5]}]})
+    assert "value axis: [5, 5]" in dot and rows(dot)[0].index("●") == 9  # the middle of 10 cells
+    scatter = render_chart({"chartType": "scatter", "border": "none", "width": 9, "height": 3,
+                            "series": [{"points": [{"x": 2, "y": 3}]}]})
+    assert rows(scatter)[1] == "    ●    " and "x: [2, 2]  y: [3, 3]" in scatter
+    assert render_chart({"chartType": "sparkline", "border": "none", "series": [{"values": [4, 4]}]}) == "▄▄"
 
 
 def test_float_rounding_is_half_away_from_zero_like_go():
