@@ -7,14 +7,14 @@ the way. It is written for two readers:
 - **An agent that must draw a chart without running code.** Sections 1–6 give the rules, section 13 is
   a step-by-step procedure with a self-check.
 - **An engineer (or agent) re-implementing the renderer in another language** — Rust, Go, TypeScript.
-  Sections 4–9 are the specification, section 12 lists what to fix rather than copy, section 14 is the
-  porting checklist.
+  Sections 4–9 are the specification, sections 11–12 are what went wrong and what is still a
+  trade-off, section 14 is the porting checklist.
 
 Every example output in this document is real output of `asciicharts.py`, not a drawing.
 
 **Contents:** 1 The medium · 2 The glyph alphabet · 3 Identity without color · 4 From numbers to cells ·
 5 Layout · 6 Text · 7 The twelve chart types · 8 Styles · 9 Input, limits and errors · 10 Other media ·
-11 Mistakes we made · 12 Known imperfections · 13 Drawing by hand · 14 Porting checklist · 15 Summary
+11 Mistakes we made · 12 Limitations and choices · 13 Drawing by hand · 14 Porting checklist · 15 Summary
 
 ---
 
@@ -943,46 +943,47 @@ default Windows console font and editors using Consolas lack tier-2 glyphs.
 | Hand-maintained example outputs in docs | the gallery drifted from the renderer (a stale stacked vbar, a missing border) | generate examples from their specs and check them in CI |
 | Web page: decorative pixel font, line height 1.5 | block and box glyphs fell back to another font; frames looked dashed | self-host a full-coverage font, tight line height (10) |
 
+The following were found by the analysis that produced this document, confirmed on the running
+renderer, and fixed. Several were hiding **in the golden files**: a golden file pins behaviour, it does
+not prove it right — the corpus faithfully preserved a heatmap drawn entirely blank and a dotplot row
+missing a series.
+
+| mistake | symptom | principle |
+|---|---|---|
+| Levels picked with `floor(norm × (n − 1))`, blank as the lowest shade | the bottom fifth of every heatmap was empty; a heatmap of equal values was **entirely blank**; the top level only for the exact maximum | equal buckets; blank is not a level (4.12) |
+| The zero row/column shared by positive and negative bars | `+3` one row taller than `−3`; zero drew a stub; a diverging hbar had no one-cell minimum, so `−1.41` next to `76` **vanished** | the zero line is an axis owned by no bar (4.5) |
+| Threshold dashes written over data | a line along a threshold was cut into `-█-█` | reference lines go behind the data (4.7) |
+| Markers of different series on one cell: last one wins | a dotplot row of four series showed three | show an overlap glyph `*` and say so in the legend (7) |
+| A slice thinner than a cell got no cells | a 0.1% slice existed only in the legend | every non-zero value owns at least one cell (4.9) |
+| Two fixed decimals everywhere | `0.001` and `0.004` both printed `0.00` | two significant digits below 1 (4.13) |
+| Zero between rows; axis labels with float noise | an area chart's baseline read `0.50`; a label read `−28.00` for `−28`; a `−0` | put zero on a row; round labels to 12 significant digits (4.2, 4.13) |
+| All-equal data scaled to `v .. v + 1` | flat lines on the bottom edge; `value axis: [5, 6]` for data that is all 5 | a centred range, and print the data's own range (4.2) |
+| "Box drawing is font-safe" | the heavy `┃` boxplot median is not in Consolas; the test accepted the whole block | the safe set is WGL4, and the test checks exactly that (2.1) |
+| Structural glyphs inside the series ramp | `|` (the ascii separator) and `.` (the connector) were ramp glyphs 21 and 23; the ascii diverging axis was `|` too | one role per glyph, pinned by a test (2.2, 2.3) |
+
 ---
 
-## 12. Known imperfections in the reference implementation
+## 12. Known limitations and deliberate choices
 
-The Python renderer keeps these for byte parity with its golden corpus. A new implementation should fix
-them (and regenerate its own goldens) rather than copy them.
+The analysis behind this document found eleven imperfections in the renderer. Nine are fixed (section
+11, second table): the golden corpus was regenerated one fix at a time, each diff reviewed and
+confined to the charts the fix concerned. What remains is either a deliberate trade-off or future work —
+a port should know these, and may improve on them:
 
-1. **Floor quantisation wastes the ends of the ramp.** In a heatmap, every value in the lowest fifth of
-   the range is blank — indistinguishable from "no data" (`1, 2, 3, 4` next to `100` are all blank);
-   only the exact maximum gets `█`; a sparkline reaches `█` only at its maximum. Better: reserve blank
-   for missing data and map the range onto the visible levels, e.g.
-   `level = 1 + min(n − 2, floor(norm × (n − 1)))` for `n` levels including blank, or round instead of floor.
-2. **The zero row is shared in diverging vbars.** A zero value draws one cell (looks like a small bar);
-   `+3` gets one row more than `−3` because the zero row belongs to the positive bar. Better: the
-   baseline row belongs to no bar and always shows the baseline glyph.
-3. **Threshold dashes overwrite data** on even columns (`-█-█-█` where a line runs along a threshold).
-   Better: draw dashes only into empty cells, or draw data above reference lines.
-4. **Overlaps hide series.** Lines, scatter markers and dotplot markers that land on the same cell: the
-   last series wins and the earlier one disappears (two identical dotplot values show one marker).
-   Boxplot: when min and median share a position, `┃` overwrites `├`. Better: an explicit overlap glyph
-   or a documented priority, plus a note.
-5. **Tiny pie slices vanish.** A slice under one cell's worth of angle has no cells; only the legend
-   shows it. Acceptable (the legend is always printed), but say so, or guarantee one cell.
-6. **Two fixed decimals lose small values and bloat large ones.** `0.001` and `0.004` both print `0.00`;
-   `123456789.5` prints `123456789.50`. Better: a fixed number of significant digits and/or SI suffixes
-   (`1.2k`, `3.4M`), chosen once per axis so labels stay comparable.
-7. **Axis labels are exact row values, and zero may fall between rows.** Labels read `26.40, 22.80`, and
-   an area chart's baseline row is labelled `0.50`. Better: choose a "nice" domain (steps of 1, 2, 2.5,
-   5 × 10ⁿ) and a height so that ticks are round and zero lands on a row.
-8. **vbar has no value labels, and the one-cell minimum exaggerates.** `0.1` next to `10` draws a full
-   row — a quarter of a 4-row chart. The minimum is right (a value must not disappear), but then the
-   value must be printed somewhere.
-9. **A flat series gets an invented range.** All values equal → the domain `v .. v + 1`, and a dotplot
-   prints `value axis: [5, 6]` although nothing is 6.
-10. **`width` is approximate for vbar** (floor division, 5.4), and **hbar's default bar is 40** while
-    everything else defaults to 60.
-11. **Two glyph-role clashes survive.** In `ascii` style a diverging hbar uses `|` both as the label
-    separator and as its zero column; and `.`, the ASCII connector for `showPoints`, is also the 23rd
-    series glyph of the ASCII ramp. Better: a distinct zero-column glyph (for example `+` or `:`
-    reserved for it) and a ramp that excludes the connector.
+1. **Axis labels are exact row values, not "nice" numbers.** Rows read `26.40, 22.80` rather than
+   `25, 20`. Zero is always on a row (4.2), but a nice-number domain (steps of 1, 2, 2.5, 5 × 10ⁿ) would
+   widen the data's range and leave rows unused; the reference keeps the plot filled instead.
+2. **vbar prints no values.** Its value is only as precise as a row, and the one-cell minimum makes a
+   tiny value look bigger than it is (`0.1` next to `10` fills one of four rows). Use hbar when exact
+   values matter — it prints every one.
+3. **`width` is approximate for vbar** (floor division, 5.4: asked 23, got 19), and **hbar's default bar
+   is 40** long while other plots default to 60 — with labels and values an hbar ends up about as wide.
+4. **Crossing lines overwrite each other.** Where two line series cross, the later series is drawn on
+   top; lines crossing is ordinary, so there is no overlap glyph for them (unlike markers, section 7).
+5. **Boxplot marks on one cell:** the median `║` wins over `├`/`┤` when they coincide; the statistics
+   printed after the row always give the exact five numbers.
+6. **Emoji built with zero-width joiners** have no reliable width (6.1).
+7. **Large numbers are printed in full** (`123456789.50`); there are no SI suffixes (`123.5M`).
 
 ---
 
@@ -1088,7 +1089,9 @@ the port. To reach byte parity:
   `unicodedata` and a Rust crate (`unicode-width`) may disagree on newer emoji. Pin the version and test
   with the CJK/emoji/combining cases.
 
-Then fix section 12 deliberately, in separate commits, regenerating goldens with a reviewed diff.
+The corpus reflects the fixed behaviour described in this document. If a port changes behaviour on
+purpose (section 12 lists candidates), do it one change per commit and regenerate its goldens with a
+reviewed diff: every changed case should be one the change is about.
 
 **Robustness.**
 
@@ -1121,10 +1124,12 @@ handful of glyphs); build rows as arrays and join once.
 6. Bars start at zero; lines and dotplots may zoom, but say the range.
 7. The grid shows shape; printed numbers carry precision.
 8. Round half away from zero, sum left to right, split stacks by largest remainder — exactly, everywhere.
-9. A non-zero value never disappears; a zero value is visibly empty.
+9. A non-zero value never disappears (bars, diverging bars, pie slices); a zero value is visibly empty.
+   Blank never stands for a value; a series never silently hides another.
 10. Fill a sensible default width; `width` is the plot, not the decoration.
 11. Measure text in display columns; never cut a wide character; sanitise control characters.
 12. Frames are always rectangular.
 13. Deterministic: same spec, same bytes.
 14. Bounded input, strict types, one-line errors that say how to fix the call. Never crash on input.
-15. Examples are generated, checked and never hand-edited.
+15. Examples are generated, checked and never hand-edited. Golden files pin behaviour; they don't prove it
+    right — review what they preserve.
