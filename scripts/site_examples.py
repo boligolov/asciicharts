@@ -1,11 +1,13 @@
-"""Renders the chart examples shown on the landing page, in both a plain (mono) and a colored
-variant, and writes them to src/data/charts.json as ready-to-embed HTML strings.
+#!/usr/bin/env python3
+"""Render the chart examples shown on the landing page (site/), in both a plain (mono) and a colored
+variant, and write them to site/src/data/charts.json as ready-to-embed HTML strings.
+
+    python scripts/site_examples.py           # rewrite charts.json
+    python scripts/site_examples.py --check   # exit 1 if it is stale
 
 Static, checked-in output on purpose: the site is plain HTML/CSS/JS and its build (`astro build`,
 on GitHub Pages/Vercel/Netlify) never needs Python installed. Re-run this after changing the specs
-below or after any renderer change that affects their output:
-
-    python site/scripts/render_examples.py
+below or after any renderer change that affects their output; a test fails if you forget.
 """
 
 import html
@@ -14,12 +16,12 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent.parent
+ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from asciicharts import render_chart  # noqa: E402
 
-OUT = Path(__file__).resolve().parent.parent / "src" / "data" / "charts.json"
+OUT = ROOT / "site" / "src" / "data" / "charts.json"
 
 _ANSI_RUN = re.compile(r"\x1b\[38;5;(\d+)m(.*?)\x1b\[0m", re.S)
 
@@ -129,9 +131,11 @@ EXAMPLES = [
     {
         "id": "line",
         "spec": {
-            "chartType": "line", "border": "light", "title": "Response time vs SLA", "height": 10, "width": 96,
-            "threshold": 50, "showPoints": True,
-            "series": [{"values": [20, 25, 22, 30, 45, 38, 55, 60, 48, 35, 30, 28]}],
+            "chartType": "line", "border": "light", "title": "Latency p99 (ms)", "height": 10, "width": 80,
+            "showPoints": True,
+            "labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            "thresholds": [{"value": 106, "label": "target"}, {"value": 140, "label": "SLA"}],
+            "series": [{"values": [92, 98, 120, 131, 112, 101, 95]}],
         },
     },
     {
@@ -163,7 +167,7 @@ EXAMPLES = [
 ]
 
 
-def main():
+def rendered() -> str:
     out = []
     for ex in EXAMPLES:
         mono = render_chart(ex["spec"])
@@ -175,9 +179,20 @@ def main():
             "mono_html": html.escape(mono),
             "color_html": ansi_to_html(color),
         })
-    OUT.write_text(json.dumps(out, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"wrote {len(out)} example(s) to {OUT.relative_to(ROOT)}")
+    return json.dumps(out, indent=2, ensure_ascii=False) + "\n"
+
+
+def main(argv):
+    new = rendered()
+    if "--check" in argv:
+        if OUT.read_text(encoding="utf-8") != new:
+            print(f"{OUT.relative_to(ROOT)} is stale (run python scripts/site_examples.py)", file=sys.stderr)
+            return 1
+        return 0
+    OUT.write_text(new, encoding="utf-8", newline="\n")
+    print(f"wrote {len(EXAMPLES)} example(s) to {OUT.relative_to(ROOT)}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main(sys.argv[1:]))

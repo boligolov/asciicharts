@@ -8,9 +8,9 @@ server/                 the MCP server (installed as the `asciicharts_server` pa
 skills/asciicharts/     the skill: SKILL.md, scripts/, references/ — see docs/skill.md
 deploy/                 Dockerfile, docker-compose (dev and prod), Caddyfile, .env.example
 tests/                  pytest suite; tests/golden/ pins renderer output; tests/skill_evals/ holds the skill's evals
-scripts/                sync_skill.py, package_skill.py, gallery_refresh.py, gallery_toc.py
+scripts/                sync_skill.py, package_skill.py, gallery_refresh.py, site_examples.py
 docs/                   this file, gallery.md (every chart rendered), skill.md
-TODO.md  LICENSE  pyproject.toml
+LICENSE  pyproject.toml
 ```
 
 ## Setup
@@ -62,7 +62,7 @@ pytest
 python scripts/sync_skill.py
 ```
 
-`tests/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn, refresh every printed output with `python scripts/gallery_refresh.py`, the contents list with `python scripts/gallery_toc.py`; a test fails if either is stale) and `python scripts/sync_skill.py` copies it into the skill.
+`tests/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn or adding an example, `python scripts/gallery_refresh.py` re-renders every printed output and rebuilds the contents list; a test fails if either is stale) and `python scripts/sync_skill.py` copies it into the skill.
 
 ## Docker
 
@@ -80,7 +80,8 @@ HTTP — set `PORT`:
 
 ```sh
 docker run --rm -e PORT=8080 -p 8080:8080 asciicharts
-curl localhost:8080/healthz          # ok
+curl localhost:8080/healthz          # ok  (on Windows prefer 127.0.0.1: the server listens on IPv4,
+                                     #      and "localhost" tries IPv6 first — ~200 ms per request)
 ```
 
 The image has no `curl`; `asciicharts-mcp healthcheck` is a subcommand of the server itself that GETs its own `/healthz` and exits 0/1 (used by the compose files in `deploy/`).

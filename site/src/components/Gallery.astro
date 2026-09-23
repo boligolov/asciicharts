@@ -5,7 +5,7 @@ import Chart from "./Chart.astro";
 const items = [
   { id: "pie", kind: "pie" },
   { id: "vbar", kind: "vbar · grouped" },
-  { id: "line", kind: "line · threshold + points", wide: true },
+  { id: "line", kind: "line · labelled thresholds", wide: true },
   { id: "diverging", kind: "hbar · stacked, diverging" },
   { id: "heatmap", kind: "heatmap" },
   { id: "dual_axis", kind: "dual_axis", wide: true },
@@ -21,7 +21,7 @@ const items = [
       Every one of these is real <code>render_chart()</code> output
     </h2>
     <p class="lede" style="margin-bottom: 32px;">
-      Bars, stacks, diverging values, lines with thresholds, two y-axes, pies, heatmaps, a pure-ASCII style for when Unicode isn't
+      Bars, stacks, diverging values, lines with labelled thresholds, two y-axes, pies, heatmaps, a pure-ASCII style for when Unicode isn't
       safe to assume. <a href="https://github.com/boligolov/asciicharts/blob/master/docs/gallery.md">See every chart type and style →</a>
     </p>
     <div class="gallery">

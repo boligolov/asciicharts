@@ -81,7 +81,9 @@ problem, so the model can correct the call — for example `series 0 "" must con
 or `width must be at most 500, got 9999`.
 
 **Limits:** `width` ≤ 500, `height` ≤ 200, `bins` ≤ 500, at most 100 series and 50,000 values/points in
-total; values must be finite numbers. Requests beyond that are rejected, not truncated.
+total; values must be finite numbers no larger than 1e15 in magnitude; `title`, `labels` and names at most 200
+characters. Requests beyond that are rejected, not truncated. Control characters in text (newlines, escape
+sequences) are replaced by spaces.
 
 ## Running it
 

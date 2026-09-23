@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
-"""Re-render every example in docs/gallery.md from the JSON spec printed above it.
+"""Keep docs/gallery.md honest: re-render every example from the JSON spec printed above it, and
+rebuild the table of contents from the headings.
 
-    python scripts/gallery_refresh.py           # rewrite the output blocks
-    python scripts/gallery_refresh.py --check   # exit 1 if any printed output is stale
+    python scripts/gallery_refresh.py           # rewrite the output blocks and the contents
+    python scripts/gallery_refresh.py --check   # exit 1 if either is stale
 
 Each example is a ```json spec block immediately followed by its output block; the output is
-replaced by what asciicharts.render_chart() produces for that spec today. Run it (then
-scripts/gallery_toc.py and scripts/sync_skill.py) after changing how anything is drawn.
+replaced by what asciicharts.render_chart() produces for that spec today. The contents block sits
+between <!-- toc --> and <!-- /toc -->: every "###" heading, grouped by the chart type it starts
+with (the first word). Run it (then scripts/sync_skill.py) after changing how anything is drawn or
+adding an example.
 """
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -17,6 +21,35 @@ sys.path.insert(0, str(ROOT))
 from asciicharts import render_chart  # noqa: E402
 
 GALLERY = ROOT / "docs" / "gallery.md"
+START, END = "<!-- toc -->", "<!-- /toc -->"
+
+
+def anchor(heading: str) -> str:
+    """GitHub's heading id: lowercase, drop punctuation (keep - and _), spaces to hyphens."""
+    return re.sub(r"[^\w\- ]", "", heading.strip().lower()).replace(" ", "-")
+
+
+def headings(text: str):
+    return re.findall(r"^### (.+)$", text, re.M)
+
+
+def build_toc(text: str) -> str:
+    groups = {}
+    for h in headings(text):
+        m = re.match(r"^(\w+)\s*(?:\((.*)\))?$", h)
+        kind, detail = (m.group(1), m.group(2)) if m else (h, None)
+        groups.setdefault(kind, []).append((detail or "default", h))
+    lines = []
+    for kind, items in groups.items():
+        links = " · ".join(f"[{detail}](#{anchor(h)})" for detail, h in items)
+        lines.append(f"- **{kind}**: {links}" if len(items) > 1 or items[0][0] != "default"
+                     else f"- **[{kind}](#{anchor(items[0][1])})**")
+    return "\n".join(lines)
+
+
+def updated(text: str) -> str:
+    a, b = text.index(START) + len(START), text.index(END)
+    return text[:a] + "\n" + build_toc(text) + "\n" + text[b:]
 
 
 def refreshed(text: str):
@@ -54,14 +87,18 @@ def refreshed(text: str):
 def main(argv):
     text = GALLERY.read_text(encoding="utf-8")
     new, stale = refreshed(text)
+    new = updated(new)
+    toc_stale = updated(text) != text
     if "--check" in argv:
-        if stale:
-            print("stale examples in docs/gallery.md: " + ", ".join(stale) + " (run python scripts/gallery_refresh.py)", file=sys.stderr)
+        problems = (["stale examples: " + ", ".join(stale)] if stale else []) + (["stale contents"] if toc_stale else [])
+        if problems:
+            print("docs/gallery.md: " + "; ".join(problems) + " (run python scripts/gallery_refresh.py)", file=sys.stderr)
             return 1
         return 0
-    if stale:
+    if new != text:
         GALLERY.write_text(new, encoding="utf-8", newline="\n")
-    print(f"{len(stale)} example(s) refreshed" + (": " + ", ".join(stale) if stale else ""))
+    print(f"{len(stale)} example(s) refreshed" + (": " + ", ".join(stale) if stale else "")
+          + f"; contents {'rebuilt' if toc_stale else 'up to date'} ({len(headings(new))} examples)")
     return 0
 
 

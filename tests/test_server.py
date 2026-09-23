@@ -35,6 +35,11 @@ async def check_tools(client):
                                                   "thresholds": [{"value": 4, "label": "target"}, {"value": 2}]})
     assert not ref.is_error and "target: 4" in ref.content[0].text
 
+    for loose in ({"series": [{"values": ["1", "2"]}]}, {"series": [{"values": [True, False]}]},
+                  {"series": [{"values": [1, 2]}], "width": "40"}, {"series": [{"values": [1, 2]}], "showPoints": "yes"}):
+        coerced = await client.call_tool("render_chart", {"chartType": "line", **loose})
+        assert coerced.is_error, f"{loose} should be rejected, not coerced"
+
     bad = await client.call_tool("render_chart", {"chartType": "line", "series": [{"values": [1]}]})
     assert bad.is_error and "at least two values" in bad.content[0].text
 

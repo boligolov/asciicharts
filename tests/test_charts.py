@@ -151,6 +151,72 @@ def test_threshold_and_thresholds_combine():
     assert rows(out)[0].endswith("  cap: 9") and rows(out)[-1] == "- - threshold: 1"
 
 
+def test_control_characters_in_text_become_spaces():
+    out = render_chart({"chartType": "hbar", "title": "a\nb\x1b[2J", "labels": ["x\ty", "z"],
+                        "series": [{"name": "s\r", "values": [1, 2]}]})
+    assert "\x1b" not in out and "\t" not in out and "\r" not in out
+    r = rows(out)
+    assert len(r) == 6 and "a b [2J" in r[1] and r[3].startswith("│ x y │")
+    assert len({len(line) for line in r}) == 1  # still a rectangle
+
+
+def test_magnitude_limit_leaves_room_for_every_chart_type():
+    """1e15 is accepted everywhere and never crashes the scale — the limit sits below where it breaks."""
+    for chart in CHART_TYPES:
+        spec = {"chartType": chart, "labels": ["a", "b"], "bins": 2,
+                "series": [{"name": "s", "values": [1e15, 1e15 - 1],
+                            "points": [{"x": -1e15, "y": 1e15}, {"x": 1e15, "y": -1e15}]},
+                           {"name": "t", "values": [-1e15, 5], "points": [{"x": 0, "y": 0}]}]}
+        if chart == "pie":
+            spec["series"] = [{"name": "a", "values": [1e15]}, {"name": "b", "values": [1]}]
+        for stacked in (False, True):
+            try:
+                render_chart({**spec, "stacked": stacked})
+            except ChartError as e:  # a shape rule of that chart (e.g. histogram: one series), not the limit
+                assert "magnitude" not in str(e)
+
+
+def display_width(line):
+    """Terminal columns, computed independently of the renderer: CJK and most emoji take two,
+    combining accents and format characters none."""
+    import unicodedata
+    return sum(0 if unicodedata.combining(c) or unicodedata.category(c) in ("Mn", "Me", "Cf")
+               else 2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in line)
+
+
+WIDE_TEXT = ["東京", "🍕 pizza", "e\u0301te\u0301", "plain"]
+
+
+@pytest.mark.parametrize("chart", CHART_TYPES)
+@pytest.mark.parametrize("use_color", ["off", "on"])
+def test_wide_and_combining_characters_keep_the_frame_rectangular(chart, use_color):
+    import re
+    spec = {"chartType": chart, "useColor": use_color, "title": "売上 🔥 résumé", "labels": WIDE_TEXT, "bins": 3,
+            "showPoints": True, "thresholds": [{"value": 3, "label": "目標 🎯"}],
+            "series": [{"name": WIDE_TEXT[i], "values": [1 + i, 4, 2, 5], "points": [{"x": 1, "y": 2}, {"x": 3, "y": 1}]}
+                       for i in range(2)]}
+    if chart == "histogram":
+        spec["series"] = spec["series"][:1]
+    if chart == "pie":
+        spec["series"] = [{"name": t, "values": [i + 1]} for i, t in enumerate(WIDE_TEXT)]
+    plain = re.sub(r"\x1b\[[0-9;]*m", "", render_chart(spec))
+    assert len({display_width(line) for line in plain.split("\n")}) == 1
+
+
+def test_a_wide_character_is_never_cut_in_half():
+    out = render_chart({"chartType": "heatmap", "border": "none", "width": 18, "labels": ["月曜日", "火", "水"],
+                        "series": [{"name": "朝", "values": [1, 2, 3]}]})
+    header = rows(out)[0]
+    assert "月曜 " in header and "月曜日" not in header  # 6 columns into a 5-column cell: the third glyph drops whole
+
+
+def test_pointchar_must_be_one_column_wide():
+    spec = {"chartType": "line", "showPoints": True, "series": [{"values": [1, 2]}]}
+    with pytest.raises(ChartError, match="pointChar must be a single-width character"):
+        render_chart({**spec, "pointChar": "🔴"})
+    assert "x" in render_chart({**spec, "pointChar": "x"})
+
+
 def test_float_rounding_is_half_away_from_zero_like_go():
     # Python's round(2.5) == 2; Go's math.Round(2.5) == 3. Column 0.5 of 5 rows must round up.
     out = render_chart({"chartType": "vbar", "height": 5, "border": "none", "labels": ["a", "b"],
@@ -168,6 +234,12 @@ def test_float_rounding_is_half_away_from_zero_like_go():
     ({"chartType": "line", "useColor": "x", "series": [{"values": [1, 2]}]}, 'invalid useColor "x"'),
     ({"chartType": "line", "series": [{"values": [1]}]}, "at least two values"),
     ({"chartType": "line", "thresholds": 5, "series": [{"values": [1, 2]}]}, "thresholds must be an array"),
+    ({"chartType": "line", "series": [{"values": [1e308, -1e308]}]}, "value must be at most 1e15 in magnitude, got 1e"),
+    ({"chartType": "scatter", "series": [{"points": [{"x": 2e15, "y": 1}]}]}, "point x must be at most 1e15"),
+    ({"chartType": "line", "threshold": -1e16, "series": [{"values": [1, 2]}]}, "threshold must be at most 1e15"),
+    ({"chartType": "line", "title": "x" * 201, "series": [{"values": [1, 2]}]}, "title must be at most 200 characters, got 201"),
+    ({"chartType": "hbar", "labels": ["ok", "y" * 201], "series": [{"values": [1, 2]}]}, "labels 1 must be at most 200"),
+    ({"chartType": "hbar", "series": [{"name": "n" * 201, "values": [1]}]}, "name must be at most 200"),
     ({"chartType": "line", "thresholds": [{"label": "x"}], "series": [{"values": [1, 2]}]},
      "thresholds 0 value must be a number"),
     ({"chartType": "line", "thresholds": [{"value": 1, "label": "x" * 41}], "series": [{"values": [1, 2]}]},
