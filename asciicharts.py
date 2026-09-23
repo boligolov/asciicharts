@@ -294,6 +294,10 @@ ASCII_MARKERS = ["o", "x", "*", "+", "^", "v", "@", "%", "&", "$"]
 # '@') reads better as the second glyph there — the same swap ASCII_FILLS makes for the first.
 AREA_ASCII_FILLS = ["#", ":", "%", "&", "$", "W", "M", "N", "H", "D", "G", "U", "O", "S", "Z", "X", "=", "/", "\\", "@", ";", "!", "'"]
 MARKERS = ["●", "○", "▲", "■", "□", "▼", "♦", "◊", "►", "◄"]
+# Where markers of different series land on the same cell (scatter, dotplot), neither may silently
+# hide the other: the cell shows this glyph, and the legend explains it.
+OVERLAP_MARKER = "*"
+OVERLAP_NOTE = f"{OVERLAP_MARKER} overlap"
 PALETTE256 = [39, 208, 40, 201, 51, 226]
 THRESHOLD_COLOR = 244
 HEAT_RAMP = [21, 27, 33, 39, 45, 51, 87, 123, 159, 195, 226, 220, 214, 208, 202, 196]
@@ -1388,11 +1392,18 @@ def _render_dotplot(inp):
     max_label = max(_width(l) for l in labels)
 
     lines = []
+    overlap = False
     for c, lbl in enumerate(labels):
         row = ["·"] * width
         crow = [-1] * width
+        owner = [-1] * width
         for s in range(num_series):
             col = _clamp(_round((matrix[s][c] - min_val) / (max_val - min_val) * (width - 1)), 0, width - 1)
+            if owner[col] >= 0:
+                row[col], crow[col] = OVERLAP_MARKER, -1
+                overlap = True
+                continue
+            owner[col] = s
             row[col] = MARKERS[s % len(MARKERS)]
             if color_on:
                 crow[col] = _series_color(s)
@@ -1404,7 +1415,7 @@ def _render_dotplot(inp):
 
     body = "\n".join(lines) + f"\nvalue axis: [{_fmt(data_min)}, {_fmt(data_max)}]"
     if num_series > 1:
-        body += "\n" + _named_legend(names, color_on, MARKERS)
+        body += "\n" + _named_legend(names, color_on, MARKERS) + ("   " + OVERLAP_NOTE if overlap else "")
     return body
 
 
@@ -1427,18 +1438,25 @@ def _render_scatter(inp):
     color_on = inp["color"]
     c = _Canvas(width, height)
     pw, ph = width, height
+    owner = {}
+    overlap = False
     for si, s in enumerate(series):
         color = _series_color(si) if color_on else -1
         for px_, py_ in s["points"]:
             px = _round((px_ - min_x) / (max_x - min_x) * (pw - 1))
             py = ph - 1 - _round((py_ - min_y) / (max_y - min_y) * (ph - 1))
-            c.set_marker(px, py, MARKERS[si % len(MARKERS)], color)
+            if owner.setdefault((px, py), si) != si:
+                c.cell_char[py][px], c.cell_color[py][px] = OVERLAP_MARKER, -1
+                overlap = True
+                continue
+            if c.cell_char[py][px] != OVERLAP_MARKER:
+                c.set_marker(px, py, MARKERS[si % len(MARKERS)], color)
 
     body = "\n".join(c.render(color_on))
     body += f"\nx: [{_fmt(data_x[0])}, {_fmt(data_x[1])}]  y: [{_fmt(data_y[0])}, {_fmt(data_y[1])}]"
     if len(series) > 1:
         names = [_series_label(s, i) for i, s in enumerate(series)]
-        body += "\n" + _named_legend(names, color_on, MARKERS)
+        body += "\n" + _named_legend(names, color_on, MARKERS) + ("   " + OVERLAP_NOTE if overlap else "")
     return body
 
 

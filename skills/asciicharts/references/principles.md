@@ -130,6 +130,7 @@ A reader decodes a chart by glyph. If one glyph means two things, the chart lies
 | label / plot separator | `│` | `\|` | |
 | y-axis tick | `┤` (left), `├` (right axis) | `+` | |
 | dotplot background | `·` | | |
+| markers of different series in one cell (scatter, dotplot) | `*` | | legend adds `* overlap` |
 | boxplot | `─` whisker, `█` box, `├` min, `┤` max, `║` median | | |
 
 The ASCII track glyph is a comma precisely because a comma is used nowhere else — not in the ramp, not
@@ -703,7 +704,9 @@ Overlaid or stacked, negative values fill downward (4.8). All series the same le
 
 ### scatter
 
-`points: [{x, y}]` per series, one marker shape per series, ranges printed below. Default 60 × 15.
+`points: [{x, y}]` per series, one marker shape per series, ranges printed below. Default 60 × 15. Where
+markers of different series land on the same cell, the cell shows `*` and the legend adds
+`* overlap` (dotplot does the same) — the last series drawn must not silently hide the others.
 
 ```
      ○              

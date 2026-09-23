@@ -273,6 +273,19 @@ def test_a_flat_series_sits_mid_plot_and_reports_its_real_range():
     assert render_chart({"chartType": "sparkline", "border": "none", "series": [{"values": [4, 4]}]}) == "▄▄"
 
 
+def test_overlapping_markers_of_different_series_are_shown_not_hidden():
+    dot = render_chart({"chartType": "dotplot", "border": "none", "width": 10, "labels": ["a", "b"],
+                        "series": [{"name": "x", "values": [5, 1]}, {"name": "y", "values": [5, 9]}]})
+    assert rows(dot)[0] == "a │ ·····*····" and rows(dot)[-1].endswith("* overlap")
+    apart = render_chart({"chartType": "dotplot", "border": "none", "labels": ["a"],
+                          "series": [{"name": "x", "values": [1]}, {"name": "y", "values": [9]}]})
+    assert "*" not in apart  # the note appears only when something overlaps
+    scatter = render_chart({"chartType": "scatter", "border": "none", "width": 9, "height": 3,
+                            "series": [{"name": "A", "points": [{"x": 1, "y": 1}, {"x": 2, "y": 2}]},
+                                       {"name": "B", "points": [{"x": 2, "y": 2}, {"x": 3, "y": 3}]}]})
+    assert rows(scatter)[1] == "    *    " and "* overlap" in scatter
+
+
 def test_float_rounding_is_half_away_from_zero_like_go():
     # Python's round(2.5) == 2; Go's math.Round(2.5) == 3. Column 0.5 of 5 rows must round up.
     out = render_chart({"chartType": "vbar", "height": 5, "border": "none", "labels": ["a", "b"],
