@@ -111,11 +111,24 @@ def test_heatmap_width_widens_cells_to_fill_the_grid():
     spec = {"chartType": "heatmap", "border": "none", "labels": ["Mon", "Tue"],
             "series": [{"name": "am", "values": [0, 10]}]}
     narrow = [r.rstrip() for r in rows(render_chart({**spec, "width": 7}))]
-    assert narrow == ["   Mon Tue", "am     ███"]
+    assert narrow == ["   Mon Tue", "am ░░░ ███"]
     wide = [r.rstrip() for r in rows(render_chart({**spec, "width": 21}))]
-    assert wide == ["      Mon        Tue", "am            ██████████"]
+    assert wide == ["      Mon        Tue", "am ░░░░░░░░░░ ██████████"]
     # never narrower than a 3-character cell, however small width is
     assert render_chart({**spec, "width": 2}) == render_chart({**spec, "width": 7})
+
+
+def test_levels_are_equal_buckets_and_blank_is_never_a_value():
+    """Heatmap shades and sparkline ticks split the range into equal buckets: the lowest value is
+    visible (never blank, which would read as "no data") and the top level covers the top bucket,
+    not the maximum alone."""
+    heat = render_chart({"chartType": "heatmap", "border": "none", "labels": list("abcde"), "width": 19,
+                         "series": [{"name": "r", "values": [0, 24, 26, 76, 100]}]})
+    assert rows(heat)[1].split() == ["r", "░░░", "░░░", "▒▒▒", "███", "███"]
+    flat = render_chart({"chartType": "heatmap", "border": "none", "series": [{"name": "r", "values": [7, 7]}]})
+    assert "░" in flat
+    spark = render_chart({"chartType": "sparkline", "border": "none", "series": [{"values": [0, 90, 100]}]})
+    assert spark == "▁██"
 
 
 def test_charts_without_width_fill_the_default_plot_width():

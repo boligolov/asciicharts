@@ -394,17 +394,20 @@ statistics follow as text.
 
 ### 4.12 Quantising to a small set of levels
 
-Heatmap shade and sparkline tick use floor:
+Split the range into **equal buckets**, one per visible level:
 
 ```
-norm  = (v − lo) / (hi − lo)                      # 0..1
-shade = SHADES[floor(norm × 4)]                   # 5 levels: " ░▒▓█"
-tick  = SPARK_TICKS[floor(norm × 7)]              # 8 levels: "▁▂▃▄▅▆▇█" (0 if the series is flat)
-color = HEAT_RAMP[floor(norm × 15)]               # 16 colors
+norm   = (v − lo) / (hi − lo)                     # 0..1
+level  = min(n − 1, floor(norm × n))              # bucket 0..n−1; the maximum joins the top bucket
+tick   = SPARK_TICKS[level(norm, 8)]              # "▁▂▃▄▅▆▇█" (▁ if the series is flat)
+shade  = SHADES[1 + level(norm, 4)]               # "░▒▓█" — never the blank
+color  = HEAT_RAMP[level(norm, 16)]               # 16 colors
 ```
 
-Floor means the top level is reached only by the maximum itself, and the bottom shade is blank. See
-12.1 for why a port should do better.
+Two traps this avoids. Scaling by `n − 1` and flooring (`floor(norm × (n − 1))`) gives the top level to
+the exact maximum alone and squeezes everything else down. And **blank is not a level**: a heatmap cell
+that holds a value must be visible, or the lowest values read as "no data" (the old renderer left the
+bottom fifth of every heatmap empty, and a heatmap of equal values entirely empty).
 
 ### 4.13 Numbers as text
 
@@ -740,8 +743,8 @@ Cell width `max(3, (W + 1) // columns − 1)`, one space between cells, headers 
 
 ```
     Mon Tue Wed Thu Fri 
-9am             ░░░     
-5pm ▓▓▓ ▒▒▒ ▓▓▓ ▓▓▓ ███ 
+9am ░░░ ░░░ ░░░ ▒▒▒ ░░░ 
+5pm ███ ▓▓▓ ███ ███ ███ 
 ```
 
 ### boxplot
@@ -991,7 +994,7 @@ Example, `H = 6`, `max = 70`, 2025 = `30 45 40 60` → rows `3 4 3 5`; 2026 = `3
 
 ```
 1. lo, hi = min, max
-2. for each value: index = floor((v − lo) / (hi − lo) × 7); glyph = "▁▂▃▄▅▆▇█"[index]
+2. for each value: index = min(7, floor((v − lo) / (hi − lo) × 8)); glyph = "▁▂▃▄▅▆▇█"[index]
 ```
 
 `4 6 5 9 3 7 8 2 6 9 4` (lo 2, hi 9) → `▃▅▄█▂▆▇▁▅█▃`.

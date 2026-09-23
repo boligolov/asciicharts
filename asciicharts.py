@@ -698,10 +698,7 @@ def _render_sparkline(inp):
             raise ChartError(f"series {i} {_q(s['name'])} must contain at least one value")
         lo, hi = min(vals), max(vals)
         span = hi - lo
-        spark = "".join(
-            SPARK_TICKS[int((v - lo) / span * (len(SPARK_TICKS) - 1)) if span > 0 else 0]
-            for v in vals
-        )
+        spark = "".join(SPARK_TICKS[_level((v - lo) / span, len(SPARK_TICKS)) if span > 0 else 0] for v in vals)
         spark = _colorize(spark, _series_color(i), inp["color"])
         lines.append(f"{s['name']} {spark}" if s["name"] else spark)
     return "\n".join(lines)
@@ -1527,6 +1524,13 @@ def _render_histogram(inp):
     return _render_horizontal_bars(labels, counts, inp["width"], _bar_fill_ramp(inp["style"]), inp["style"] == "fine")
 
 
+def _level(norm: float, n: int) -> int:
+    """Which of n equal-width buckets norm (0..1) falls in: 0..n-1, the maximum in the top one.
+    (Scaling by n - 1 and flooring would give the top level to the maximum alone and leave the
+    bottom level to a sliver of the range.)"""
+    return min(n - 1, int(norm * n))
+
+
 def _render_heatmap(inp):
     series = inp["series"]
     if not series:
@@ -1561,9 +1565,10 @@ def _render_heatmap(inp):
         for v in s["values"]:
             norm = (v - lo) / (hi - lo)
             if color_on:
-                cell = _colorize("█" * cell_w, HEAT_RAMP[int(norm * (len(HEAT_RAMP) - 1))], True)
+                cell = _colorize("█" * cell_w, HEAT_RAMP[_level(norm, len(HEAT_RAMP))], True)
             else:
-                cell = SHADES[int(norm * (len(SHADES) - 1))] * cell_w
+                # blank is not a level: every value is data, so the lowest one still gets ░
+                cell = SHADES[1 + _level(norm, len(SHADES) - 1)] * cell_w
             line += cell + " "
         out.append(line)
     return "\n".join(out)
