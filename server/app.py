@@ -35,7 +35,7 @@ from typing import Annotated, Any, Literal
 
 from mcp.server.mcpserver import MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, StrictBool, StrictFloat, StrictInt
 from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 
@@ -53,19 +53,21 @@ ChartType = Literal[
 ]
 
 
+# Strict types: "1" and true are not numbers. Pydantic's lax mode would coerce them, so the same spec
+# would render over MCP and fail in the library (which rejects booleans as values).
 class Point(BaseModel):
-    x: float
-    y: float
+    x: StrictFloat
+    y: StrictFloat
 
 
 class Series(BaseModel):
     name: Annotated[str | None, Field(description="optional series/category/row name, used in legends and axis labels")] = None
-    values: Annotated[list[float] | None, Field(description="numeric values; meaning depends on chartType, see list_charts")] = None
+    values: Annotated[list[StrictFloat] | None, Field(description="numeric values; meaning depends on chartType, see list_charts")] = None
     points: Annotated[list[Point] | None, Field(description="(x, y) samples, used only by scatter charts")] = None
 
 
 class Threshold(BaseModel):
-    value: float
+    value: StrictFloat
     label: Annotated[str | None, Field(max_length=asciicharts.MAX_THRESHOLD_LABEL, description="shown right of the plot next to the value, e.g. \"target\" or \"SLA\"")] = None
 
 
@@ -153,16 +155,16 @@ def build_server(stats: Store | None = None) -> MCPServer:
         series: Annotated[list[Series], Field(description="one or more data series/rows/slices to plot; see list_charts for how each chartType reads them")],
         labels: Annotated[list[str] | None, Field(description="category labels for vbar/hbar/histogram/dotplot bars, x-axis labels for line/area, or column headers for a heatmap")] = None,
         title: Annotated[str | None, Field(description="optional title shown above the chart")] = None,
-        width: Annotated[int | None, Field(ge=0, le=asciicharts.MAX_WIDTH, description="chart width in characters (default depends on chart type)")] = None,
-        height: Annotated[int | None, Field(ge=0, le=asciicharts.MAX_HEIGHT, description="chart height in rows (default depends on chart type)")] = None,
+        width: Annotated[StrictInt | None, Field(ge=0, le=asciicharts.MAX_WIDTH, description="chart width in characters (default depends on chart type)")] = None,
+        height: Annotated[StrictInt | None, Field(ge=0, le=asciicharts.MAX_HEIGHT, description="chart height in rows (default depends on chart type)")] = None,
         border: Annotated[Literal["none", "ascii", "light", "heavy", "double", "rounded"] | None, Field(description="border style (default: light)")] = None,
         style: Annotated[Literal["solid", "fine", "halftone", "ascii", "dotted"] | None, Field(description="visual style. vbar/hbar/histogram/area: solid (default; flat blocks, bars end on whole character cells), fine (bars end on eighth-block glyphs for sub-cell precision; needs a font that has them, which Consolas does not), halftone (lighter stippled Unicode shades per series) or ascii (plain-ASCII characters per series — #, X, H, W, =, :, |, . then @ % & $ M N D O U S G Z / \\ ! — that render identically in any monospace font). line: solid (default) or dotted (sparse plotted-dot trend line)")] = None,
-        stacked: Annotated[bool | None, Field(description="for vbar/hbar/area with multiple series, stack them (cumulative from zero; negative values stack the other way) instead of grouping/overlaying")] = None,
-        bins: Annotated[int | None, Field(ge=0, le=asciicharts.MAX_BINS, description="number of buckets for histogram charts (default: 10)")] = None,
+        stacked: Annotated[StrictBool | None, Field(description="for vbar/hbar/area with multiple series, stack them (cumulative from zero; negative values stack the other way) instead of grouping/overlaying")] = None,
+        bins: Annotated[StrictInt | None, Field(ge=0, le=asciicharts.MAX_BINS, description="number of buckets for histogram charts (default: 10)")] = None,
         useColor: Annotated[Literal["auto", "on", "off"] | None, Field(description="ANSI 256-color output (default: auto, which is equivalent to off since tool output is plain text for an agent, not a terminal)")] = None,
-        threshold: Annotated[float | None, Field(description="line charts only: draw a dashed horizontal reference line at this y-value")] = None,
+        threshold: Annotated[StrictFloat | None, Field(description="line charts only: draw a dashed horizontal reference line at this y-value")] = None,
         thresholds: Annotated[list[Threshold] | None, Field(max_length=asciicharts.MAX_THRESHOLDS, description="line charts only: several dashed horizontal reference lines, each named with its value right of the plot, e.g. [{\"value\": 106, \"label\": \"target\"}]")] = None,
-        showPoints: Annotated[bool | None, Field(description="line charts only: mark each individual data point with a glyph on top of the connecting line")] = None,
+        showPoints: Annotated[StrictBool | None, Field(description="line charts only: mark each individual data point with a glyph on top of the connecting line")] = None,
         pointChar: Annotated[str | None, Field(description="line charts only, with showPoints: single character used to mark points on every series (default: a large circle for the first series, with a distinct shape per additional series)")] = None,
     ) -> str:
         args = dict(

@@ -80,7 +80,8 @@ HTTP — set `PORT`:
 
 ```sh
 docker run --rm -e PORT=8080 -p 8080:8080 asciicharts
-curl localhost:8080/healthz          # ok
+curl localhost:8080/healthz          # ok  (on Windows prefer 127.0.0.1: the server listens on IPv4,
+                                     #      and "localhost" tries IPv6 first — ~200 ms per request)
 ```
 
 The image has no `curl`; `asciicharts-mcp healthcheck` is a subcommand of the server itself that GETs its own `/healthz` and exits 0/1 (used by the compose files in `deploy/`).

@@ -36,11 +36,13 @@ from __future__ import annotations
 import argparse
 import copy
 import csv
+import functools
 import io
 import json
 import math
 import re
 import sys
+import unicodedata
 
 __version__ = "1.0.0"
 __all__ = ["render_chart", "list_charts", "spec_from_csv", "ChartError", "CHART_TYPES", "CHARTS", "__version__",
@@ -180,12 +182,61 @@ def _clamp(v: int, lo: int, hi: int) -> int:
     return lo if v < lo else hi if v > hi else v
 
 
+@functools.lru_cache(maxsize=4096)  # charts reuse a handful of glyphs over and over
+def _char_width(ch: str) -> int:
+    """Terminal columns one code point takes: 2 for East Asian wide/fullwidth (CJK, most emoji),
+    0 for combining marks and invisible format characters (accents, ZWJ, variation selectors)."""
+    if unicodedata.combining(ch) or unicodedata.category(ch) in ("Mn", "Me", "Cf"):
+        return 0
+    return 2 if unicodedata.east_asian_width(ch) in "WF" else 1
+
+
+def _cells(s: str) -> list:
+    """s split into terminal columns: a wide character is followed by an empty "" cell (its
+    right half), a zero-width one joins the column before it. "".join(_cells(s)) == s, and
+    len(_cells(s)) is the width s takes on screen."""
+    if s.isascii():
+        return list(s)
+    out = []
+    for ch in s:
+        w = _char_width(ch)
+        if w == 0 and out:
+            out[-2 if out[-1] == "" else -1] += ch
+        elif w == 2:
+            out += [ch, ""]
+        else:
+            out.append(ch)
+    return out
+
+
+def _width(s: str) -> int:
+    """len(_cells(s)), without building the list: this runs on every line of every frame."""
+    if s.isascii():
+        return len(s)
+    lead = 1 if _char_width(s[0]) == 0 else 0  # a leading zero-width character gets a column of its own
+    return sum(map(_char_width, s)) + lead
+
+
+def _pad(s: str, width: int) -> str:
+    """s left-aligned in width columns."""
+    return s + " " * (width - _width(s))
+
+
 def _truncate(s: str, n: int) -> str:
-    return "" if n <= 0 else s[:n]
+    """The first n columns of s; a wide character that would be cut in half becomes a space."""
+    if n <= 0:
+        return ""
+    cells = _cells(s)
+    if len(cells) <= n:
+        return s
+    cut = cells[:n]
+    if cells[n] == "":  # the last kept cell is the left half of a wide character
+        cut[-1] = " "
+    return "".join(cut)
 
 
 def _pad_center(s: str, width: int) -> str:
-    w = len(s)
+    w = _width(s)
     if w >= width:
         return _truncate(s, width)
     left = (width - w) // 2
@@ -276,7 +327,7 @@ _BORDERS = {
 
 
 def _visible_width(s: str) -> int:
-    return len(_ANSI.sub("", s)) if "\x1b" in s else len(s)
+    return _width(_ANSI.sub("", s)) if "\x1b" in s else _width(s)
 
 
 def _wrap_border(body: str, title: str, style: str) -> str:
@@ -363,21 +414,21 @@ def _x_axis_labels(labels, n: int, plot_width: int, left_pad: int) -> str:
     placed = []
     for i, lbl in enumerate(labels):
         cell = _truncate(lbl, 8)
-        start = _clamp(_x_pixel(i, n, plot_width) - len(cell) // 2, 0, max(plot_width - len(cell), 0))
+        start = _clamp(_x_pixel(i, n, plot_width) - _width(cell) // 2, 0, max(plot_width - _width(cell), 0))
         placed.append((start, cell))
     # When labels don't all fit, drop the ones that would touch a neighbour rather
     # than let them run together ("JaFeb"); the first and last always stay.
     keep = [True] + [False] * (n - 2) + [True] if n > 1 else [True]
-    end = placed[0][0] + len(placed[0][1])
+    end = placed[0][0] + _width(placed[0][1])
     last_start = placed[-1][0]
     for i in range(1, n - 1):
         start, cell = placed[i]
-        if start > end and start + len(cell) < last_start:
+        if start > end and start + _width(cell) < last_start:
             keep[i] = True
-            end = start + len(cell)
+            end = start + _width(cell)
     for (start, cell), k in zip(placed, keep):
         if k:
-            for j, r in enumerate(cell):
+            for j, r in enumerate(_cells(cell)):
                 if start + j < plot_width:
                     row[start + j] = r
     return " " * left_pad + "".join(row).rstrip(" ")
@@ -496,6 +547,10 @@ MAX_SERIES = 100
 MAX_THRESHOLDS = 20
 MAX_THRESHOLD_LABEL = 40
 MAX_VALUES = 50_000  # values + points across all series
+# Beyond this, scale arithmetic stops being exact (lo + 1 == lo past 2**53) and extremes overflow
+# to inf; no readable chart needs numbers this large.
+MAX_MAGNITUDE = 1e15
+MAX_TEXT = 200  # title, labels, series names: characters
 
 
 def _num(v, where: str) -> float:
@@ -503,6 +558,8 @@ def _num(v, where: str) -> float:
         raise ChartError(f"{where} must be a number, got {_q(v)}")
     if not math.isfinite(v):
         raise ChartError(f"{where} must be a finite number, got {v}")
+    if abs(v) > MAX_MAGNITUDE:
+        raise ChartError(f"{where} must be at most 1e15 in magnitude, got {v:g}")
     return float(v)
 
 
@@ -519,13 +576,24 @@ def _int(spec: dict, key: str, limit: int) -> int:
     return max(v, 0)
 
 
+def _clean(s: str, where: str) -> str:
+    """Bounded length, and control characters (newlines, tabs, ESC and the rest of Unicode
+    category Cc) replaced by spaces: a newline would break the chart's rows, and an escape
+    sequence in a title that came from untrusted data would reach whatever terminal shows it."""
+    if len(s) > MAX_TEXT:
+        raise ChartError(f"{where} must be at most {MAX_TEXT} characters, got {len(s)}")
+    if any(unicodedata.category(ch) == "Cc" for ch in s):
+        s = "".join(" " if unicodedata.category(ch) == "Cc" else ch for ch in s)
+    return s
+
+
 def _text(spec: dict, key: str) -> str:
     v = spec.get(key)
     if v is None:
         return ""
     if not isinstance(v, str):
         raise ChartError(f"{key} must be a string, got {_q(v)}")
-    return v
+    return _clean(v, key)
 
 
 def _thresholds(raw) -> list:
@@ -546,6 +614,15 @@ def _thresholds(raw) -> list:
             raise ChartError(f"thresholds {i}: label must be at most {MAX_THRESHOLD_LABEL} characters, got {len(label)}")
         out.append((_num(t.get("value"), f"thresholds {i} value"), label))
     return out
+
+
+def _point_char(spec: dict) -> str:
+    """pointChar's first character; it fills exactly one plot cell, so it must be one column wide."""
+    ch = _text(spec, "pointChar")[:1]
+    if ch and _char_width(ch) != 1:
+        raise ChartError(f"pointChar must be a single-width character, got {_q(ch)} (wide characters such as emoji "
+                         "take two columns)")
+    return ch
 
 
 def _normalize(spec: dict) -> dict:
@@ -592,7 +669,7 @@ def _normalize(spec: dict) -> dict:
     return {
         "chartType": _text(spec, "chartType"),
         "series": series,
-        "labels": [str(l) for l in labels],
+        "labels": [_clean(str(l), f"labels {i}") for i, l in enumerate(labels)],
         "title": _text(spec, "title"),
         "width": _int(spec, "width", MAX_WIDTH),
         "height": _int(spec, "height", MAX_HEIGHT),
@@ -605,7 +682,7 @@ def _normalize(spec: dict) -> dict:
         "threshold": None if threshold is None else _num(threshold, "threshold"),
         "thresholds": _thresholds(spec.get("thresholds")),
         "showPoints": bool(spec.get("showPoints")),
-        "pointChar": _text(spec, "pointChar"),
+        "pointChar": _point_char(spec),
     }
 
 
@@ -758,7 +835,7 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
             if bw > 1:
                 bar_width = bw
 
-    max_label_w = max(len(l) for l in labels)
+    max_label_w = max(_width(l) for l in labels)
     group_w = max(bars_per_group * bar_width, max_label_w)
     bars_offset = (group_w - bars_per_group * bar_width) // 2
     total_w = max(num_cat * group_w + (num_cat - 1) * gap, 1)
@@ -893,8 +970,8 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
         out.append("".join(_colorize(grid[r][x], cgrid[r][x], color_on) for x in range(total_w)))
     label_row = [" "] * total_w
     for c, lbl in enumerate(labels):
-        start = c * (group_w + gap) + (group_w - len(lbl)) // 2
-        for j, ch in enumerate(lbl):
+        start = c * (group_w + gap) + (group_w - _width(lbl)) // 2
+        for j, ch in enumerate(_cells(lbl)):
             if 0 <= start + j < total_w:
                 label_row[start + j] = ch
     out.append("".join(label_row).rstrip(" "))
@@ -950,7 +1027,7 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=Fals
         max_val = min_val + 1
     diverging = min_val < 0
     zero_col = _zero_col(min_val, max_val, width) if diverging else 0
-    max_name_w = max(len(n) for n in names)
+    max_name_w = max(_width(n) for n in names)
 
     blocks = []
     for c, lbl in enumerate(labels):
@@ -964,7 +1041,7 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=Fals
             else:
                 bar = _render_bar_run(v / max_val * width, width, fill, fine, track, ascii_style)
             color = _series_color(s) if color_on else -1
-            lines.append(f"  {name}{' ' * (max_name_w - len(name))} {_sep(ramp)} {_colorize(bar, color, color_on)} {_fmt(v)}")
+            lines.append(f"  {_pad(name, max_name_w)} {_sep(ramp)} {_colorize(bar, color, color_on)} {_fmt(v)}")
         blocks.append("\n".join(lines))
     return "\n\n".join(blocks)
 
@@ -973,7 +1050,7 @@ def _render_hbar_stacked_diverging(labels, names, matrix, width, color_on, ramp,
     pos_cols = _split_rows(max_pos, max_neg, width)
     neg_cols = width - pos_cols
     seg_ramp = ramp or FILLS
-    max_label_w = max(len(l) for l in labels)
+    max_label_w = max(_width(l) for l in labels)
 
     def seg(s, w):
         color = _series_color(s) if color_on else -1
@@ -990,7 +1067,7 @@ def _render_hbar_stacked_diverging(labels, names, matrix, width, color_on, ramp,
         for s, w in enumerate(up):
             bar += seg(s, w)
         bar += " " * (pos_cols - sum(up))
-        lines.append(f"{lbl}{' ' * (max_label_w - len(lbl))} {_sep(ramp)} {bar} {_fmt(net)}")
+        lines.append(f"{_pad(lbl, max_label_w)} {_sep(ramp)} {bar} {_fmt(net)}")
 
     legend = _named_legend(names, color_on, ramp) if ramp else _named_legend(names, color_on)
     return "\n".join(lines) + "\n\n" + legend
@@ -1005,7 +1082,7 @@ def _render_hbar_stacked(labels, names, matrix, width, color_on, ramp):
         max_sum = max(max_sum, _sum(matrix[s][c] for s in range(len(names))))
     if max_sum == 0:
         max_sum = 1
-    max_label_w = max(len(l) for l in labels)
+    max_label_w = max(_width(l) for l in labels)
     seg_ramp = ramp or FILLS
 
     lines = []
@@ -1018,7 +1095,7 @@ def _render_hbar_stacked(labels, names, matrix, width, color_on, ramp):
             color = _series_color(s) if color_on else -1
             bar += _colorize(seg_ramp[s % len(seg_ramp)] * w, color, color_on)
             used += w
-        label = lbl + " " * (max_label_w - len(lbl))
+        label = _pad(lbl, max_label_w)
         lines.append(f"{label} {_sep(ramp)} {bar}{' ' * (width - used)} {_fmt(col_sum)}")
 
     legend = _named_legend(names, color_on, ramp) if ramp else _named_legend(names, color_on)
@@ -1028,7 +1105,7 @@ def _render_hbar_stacked(labels, names, matrix, width, color_on, ramp):
 def _render_horizontal_bars(labels, values, width, ramp, fine=False, track=False, ascii_style=False):
     if width <= 0:
         width = 40
-    max_label = max(len(l) for l in labels)
+    max_label = max(_width(l) for l in labels)
     fill = ramp[0] if ramp else ""
     min_val = max_val = 0.0
     for v in values:
@@ -1040,13 +1117,13 @@ def _render_horizontal_bars(labels, values, width, ramp, fine=False, track=False
     if min_val < 0:
         zc = _zero_col(min_val, max_val, width)
         for i, v in enumerate(values):
-            pad = " " * (max_label - len(labels[i]))
+            pad = " " * (max_label - _width(labels[i]))
             val_col = _round((v - min_val) / (max_val - min_val) * width)
             bar = _diverging_bar_run(zc, val_col, width, fill or "█")
             lines.append(f"{labels[i]}{pad} {_sep(ramp)} {bar} {_fmt(v)}")
         return "\n".join(lines)
     for i, v in enumerate(values):
-        pad = " " * (max_label - len(labels[i]))
+        pad = " " * (max_label - _width(labels[i]))
         lines.append(f"{labels[i]}{pad} {_sep(ramp)} {_render_bar_run(v / max_val * width, width, fill, fine, track, ascii_style)} {_fmt(v)}")
     return "\n".join(lines)
 
@@ -1270,7 +1347,7 @@ def _render_dotplot(inp):
             min_val, max_val = min(min_val, v), max(max_val, v)
     if max_val == min_val:
         max_val = min_val + 1
-    max_label = max(len(l) for l in labels)
+    max_label = max(_width(l) for l in labels)
 
     lines = []
     for c, lbl in enumerate(labels):
@@ -1282,7 +1359,7 @@ def _render_dotplot(inp):
             if color_on:
                 crow[col] = _series_color(s)
         cells = "".join(_colorize(ch, crow[i], color_on) for i, ch in enumerate(row))
-        line = f"{lbl}{' ' * (max_label - len(lbl))} │ {cells}"
+        line = f"{_pad(lbl, max_label)} │ {cells}"
         if num_series == 1:
             line += " " + _fmt(matrix[0][c])
         lines.append(line)
@@ -1471,7 +1548,7 @@ def _render_heatmap(inp):
     if hi == lo:
         hi = lo + 1
     color_on = inp["color"]
-    row_label_w = max(len(s["name"]) for s in series)
+    row_label_w = max(_width(s["name"]) for s in series)
     # width is the grid's width (row labels excluded), 60 by default like line/area: cells widen
     # to fill it, but never shrink below HEAT_CELL_WIDTH, so many columns just widen the grid.
     cell_w = max(HEAT_CELL_WIDTH, ((inp["width"] or 60) + 1) // num_cols - 1)
@@ -1480,7 +1557,7 @@ def _render_heatmap(inp):
     if labels:
         out.append(" " * (row_label_w + 1) + "".join(_pad_center(c, cell_w) + " " for c in labels))
     for s in series:
-        line = s["name"] + " " * (row_label_w - len(s["name"])) + " "
+        line = _pad(s["name"], row_label_w) + " "
         for v in s["values"]:
             norm = (v - lo) / (hi - lo)
             if color_on:
@@ -1517,7 +1594,7 @@ def _render_boxplot(inp):
         g_min, g_max = min(g_min, fn[0]), max(g_max, fn[4])
     if g_max == g_min:
         g_max = g_min + 1
-    max_name_w = max(len(n) for n in names)
+    max_name_w = max(_width(n) for n in names)
     color_on = inp["color"]
 
     def pos(v):
@@ -1533,7 +1610,7 @@ def _render_boxplot(inp):
             row[x] = "█"
         row[min_p], row[max_p], row[med_p] = "├", "┤", "┃"
         body = _colorize("".join(row), _series_color(i), color_on)
-        name = names[i] + " " * (max_name_w - len(names[i]))
+        name = _pad(names[i], max_name_w)
         lines.append(f"{name} │ {body}  min={_fmt(mn)} q1={_fmt(q1)} med={_fmt(med)} "
                      f"q3={_fmt(q3)} max={_fmt(mx)}")
     return "\n".join(lines)

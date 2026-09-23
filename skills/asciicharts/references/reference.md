@@ -39,7 +39,7 @@ Each entry in `series` has `name`, `values`, and `points` — which ones you fil
 
 ## Limits
 
-Requests are bounded so a single call can't ask for a gigantic chart: `width` ≤ 500, `height` ≤ 200, `bins` ≤ 500, at most 100 series and 50,000 values/points in total. Values must be finite numbers (no NaN/Infinity). Violations are reported as errors, not truncated.
+Requests are bounded so a single call can't ask for a gigantic chart: `width` ≤ 500, `height` ≤ 200, `bins` ≤ 500, at most 100 series and 50,000 values/points in total. Values must be finite numbers (no NaN/Infinity) no larger than 1e15 in magnitude. `title`, `labels` and series names are at most 200 characters; control characters in them (newlines, tabs, escape sequences) are replaced by spaces, so a string from untrusted data can't break the chart's rows or send escape codes to a terminal. Text is aligned by the columns it takes on screen, not by its length: CJK characters and most emoji count as two, combining accents as none, so labels in any script keep the frame straight (emoji joined into one glyph with zero-width joiners, like 👨‍👩‍👧, are drawn differently by different terminals and can still be off). `pointChar` must be one column wide. Violations are reported as errors, not truncated.
 
 ## Errors
 
