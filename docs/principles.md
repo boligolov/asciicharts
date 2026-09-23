@@ -67,8 +67,8 @@ Consolas, Courier New and Lucida Console, the defaults of many Windows editors.
 | tier | glyphs | status |
 |---|---|---|
 | 0 — ASCII | printable U+0020–U+007E | always safe |
-| 1 — safe Unicode | Latin-1 (U+00A0–U+00FF, includes `·`), box drawing U+2500–U+257F (`─│┌┐└┘├┤┬┴┼━┃╭╮╰╯═║╔╗╚╝` …), the shades `░▒▓█`, the half blocks `▌▄▐▀`, the markers `●○▲■□▼♦◊►◄` | the default alphabet |
-| 2 — needs a capable font | eighth blocks `▁▂▃▄▅▆▇` (vertical) and `▏▎▍▋▊▉` (horizontal), quadrants, braille | only on request (`style: "fine"`) and in sparklines, documented as such |
+| 1 — safe Unicode | Latin-1 (U+00A0–U+00FF, includes `·` and `¦`), the **WGL4** box drawing: light and double lines only (`─│┌┐└┘├┤┬┴┼` and `═║╔╗╚╝╠╣╦╩╬` …), the shades `░▒▓█`, the half blocks `▌▄▐▀`, the markers `●○▲■□▼♦◊►◄` | the default alphabet |
+| 2 — needs a capable font | heavy (`━┃┏┓`), rounded (`╭╮╰╯`) and dashed box drawing; eighth blocks `▁▂▃▄▅▆▇` (vertical) and `▏▎▍▋▊▉` (horizontal); quadrants; braille | only on request (`border: "heavy"`/`"rounded"`, `style: "fine"`) and in sparklines, documented as such |
 
 Rules that come out of this:
 
@@ -79,6 +79,8 @@ Rules that come out of this:
 - **Sparklines are the one default exception**: a one-line trend needs eighth-height ticks
   `▁▂▃▄▅▆▇█` to have any vertical resolution at all. Document it.
 - A test walks the whole golden corpus and fails if any default output contains a glyph outside tier 0–1.
+  "Box drawing is safe" is not precise enough: the fonts cover the WGL4 subset, and the test checks that
+  set (it caught the boxplot median, once a heavy `┃`, now `║`).
 
 ### 2.2 Ink density: shades are a ramp, not decoration
 
@@ -128,7 +130,7 @@ A reader decodes a chart by glyph. If one glyph means two things, the chart lies
 | label / plot separator | `│` | `\|` | |
 | y-axis tick | `┤` (left), `├` (right axis) | `+` | |
 | dotplot background | `·` | | |
-| boxplot | `─` whisker, `█` box, `├` min, `┤` max, `┃` median | | |
+| boxplot | `─` whisker, `█` box, `├` min, `┤` max, `║` median | | |
 
 The ASCII track glyph is a comma precisely because a comma is used nowhere else — not in the ramp, not
 as a marker, not as the connector `.`. A test enforces it.
@@ -165,6 +167,9 @@ left-T, right-T):
 | `double` | `╔ ╗ ╚ ╝ ═ ║ ╠ ╣` |
 | `ascii` | `+ + + + - \| + +` |
 | `none` | no frame; a title becomes a plain first line |
+
+`light` (the default), `double` and `ascii` are safe everywhere; `heavy` and `rounded` need a tier-2 font
+(section 2.1) and are opt-in for that reason.
 
 ---
 
@@ -409,7 +414,7 @@ Q(q) = s[a] + (s[b] − s[a]) × (pos − a)
 
 Five numbers: min, Q(0.25), median Q(0.5), Q(0.75), max — computed from raw samples, never asked of the
 caller. Positions: `clamp(round((v − gmin) / (gmax − gmin) × (W − 1)), 0, W − 1)`; draw `─` from min to
-max, `█` from Q1 to Q3, then `├` at min, `┤` at max, `┃` at the median (later writes win). The exact
+max, `█` from Q1 to Q3, then `├` at min, `┤` at max, `║` at the median (later writes win). The exact
 statistics follow as text.
 
 ### 4.12 Quantising to a small set of levels
@@ -776,8 +781,8 @@ Cell width `max(3, (W + 1) // columns − 1)`, one space between cells, headers 
 One series of raw samples per group (4.11).
 
 ```
-A │       ├──███┃███─────┤    min=55 q1=62.75 med=71 q3=78.75 max=95
-B │ ├──────██┃███──────────┤  min=40 q1=58.50 med=64 q3=69.50 max=99
+A │       ├──███║███─────┤    min=55 q1=62.75 med=71 q3=78.75 max=95
+B │ ├──────██║███──────────┤  min=40 q1=58.50 med=64 q3=69.50 max=99
 ```
 
 ### dotplot (Cleveland)

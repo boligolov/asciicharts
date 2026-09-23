@@ -1649,7 +1649,8 @@ def _render_boxplot(inp):
             row[x] = "─"
         for x in range(q1_p, q3_p + 1):
             row[x] = "█"
-        row[min_p], row[max_p], row[med_p] = "├", "┤", "┃"
+        # ║, not the heavy ┃: heavy box drawing is missing from Consolas and Courier New
+        row[min_p], row[max_p], row[med_p] = "├", "┤", "║"
         body = _colorize("".join(row), _series_color(i), color_on)
         name = _pad(names[i], max_name_w)
         lines.append(f"{name} │ {body}  min={_fmt(mn)} q1={_fmt(q1)} med={_fmt(med)} "

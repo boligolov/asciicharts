@@ -504,6 +504,9 @@ def test_track_glyph_is_font_safe():
 # right edge of an otherwise rectangular chart ragged.
 SAFE_FILLS = set("█▓▒░▌▄▐▀")
 SAFE_MARKERS = set("●○▲■□▼♦◊►◄")
+# The box-drawing glyphs of WGL4, the set Consolas, Courier New and Lucida Console actually cover:
+# light and double lines only — heavy (━┃), rounded (╭╮) and dashed lines are not in it.
+WGL4_BOX = set("─│┌┐└┘├┤┬┴┼═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬")
 
 
 def test_fill_and_marker_tables_only_contain_font_safe_glyphs():
@@ -515,14 +518,17 @@ def test_fill_and_marker_tables_only_contain_font_safe_glyphs():
 
 def test_default_output_uses_only_font_safe_glyphs():
     """Across the whole golden corpus, everything except sparklines and style "fine" (both use eighth
-    blocks, documented as needing a capable font) stays inside ASCII, Latin-1, box drawing and the safe sets."""
+    blocks, documented as needing a capable font) and the opt-in heavy and rounded borders stays inside
+    ASCII, Latin-1, WGL4 box drawing and the safe sets."""
     checked = 0
     for case in load("corpus.json"):
         spec = case["spec"]
         if "out" not in case or spec["chartType"] == "sparkline" or spec.get("style") == "fine":
             continue
+        if spec.get("border") in ("heavy", "rounded"):
+            continue
         for ch in set(case["out"]):
-            ok = ord(ch) < 0x100 or "─" <= ch <= "╿" or ch in SAFE_FILLS or ch in SAFE_MARKERS
+            ok = ord(ch) < 0x100 or ch in WGL4_BOX or ch in SAFE_FILLS or ch in SAFE_MARKERS
             assert ok, f"{ch!r} (U+{ord(ch):04X}) in the output of {spec}"
         checked += 1
     assert checked > 200
