@@ -129,9 +129,11 @@ EXAMPLES = [
     {
         "id": "line",
         "spec": {
-            "chartType": "line", "border": "light", "title": "Response time vs SLA", "height": 10, "width": 96,
-            "threshold": 50, "showPoints": True,
-            "series": [{"values": [20, 25, 22, 30, 45, 38, 55, 60, 48, 35, 30, 28]}],
+            "chartType": "line", "border": "light", "title": "Latency p99 (ms)", "height": 10, "width": 80,
+            "showPoints": True,
+            "labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            "thresholds": [{"value": 106, "label": "target"}, {"value": 140, "label": "SLA"}],
+            "series": [{"values": [92, 98, 120, 131, 112, 101, 95]}],
         },
     },
     {
