@@ -41,13 +41,6 @@ def test_every_framed_chart_in_the_docs_is_rectangular():
 
 # --- the gallery -----------------------------------------------------------
 
-def test_gallery_contents_list_is_up_to_date():
-    import subprocess
-    import sys
-    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "gallery_toc.py"), "--check"], capture_output=True, encoding="utf-8")
-    assert r.returncode == 0, r.stderr
-
-
 def test_gallery_contents_links_resolve_to_headings():
     text = (ROOT / "docs" / "gallery.md").read_text(encoding="utf-8")
     toc = text[text.index("<!-- toc -->"):text.index("<!-- /toc -->")]
@@ -87,8 +80,17 @@ def _fenced(text):
     return blocks
 
 
+def test_site_examples_are_current():
+    """site/src/data/charts.json is checked in; it must be what the renderer produces today."""
+    import subprocess
+    import sys
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / "site_examples.py"), "--check"], capture_output=True, encoding="utf-8")
+    assert r.returncode == 0, r.stderr
+
+
 def test_every_gallery_output_is_current():
-    """The printed output under each spec is exactly what the renderer produces today."""
+    """The printed output under each spec is exactly what the renderer produces today, and the
+    contents list matches the headings."""
     import subprocess
     import sys
     r = subprocess.run([sys.executable, str(ROOT / "scripts" / "gallery_refresh.py"), "--check"], capture_output=True, encoding="utf-8")

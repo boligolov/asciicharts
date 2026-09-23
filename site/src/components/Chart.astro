@@ -13,7 +13,7 @@ interface Props {
 const { id, kind, wide = false } = Astro.props;
 const chart = charts.find((c) => c.id === id);
 if (!chart) {
-  throw new Error(`No rendered example for chart id "${id}" — run: python site/scripts/render_examples.py`);
+  throw new Error(`No rendered example for chart id "${id}" — run: python scripts/site_examples.py`);
 }
 ---
 
