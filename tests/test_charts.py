@@ -84,8 +84,8 @@ def test_stacked_hbar_with_negatives_puts_net_total_at_row_end():
 def test_stacked_area_with_negatives_labels_span_both_signs():
     out = render_chart({"chartType": "area", "stacked": True, "height": 6, "width": 20, "border": "none", "series": [
         {"values": [1, 2, 3]}, {"values": [-1, -2, -3]}]})
-    first, last = rows(out)[0], rows(out)[5]
-    assert first.split("┤")[0].strip() == "3" and last.split("┤")[0].strip() == "-3"
+    labels = [r.split("┤")[0].strip() for r in rows(out)[:6]]
+    assert labels[0] == "3" and float(labels[-1]) <= -3 and "0" in labels  # both signs, and zero on a row
 
 
 @pytest.mark.parametrize("chart_type", ["vbar", "hbar", "area"])
@@ -284,6 +284,14 @@ def test_overlapping_markers_of_different_series_are_shown_not_hidden():
                             "series": [{"name": "A", "points": [{"x": 1, "y": 1}, {"x": 2, "y": 2}]},
                                        {"name": "B", "points": [{"x": 2, "y": 2}, {"x": 3, "y": 3}]}]})
     assert rows(scatter)[1] == "    *    " and "* overlap" in scatter
+
+
+def test_zero_falls_on_a_labelled_row_with_the_least_widening():
+    out = render_chart({"chartType": "line", "border": "none", "height": 6, "width": 20,
+                        "series": [{"values": [-3, 2, 7, -1]}]})
+    assert [r.split("┤")[0].strip() for r in rows(out)] == ["7", "4.67", "2.33", "0", "-2.33", "-4.67"]
+    same_sign = render_chart({"chartType": "line", "border": "none", "height": 3, "series": [{"values": [2, 4]}]})
+    assert [r.split("┤")[0].strip() for r in rows(same_sign)] == ["4", "3", "2"]  # nothing to widen
 
 
 def test_float_rounding_is_half_away_from_zero_like_go():

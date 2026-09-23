@@ -235,6 +235,12 @@ Integer positions use floor division on non-negative integers (`i × (W − 1) /
 | sparkline | each series its own `min .. max` | shape only |
 | boxplot | global `min .. max` across groups | groups comparable |
 
+**Zero on a row.** When a line, area or dual_axis range crosses zero, it is widened just enough that 0
+falls exactly on a row: try every inner row `z` for zero, take the one needing the smallest step
+`max(hi / z, −lo / (H − 1 − z))`, and set `lo = −step × (H − 1 − z)`, `hi = step × z`. The baseline row
+is then labelled `0` (it used to read `0.50`), every row is a multiple of one step, and a zero value
+lands on it. Data `−3 … 7` on 6 rows becomes `−4.67 … 7`; a range that doesn't cross zero is untouched.
+
 **A degenerate domain** (`hi == lo`, all values equal) becomes `v − 1 .. v + 1`: nothing divides by
 zero, and a flat series sits in the middle of the plot (a flat sparkline is `▄▄▄`) instead of on an edge.
 Printed ranges (dotplot, scatter) still show the data's own `[v, v]`, never the padded one. Bars are the
@@ -444,8 +450,10 @@ bottom fifth of every heatmap empty, and a heatmap of equal values entirely empt
   (digits = max(2, 1 − floor(log10 |v|))); below 1e−7, exponent form `3e-09`. Two fixed decimals would
   print `0.001` and `0.004` both as `0.00`.
 - Pie percentages: one decimal.
-- **Axis labels are the exact values of their rows**, `lo + (1 − r / (H − 1)) × (hi − lo)`, right-aligned
-  to the widest label. They are honest (that row *is* that value) but rarely round: `26.40`, `22.80`.
+- **Axis labels are the exact values of their rows**, `lo + (1 − r / (H − 1)) × (hi − lo)`, rounded to
+  12 significant digits first (float noise would print `−27.999999999` as `−28.00`), right-aligned to the
+  widest label. They are honest (that row *is* that value) but not "nice": `26.40`, `22.80`. Zero is
+  always on a row when the range crosses it (4.2); a `−0` never prints.
 - A threshold snaps to its nearest row, so its label prints the exact value next to it.
 
 ### 4.14 Magnitude limit
@@ -696,10 +704,10 @@ Overlaid or stacked, negative values fill downward (4.8). All series the same le
 
 ```
     5 ┤   ████                 
- 2.75 ┤█████████               
- 0.50 ┤████████████████████████
--1.75 ┤           ███████████  
-   -4 ┤               ████     
+ 2.50 ┤█████████               
+    0 ┤████████████████████████
+-2.50 ┤           ██████████   
+   -5 ┤                 █      
 ```
 
 ### scatter

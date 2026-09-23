@@ -162,7 +162,7 @@ def _fmt(v: float) -> str:
     """Integers without decimals; other values from 1 up with two decimals; smaller ones with two
     significant digits, so 0.001 and 0.004 don't both print as 0.00 (0.5 stays 0.50)."""
     if abs(v - math.trunc(v)) < 1e-9:
-        return format(v, ".0f")
+        return format(v, ".0f").replace("-0", "0") if abs(v) < 1 else format(v, ".0f")
     if abs(v) >= 1:
         return format(v, ".2f")
     digits = max(2, 1 - math.floor(math.log10(abs(v))))
@@ -405,6 +405,16 @@ def _scale_range(lo: float, hi: float) -> tuple[float, float]:
     return (lo - 1, hi + 1) if hi == lo else (lo, hi)
 
 
+def _zero_on_row(lo: float, hi: float, height: int) -> tuple[float, float]:
+    """Widen a range that spans zero just enough that 0 falls exactly on a row, so the baseline row
+    is labelled 0 (not 0.50) and a zero value is drawn on it. Rows are then multiples of one step."""
+    if not (lo < 0 < hi) or height < 3:
+        return lo, hi
+    # the zero row that needs the smallest step (the least widening); ties go to the upper row
+    step, zero_row = min((max(hi / r, -lo / (height - 1 - r)), r) for r in range(1, height - 1))
+    return -step * (height - 1 - zero_row), step * zero_row
+
+
 def _series_max_len(series) -> int:
     return max([0] + [len(s["values"]) for s in series])
 
@@ -415,7 +425,8 @@ def _left_axis_labels(lo: float, hi: float, height: int):
         frac = 1.0
         if height > 1:
             frac = 1 - row / (height - 1)
-        labels.append(_fmt(lo + frac * (hi - lo)))
+        # 12 significant digits drop the float noise of lo + frac * span (-27.999999999 → -28)
+        labels.append(_fmt(float(f"{lo + frac * (hi - lo):.12g}")))
     return labels, max([0] + [len(l) for l in labels])
 
 
@@ -1191,6 +1202,7 @@ def _render_line(inp):
     refs = ([threshold] if threshold is not None else []) + [v for v, _ in inp["thresholds"]]
     if refs:
         lo, hi = min([lo] + refs), max([hi] + refs)
+    lo, hi = _zero_on_row(lo, hi, height)
     color_on = inp["color"]
 
     c = _Canvas(width, height)
@@ -1328,7 +1340,7 @@ def _render_area(inp):
     elif inp["stacked"]:
         # Some value is negative: positive bands stack up from the zero row,
         # negative bands stack down from it, on a shared axis.
-        min_val, max_val = -max_neg, max_pos
+        min_val, max_val = _zero_on_row(-max_neg, max_pos, height)
         zero_row = _clamp(_y_pixel(0, min_val, max_val, height), 0, height - 1)
         if max_neg > 0 and zero_row == height - 1 and height > 1:
             zero_row = height - 2
@@ -1351,6 +1363,7 @@ def _render_area(inp):
         min_val, max_val = min(min_val, 0), max(max_val, 0)
         if max_val == min_val:
             max_val = min_val + 1
+        min_val, max_val = _zero_on_row(min_val, max_val, height)
         zero_row = _y_pixel(0, min_val, max_val, height)
         # Paint later series first so the first series ends up on top.
         for si in range(num_series - 1, -1, -1):
@@ -1476,7 +1489,7 @@ def _render_dual_axis(inp):
 
     mins, maxs = [0.0, 0.0], [0.0, 0.0]
     for si, s in enumerate(series):
-        mins[si], maxs[si] = _series_min_max([s])
+        mins[si], maxs[si] = _zero_on_row(*_series_min_max([s]), ph)
         color = _series_color(si) if color_on else -1
         glyph = DUAL_AXIS_GLYPHS[si]
         n = len(s["values"])
