@@ -159,10 +159,14 @@ def _round(x: float) -> int:
 
 
 def _fmt(v: float) -> str:
-    """formatValue: integers without decimals, everything else with two."""
+    """Integers without decimals; other values from 1 up with two decimals; smaller ones with two
+    significant digits, so 0.001 and 0.004 don't both print as 0.00 (0.5 stays 0.50)."""
     if abs(v - math.trunc(v)) < 1e-9:
         return format(v, ".0f")
-    return format(v, ".2f")
+    if abs(v) >= 1:
+        return format(v, ".2f")
+    digits = max(2, 1 - math.floor(math.log10(abs(v))))
+    return format(v, f".{digits}f") if digits <= 8 else format(v, ".2g")
 
 
 def _sum(xs) -> float:

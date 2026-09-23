@@ -255,6 +255,12 @@ def test_pointchar_must_be_one_column_wide():
     assert "x" in render_chart({**spec, "pointChar": "x"})
 
 
+def test_small_values_keep_two_significant_digits():
+    out = render_chart({"chartType": "hbar", "border": "none", "width": 10, "labels": ["a", "b", "c", "d"],
+                        "series": [{"values": [0.001, 0.004, 0.5, 26.4]}]})
+    assert [r.rsplit(" ", 1)[1] for r in rows(out)] == ["0.0010", "0.0040", "0.50", "26.40"]
+
+
 def test_float_rounding_is_half_away_from_zero_like_go():
     # Python's round(2.5) == 2; Go's math.Round(2.5) == 3. Column 0.5 of 5 rows must round up.
     out = render_chart({"chartType": "vbar", "height": 5, "border": "none", "labels": ["a", "b"],

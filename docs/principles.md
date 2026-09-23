@@ -426,8 +426,12 @@ bottom fifth of every heatmap empty, and a heatmap of equal values entirely empt
 
 ### 4.13 Numbers as text
 
-- Integers print without decimals, everything else with exactly two: `62`, `26.40`, `0.50`
-  (`|v − trunc(v)| < 1e−9` counts as an integer).
+- Integers print without decimals (`|v − trunc(v)| < 1e−9` counts as one, which absorbs float noise
+  like `2.0000000001`): `62`.
+- From 1 up, two decimals: `26.40`, `123456789.50`.
+- Below 1, **two significant digits**, so small values stay apart: `0.50`, `0.050`, `0.0010`, `0.0042`
+  (digits = max(2, 1 − floor(log10 |v|))); below 1e−7, exponent form `3e-09`. Two fixed decimals would
+  print `0.001` and `0.004` both as `0.00`.
 - Pie percentages: one decimal.
 - **Axis labels are the exact values of their rows**, `lo + (1 − r / (H − 1)) × (hi − lo)`, right-aligned
   to the widest label. They are honest (that row *is* that value) but rarely round: `26.40`, `22.80`.
