@@ -347,7 +347,8 @@ line algorithm (8-connected: one cell per step, diagonal steps allowed). Consequ
 - `style: "dotted"` lights every other cell of each segment (and always the endpoints), with `+`.
 - Several series: series *i* draws with `FILLS[i]`; later series overwrite earlier ones where they cross.
 
-**Draw order (z-order) on the canvas:** series strokes in series order → threshold dashes → point markers.
+**Draw order (z-order) on the canvas:** series strokes in series order → threshold dashes, **only into
+empty cells** (a reference line goes behind the data) → point markers on top.
 
 ### 4.8 Areas: interpolate per column
 
@@ -547,8 +548,8 @@ dual_axis adds the second axis on the right, `├ {value}` left-aligned, and a t
 
 ### 5.6 Reference lines (thresholds)
 
-- A reference line is `-` on every even column of its row (dashes, not a solid rule, so data under it
-  stays visible on the odd columns).
+- A reference line is `-` on every even column of its row, drawn only into empty cells: it goes behind
+  the data, so a line running along it is never cut into `-█-█`.
 - The domain is extended so every reference line is inside the plot.
 - A single unnamed `threshold` is explained in a footnote: `- - threshold: 50` (on a new paragraph, or
   on the legend line with several series).
@@ -557,7 +558,7 @@ dual_axis adds the second axis on the right, `├ {value}` left-aligned, and a t
 
 ```
    30 ┤                     ●·       
-26.40 ┤- - - - - - - - - -·- -·-·- -   target: 25
+26.40 ┤- - - - - - - - - -·· -···· -   target: 25
 22.80 ┤                 ··        ··●
 19.20 ┤      ·●···    ··             
 15.60 ┤  ····     ···●               

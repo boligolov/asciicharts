@@ -170,6 +170,12 @@ def test_thresholds_are_dashed_and_named_right_of_the_plot():
     assert "threshold" not in out  # no footnote: every line is named on its own row
 
 
+def test_reference_lines_go_behind_the_data():
+    out = render_chart({"chartType": "line", "border": "none", "height": 3, "width": 12, "threshold": 5,
+                        "series": [{"values": [5, 5]}]})
+    assert rows(out)[2].endswith("┤" + "█" * 12)  # the data line is whole, not cut into -█-█
+
+
 def test_thresholds_on_the_same_row_share_it():
     out = render_chart({"chartType": "line", "border": "none", "height": 3,
                         "thresholds": [{"value": 5, "label": "a"}, {"value": 5.01, "label": "b"}],

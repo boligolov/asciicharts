@@ -1210,7 +1210,8 @@ def _render_line(inp):
     for ref in refs:
         row = _y_pixel(ref, lo, hi, height)
         for x in range(c.width):
-            if x % 2 == 0:
+            # a reference line goes behind the data: dashes only into empty cells
+            if x % 2 == 0 and not c.cell_char[row][x]:
                 c.set_marker(x, row, "-", tcolor)
     # `thresholds` are named right of the plot, on their own row, so they never cover data;
     # lines that land on the same row share it.
