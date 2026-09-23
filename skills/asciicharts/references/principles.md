@@ -100,12 +100,14 @@ Each glyph covers a fraction of its cell with ink. Order glyphs by that fraction
 most distinct from each other:
 
 ```
-# @ % & $ W M N H D G U O S Z X = / \ : | ! .
+# @ % & $ W M N H D G U O S Z X = / \ : ; ! '
 ```
 
 `#` leads regardless of exact rank because it plays the role of `█`. Area charts swap `@` and `:`
 (`AREA_ASCII_FILLS`): stacked areas often put thin bands on a big first band, and a light second glyph
-reads better there. With more series than glyphs, the ramp wraps around.
+reads better there. With more series than glyphs, the ramp wraps around. The ramp holds none of the ascii
+style's structural glyphs (`|` separator, `.` connector, `,` track, `+` axis, `-` dashes): its light end
+is `; ! '`, not `| ! .`, which it once was.
 
 ### 2.3 Every glyph has exactly one role per chart
 

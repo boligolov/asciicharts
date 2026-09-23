@@ -285,12 +285,14 @@ def _track_glyph(bar_ch: str, ascii_style: bool = False) -> str:
 # visually distinct at a glance — except '#' leads regardless of its exact rank, since it plays the
 # same role ASCII_FILLS[0] does everywhere else: the default single-series solid bar, the ASCII
 # analogue of the Unicode '█' (and it is in fact one of the densest of the 23 anyway).
-ASCII_FILLS = ["#", "@", "%", "&", "$", "W", "M", "N", "H", "D", "G", "U", "O", "S", "Z", "X", "=", "/", "\\", ":", "|", "!", "."]
+# No glyph of the ramp is a structural glyph of the ascii style: not the | separator, the . connector
+# of showPoints, the , track, the + axis or the - dashes; the light end uses ; and ' instead.
+ASCII_FILLS = ["#", "@", "%", "&", "$", "W", "M", "N", "H", "D", "G", "U", "O", "S", "Z", "X", "=", "/", "\\", ":", ";", "!", "'"]
 # Per-series point markers for style "ascii" on line charts.
 ASCII_MARKERS = ["o", "x", "*", "+", "^", "v", "@", "%", "&", "$"]
 # Area charts often have thin bands stacked on a much larger first one, so ':' (much lighter than
 # '@') reads better as the second glyph there — the same swap ASCII_FILLS makes for the first.
-AREA_ASCII_FILLS = ["#", ":", "%", "&", "$", "W", "M", "N", "H", "D", "G", "U", "O", "S", "Z", "X", "=", "/", "\\", "@", "|", "!", "."]
+AREA_ASCII_FILLS = ["#", ":", "%", "&", "$", "W", "M", "N", "H", "D", "G", "U", "O", "S", "Z", "X", "=", "/", "\\", "@", ";", "!", "'"]
 MARKERS = ["●", "○", "▲", "■", "□", "▼", "♦", "◊", "►", "◄"]
 PALETTE256 = [39, 208, 40, 201, 51, 226]
 THRESHOLD_COLOR = 244

@@ -22,7 +22,9 @@ def test_ramp_is_one_unified_density_ordered_sequence_of_23_glyphs():
     rest run dense-to-light so that neighbouring series stay visually distinct at a glance."""
     assert ASCII_FILLS[0] == "#"
     assert len(ASCII_FILLS) == len(set(ASCII_FILLS)) == 23
-    assert ASCII_FILLS[-1] == "."  # the lightest mark closes the ramp
+    assert ASCII_FILLS[-1] == "'"  # the lightest mark closes the ramp
+    # no series glyph doubles as a structural one: separator, showPoints connector, track, axis, dashes
+    assert not set(ASCII_FILLS) & {"|", ".", ",", "+", "-"}
     assert AREA_ASCII_FILLS[1] == ":"  # area swaps in the lighter second glyph for its thin bands
     assert sorted(AREA_ASCII_FILLS) == sorted(ASCII_FILLS)
     assert ASCII_TRACK_FILL not in ASCII_FILLS  # the track glyph never doubles as a series fill
