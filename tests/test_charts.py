@@ -84,8 +84,8 @@ def test_stacked_hbar_with_negatives_puts_net_total_at_row_end():
 def test_stacked_area_with_negatives_labels_span_both_signs():
     out = render_chart({"chartType": "area", "stacked": True, "height": 6, "width": 20, "border": "none", "series": [
         {"values": [1, 2, 3]}, {"values": [-1, -2, -3]}]})
-    first, last = rows(out)[0], rows(out)[5]
-    assert first.split("┤")[0].strip() == "3" and last.split("┤")[0].strip() == "-3"
+    labels = [r.split("┤")[0].strip() for r in rows(out)[:6]]
+    assert labels[0] == "3" and float(labels[-1]) <= -3 and "0" in labels  # both signs, and zero on a row
 
 
 @pytest.mark.parametrize("chart_type", ["vbar", "hbar", "area"])
@@ -111,11 +111,43 @@ def test_heatmap_width_widens_cells_to_fill_the_grid():
     spec = {"chartType": "heatmap", "border": "none", "labels": ["Mon", "Tue"],
             "series": [{"name": "am", "values": [0, 10]}]}
     narrow = [r.rstrip() for r in rows(render_chart({**spec, "width": 7}))]
-    assert narrow == ["   Mon Tue", "am     ███"]
+    assert narrow == ["   Mon Tue", "am ░░░ ███"]
     wide = [r.rstrip() for r in rows(render_chart({**spec, "width": 21}))]
-    assert wide == ["      Mon        Tue", "am            ██████████"]
+    assert wide == ["      Mon        Tue", "am ░░░░░░░░░░ ██████████"]
     # never narrower than a 3-character cell, however small width is
     assert render_chart({**spec, "width": 2}) == render_chart({**spec, "width": 7})
+
+
+def test_levels_are_equal_buckets_and_blank_is_never_a_value():
+    """Heatmap shades and sparkline ticks split the range into equal buckets: the lowest value is
+    visible (never blank, which would read as "no data") and the top level covers the top bucket,
+    not the maximum alone."""
+    heat = render_chart({"chartType": "heatmap", "border": "none", "labels": list("abcde"), "width": 19,
+                         "series": [{"name": "r", "values": [0, 24, 26, 76, 100]}]})
+    assert rows(heat)[1].split() == ["r", "░░░", "░░░", "▒▒▒", "███", "███"]
+    flat = render_chart({"chartType": "heatmap", "border": "none", "series": [{"name": "r", "values": [7, 7]}]})
+    assert set(flat.split(" ", 1)[1].replace(" ", "")) == {"▓"}  # equal values: one mid-range shade, never blank
+    spark = render_chart({"chartType": "sparkline", "border": "none", "series": [{"values": [0, 90, 100]}]})
+    assert spark == "▁██"
+
+
+def test_diverging_bars_leave_the_zero_line_to_the_axis():
+    """The zero row/column belongs to no bar: +v and -v get the same length, zero draws nothing,
+    and a tiny non-zero value still gets one cell."""
+    vbar = rows(render_chart({"chartType": "vbar", "border": "none", "height": 7, "width": 11,
+                              "labels": ["a", "b", "c"], "series": [{"values": [3, 0, -3]}]}))
+    assert vbar[3] == "-" * 11                       # the baseline row, whole
+    assert [r[0] for r in vbar[:7]].count("█") == 3  # +3: three rows above it
+    assert [r[8] for r in vbar[:7]].count("█") == 3  # -3: three rows below it
+    assert all(r[4] != "█" for r in vbar[:7])        # 0: nothing
+    hbar = rows(render_chart({"chartType": "hbar", "border": "none", "width": 21, "labels": ["up", "zero", "down", "tiny"],
+                              "series": [{"values": [10, 0, -10, 0.1]}]}))
+    bars = [r.split(" │ ")[1][:21] for r in hbar]
+    assert [b.index("¦") for b in bars] == [10] * 4  # one axis column for every row
+    assert bars[0].count("█") == bars[2].count("█") == 10 and bars[1].count("█") == 0 and bars[3].count("█") == 1
+    ascii_bar = render_chart({"chartType": "hbar", "style": "ascii", "border": "none", "labels": ["a", "b"],
+                              "series": [{"values": [5, -5]}]})
+    assert "+" in ascii_bar and "¦" not in ascii_bar  # pure ASCII, and not the | separator
 
 
 def test_charts_without_width_fill_the_default_plot_width():
@@ -136,6 +168,12 @@ def test_thresholds_are_dashed_and_named_right_of_the_plot():
     assert r[0].lstrip().startswith("10 ┤- - - - - ") and r[0].endswith("  target: 10")
     assert r[4].lstrip().startswith("0 ┤- - - - - ") and r[4].endswith("  0")
     assert "threshold" not in out  # no footnote: every line is named on its own row
+
+
+def test_reference_lines_go_behind_the_data():
+    out = render_chart({"chartType": "line", "border": "none", "height": 3, "width": 12, "threshold": 5,
+                        "series": [{"values": [5, 5]}]})
+    assert rows(out)[1] == "5 ┤" + "█" * 12  # the data line is whole, not cut into -█-█
 
 
 def test_thresholds_on_the_same_row_share_it():
@@ -215,6 +253,52 @@ def test_pointchar_must_be_one_column_wide():
     with pytest.raises(ChartError, match="pointChar must be a single-width character"):
         render_chart({**spec, "pointChar": "🔴"})
     assert "x" in render_chart({**spec, "pointChar": "x"})
+
+
+def test_small_values_keep_two_significant_digits():
+    out = render_chart({"chartType": "hbar", "border": "none", "width": 10, "labels": ["a", "b", "c", "d"],
+                        "series": [{"values": [0.001, 0.004, 0.5, 26.4]}]})
+    assert [r.rsplit(" ", 1)[1] for r in rows(out)] == ["0.0010", "0.0040", "0.50", "26.40"]
+
+
+def test_a_flat_series_sits_mid_plot_and_reports_its_real_range():
+    line = rows(render_chart({"chartType": "line", "border": "none", "height": 5, "width": 10,
+                              "series": [{"values": [5, 5, 5]}]}))
+    assert line[2] == "   5 ┤" + "█" * 10 and line[0].startswith("   6") and line[4].startswith("   4")
+    dot = render_chart({"chartType": "dotplot", "border": "none", "width": 10, "labels": ["a"], "series": [{"values": [5]}]})
+    assert "value axis: [5, 5]" in dot and rows(dot)[0].index("●") == 9  # the middle of 10 cells
+    scatter = render_chart({"chartType": "scatter", "border": "none", "width": 9, "height": 3,
+                            "series": [{"points": [{"x": 2, "y": 3}]}]})
+    assert rows(scatter)[1] == "    ●    " and "x: [2, 2]  y: [3, 3]" in scatter
+    assert render_chart({"chartType": "sparkline", "border": "none", "series": [{"values": [4, 4]}]}) == "▄▄"
+
+
+def test_overlapping_markers_of_different_series_are_shown_not_hidden():
+    dot = render_chart({"chartType": "dotplot", "border": "none", "width": 10, "labels": ["a", "b"],
+                        "series": [{"name": "x", "values": [5, 1]}, {"name": "y", "values": [5, 9]}]})
+    assert rows(dot)[0] == "a │ ·····*····" and rows(dot)[-1].endswith("* overlap")
+    apart = render_chart({"chartType": "dotplot", "border": "none", "labels": ["a"],
+                          "series": [{"name": "x", "values": [1]}, {"name": "y", "values": [9]}]})
+    assert "*" not in apart  # the note appears only when something overlaps
+    scatter = render_chart({"chartType": "scatter", "border": "none", "width": 9, "height": 3,
+                            "series": [{"name": "A", "points": [{"x": 1, "y": 1}, {"x": 2, "y": 2}]},
+                                       {"name": "B", "points": [{"x": 2, "y": 2}, {"x": 3, "y": 3}]}]})
+    assert rows(scatter)[1] == "    *    " and "* overlap" in scatter
+
+
+def test_zero_falls_on_a_labelled_row_with_the_least_widening():
+    out = render_chart({"chartType": "line", "border": "none", "height": 6, "width": 20,
+                        "series": [{"values": [-3, 2, 7, -1]}]})
+    assert [r.split("┤")[0].strip() for r in rows(out)] == ["7", "4.67", "2.33", "0", "-2.33", "-4.67"]
+    same_sign = render_chart({"chartType": "line", "border": "none", "height": 3, "series": [{"values": [2, 4]}]})
+    assert [r.split("┤")[0].strip() for r in rows(same_sign)] == ["4", "3", "2"]  # nothing to widen
+
+
+def test_every_non_zero_pie_slice_owns_at_least_one_cell():
+    out = render_chart({"chartType": "pie", "border": "none", "width": 20, "series": [
+        {"name": "big", "values": [999]}, {"name": "tiny", "values": [1]}, {"name": "zero", "values": [0]}]})
+    disc = out.split("\n\n")[0]
+    assert disc.count("▓") == 1 and "▒" not in disc  # tiny: one cell; zero: none
 
 
 def test_float_rounding_is_half_away_from_zero_like_go():
@@ -448,6 +532,9 @@ def test_track_glyph_is_font_safe():
 # right edge of an otherwise rectangular chart ragged.
 SAFE_FILLS = set("█▓▒░▌▄▐▀")
 SAFE_MARKERS = set("●○▲■□▼♦◊►◄")
+# The box-drawing glyphs of WGL4, the set Consolas, Courier New and Lucida Console actually cover:
+# light and double lines only — heavy (━┃), rounded (╭╮) and dashed lines are not in it.
+WGL4_BOX = set("─│┌┐└┘├┤┬┴┼═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬")
 
 
 def test_fill_and_marker_tables_only_contain_font_safe_glyphs():
@@ -459,14 +546,17 @@ def test_fill_and_marker_tables_only_contain_font_safe_glyphs():
 
 def test_default_output_uses_only_font_safe_glyphs():
     """Across the whole golden corpus, everything except sparklines and style "fine" (both use eighth
-    blocks, documented as needing a capable font) stays inside ASCII, Latin-1, box drawing and the safe sets."""
+    blocks, documented as needing a capable font) and the opt-in heavy and rounded borders stays inside
+    ASCII, Latin-1, WGL4 box drawing and the safe sets."""
     checked = 0
     for case in load("corpus.json"):
         spec = case["spec"]
         if "out" not in case or spec["chartType"] == "sparkline" or spec.get("style") == "fine":
             continue
+        if spec.get("border") in ("heavy", "rounded"):
+            continue
         for ch in set(case["out"]):
-            ok = ord(ch) < 0x100 or "─" <= ch <= "╿" or ch in SAFE_FILLS or ch in SAFE_MARKERS
+            ok = ord(ch) < 0x100 or ch in WGL4_BOX or ch in SAFE_FILLS or ch in SAFE_MARKERS
             assert ok, f"{ch!r} (U+{ord(ch):04X}) in the output of {spec}"
         checked += 1
     assert checked > 200

@@ -95,7 +95,7 @@ python asciicharts.py --json '{"chartType":"hbar","style":"ascii","border":"asci
 | `pie` | shares of a whole |
 | `heatmap` | a matrix, e.g. hour × weekday |
 
-Styles: `solid` (default), `halftone`, `ascii`, `dotted` (line), `fine` (eighth-block bar ends, needs a capable font). Six borders (`none`, `ascii`, `light`, `heavy`, `double`, `rounded`), a centred title, optional ANSI 256-colour. **[The gallery](docs/gallery.md)** shows every one; **[the reference](skills/asciicharts/references/reference.md)** lists every option.
+Styles: `solid` (default), `halftone`, `ascii`, `dotted` (line), `fine` (eighth-block bar ends, needs a capable font). Six borders (`none`, `ascii`, `light`, `heavy`, `double`, `rounded`), a centred title, optional ANSI 256-colour. **[The gallery](docs/gallery.md)** shows every one; **[the reference](skills/asciicharts/references/reference.md)** lists every option. **[The principles](docs/principles.md)** explain how it all works — the glyphs, the arithmetic, the layout rules and the mistakes behind them — enough to draw a chart by hand or to port the renderer to another language.
 
 ## Three ways in
 

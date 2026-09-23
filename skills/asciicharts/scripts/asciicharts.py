@@ -159,10 +159,14 @@ def _round(x: float) -> int:
 
 
 def _fmt(v: float) -> str:
-    """formatValue: integers without decimals, everything else with two."""
+    """Integers without decimals; other values from 1 up with two decimals; smaller ones with two
+    significant digits, so 0.001 and 0.004 don't both print as 0.00 (0.5 stays 0.50)."""
     if abs(v - math.trunc(v)) < 1e-9:
-        return format(v, ".0f")
-    return format(v, ".2f")
+        return format(v, ".0f").replace("-0", "0") if abs(v) < 1 else format(v, ".0f")
+    if abs(v) >= 1:
+        return format(v, ".2f")
+    digits = max(2, 1 - math.floor(math.log10(abs(v))))
+    return format(v, f".{digits}f") if digits <= 8 else format(v, ".2g")
 
 
 def _sum(xs) -> float:
@@ -281,13 +285,19 @@ def _track_glyph(bar_ch: str, ascii_style: bool = False) -> str:
 # visually distinct at a glance — except '#' leads regardless of its exact rank, since it plays the
 # same role ASCII_FILLS[0] does everywhere else: the default single-series solid bar, the ASCII
 # analogue of the Unicode '█' (and it is in fact one of the densest of the 23 anyway).
-ASCII_FILLS = ["#", "@", "%", "&", "$", "W", "M", "N", "H", "D", "G", "U", "O", "S", "Z", "X", "=", "/", "\\", ":", "|", "!", "."]
+# No glyph of the ramp is a structural glyph of the ascii style: not the | separator, the . connector
+# of showPoints, the , track, the + axis or the - dashes; the light end uses ; and ' instead.
+ASCII_FILLS = ["#", "@", "%", "&", "$", "W", "M", "N", "H", "D", "G", "U", "O", "S", "Z", "X", "=", "/", "\\", ":", ";", "!", "'"]
 # Per-series point markers for style "ascii" on line charts.
 ASCII_MARKERS = ["o", "x", "*", "+", "^", "v", "@", "%", "&", "$"]
 # Area charts often have thin bands stacked on a much larger first one, so ':' (much lighter than
 # '@') reads better as the second glyph there — the same swap ASCII_FILLS makes for the first.
-AREA_ASCII_FILLS = ["#", ":", "%", "&", "$", "W", "M", "N", "H", "D", "G", "U", "O", "S", "Z", "X", "=", "/", "\\", "@", "|", "!", "."]
+AREA_ASCII_FILLS = ["#", ":", "%", "&", "$", "W", "M", "N", "H", "D", "G", "U", "O", "S", "Z", "X", "=", "/", "\\", "@", ";", "!", "'"]
 MARKERS = ["●", "○", "▲", "■", "□", "▼", "♦", "◊", "►", "◄"]
+# Where markers of different series land on the same cell (scatter, dotplot), neither may silently
+# hide the other: the cell shows this glyph, and the legend explains it.
+OVERLAP_MARKER = "*"
+OVERLAP_NOTE = f"{OVERLAP_MARKER} overlap"
 PALETTE256 = [39, 208, 40, 201, 51, 226]
 THRESHOLD_COLOR = 244
 HEAT_RAMP = [21, 27, 33, 39, 45, 51, 87, 123, 159, 195, 226, 220, 214, 208, 202, 196]
@@ -386,9 +396,23 @@ def _series_min_max(series) -> tuple[float, float]:
             hi = max(hi, v)
     if lo == math.inf:
         return 0.0, 1.0
-    if lo == hi:
-        hi = lo + 1
-    return lo, hi
+    return _scale_range(lo, hi)
+
+
+def _scale_range(lo: float, hi: float) -> tuple[float, float]:
+    """A usable scale for data spanning lo..hi. All-equal data gets a range centred on its value,
+    so a flat series sits mid-plot rather than on an edge (lo..lo+1 put it on the bottom row)."""
+    return (lo - 1, hi + 1) if hi == lo else (lo, hi)
+
+
+def _zero_on_row(lo: float, hi: float, height: int) -> tuple[float, float]:
+    """Widen a range that spans zero just enough that 0 falls exactly on a row, so the baseline row
+    is labelled 0 (not 0.50) and a zero value is drawn on it. Rows are then multiples of one step."""
+    if not (lo < 0 < hi) or height < 3:
+        return lo, hi
+    # the zero row that needs the smallest step (the least widening); ties go to the upper row
+    step, zero_row = min((max(hi / r, -lo / (height - 1 - r)), r) for r in range(1, height - 1))
+    return -step * (height - 1 - zero_row), step * zero_row
 
 
 def _series_max_len(series) -> int:
@@ -401,7 +425,8 @@ def _left_axis_labels(lo: float, hi: float, height: int):
         frac = 1.0
         if height > 1:
             frac = 1 - row / (height - 1)
-        labels.append(_fmt(lo + frac * (hi - lo)))
+        # 12 significant digits drop the float noise of lo + frac * span (-27.999999999 → -28)
+        labels.append(_fmt(float(f"{lo + frac * (hi - lo):.12g}")))
     return labels, max([0] + [len(l) for l in labels])
 
 
@@ -698,10 +723,8 @@ def _render_sparkline(inp):
             raise ChartError(f"series {i} {_q(s['name'])} must contain at least one value")
         lo, hi = min(vals), max(vals)
         span = hi - lo
-        spark = "".join(
-            SPARK_TICKS[int((v - lo) / span * (len(SPARK_TICKS) - 1)) if span > 0 else 0]
-            for v in vals
-        )
+        # a flat series is a flat line at half height, not on the floor
+        spark = "".join(SPARK_TICKS[_level((v - lo) / span, len(SPARK_TICKS)) if span > 0 else 3] for v in vals)
         spark = _colorize(spark, _series_color(i), inp["color"])
         lines.append(f"{s['name']} {spark}" if s["name"] else spark)
     return "\n".join(lines)
@@ -901,6 +924,23 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
             max_val = min_val + 1
         diverging = min_val < 0
         zero_row = _clamp(_y_pixel(0, min_val, max_val, height), 0, height - 1)
+        if diverging and height >= 3:
+            # the zero row is the baseline and belongs to no bar, so keep a row free on each side
+            # that has data
+            if max_val > 0:
+                zero_row = max(zero_row, 1)
+            zero_row = min(zero_row, height - 2)
+
+        def diverging_rows(v):
+            """Rows of a diverging bar: strictly above or below the baseline, at least one."""
+            if v == 0:
+                return range(0)
+            row = _y_pixel(v, min_val, max_val, height)
+            if v > 0:
+                top = min(row, zero_row - 1)
+                return range(max(top, 0), zero_row) if zero_row > 0 else range(zero_row, zero_row + 1)
+            bottom = max(row, zero_row + 1)
+            return range(zero_row + 1, min(bottom, height - 1) + 1) if zero_row < height - 1 else range(zero_row, zero_row + 1)
 
         effective = ramp
         if effective is None and num_series > 1:
@@ -929,9 +969,8 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
                                 for r in range(filled, height):
                                     grid[height - 1 - r][col] = pad
                     else:
-                        lo, hi = sorted((zero_row, _y_pixel(v, min_val, max_val, height)))
                         for w in range(bar_width):
-                            for r in range(lo, hi + 1):
+                            for r in diverging_rows(v):
                                 grid[r][col_start + w] = ch
                                 cgrid[r][col_start + w] = color
                     continue
@@ -954,13 +993,12 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
                             for r in range(top, height):
                                 grid[height - 1 - r][col] = pad
                 else:
-                    lo, hi = sorted((zero_row, _y_pixel(v, min_val, max_val, height)))
                     for w in range(bar_width):
-                        for r in range(lo, hi + 1):
+                        for r in diverging_rows(v):
                             grid[r][col_start + w] = "█"
                             cgrid[r][col_start + w] = color
 
-        if diverging and min_val < 0 < max_val:
+        if diverging:
             for x in range(total_w):
                 if grid[zero_row][x] == " ":
                     grid[zero_row][x] = "-"
@@ -982,19 +1020,36 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
     return body
 
 
-def _zero_col(min_val, max_val, width):
-    return _round((0 - min_val) / (max_val - min_val) * width)
+def _diverging_scale(min_val, max_val, width):
+    """(zero_col, cells per unit) of a diverging bar row `width` cells wide: one cell is the zero
+    axis, the other width - 1 are shared by the two sides in proportion to the range."""
+    unit = (width - 1) / (max_val - min_val) if width > 1 else 0.0
+    return _clamp(_round(-min_val * unit), 0, max(width - 1, 0)), unit
 
 
-def _diverging_bar_run(zero_col, val_col, width, fill):
-    lo, hi = sorted((zero_col, val_col))
-    lo, hi = _clamp(lo, 0, width), _clamp(hi, 0, width)
+def _diverging_bar_run(v, zero_col, unit, width, fill, axis):
+    """A diverging bar: left of the axis for a negative value, right of it for a positive one,
+    never on it; at least one cell for a non-zero value; nothing for zero."""
     row = [" "] * width
-    for i in range(lo, hi):
-        row[i] = fill
-    if 0 <= zero_col < width and row[zero_col] == " ":
-        row[zero_col] = "|"
+    if width <= 0:
+        return ""
+    row[zero_col] = axis
+    n = _round(abs(v) * unit)
+    if v != 0 and n == 0:
+        n = 1
+    if v > 0:
+        for i in range(zero_col + 1, min(width, zero_col + 1 + n)):
+            row[i] = fill
+    elif v < 0:
+        for i in range(max(0, zero_col - n), zero_col):
+            row[i] = fill
     return "".join(row)
+
+
+def _axis_glyph(ramp) -> str:
+    """The zero axis of a diverging hbar: not the label separator (│ or |), so the two never read
+    as the same line — a broken bar ¦, or + in the pure-ASCII style."""
+    return "+" if _is_ascii_ramp(ramp) else "¦"
 
 
 def _render_bar_run(length: float, max_width: int, fill, fine=False, track=False, ascii_style=False) -> str:
@@ -1026,7 +1081,7 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=Fals
     if max_val == min_val:
         max_val = min_val + 1
     diverging = min_val < 0
-    zero_col = _zero_col(min_val, max_val, width) if diverging else 0
+    zero_col, unit = _diverging_scale(min_val, max_val, width) if diverging else (0, 0.0)
     max_name_w = max(_width(n) for n in names)
 
     blocks = []
@@ -1036,8 +1091,7 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=Fals
             v = matrix[s][c]
             fill = ramp[s % len(ramp)] if ramp else ""
             if diverging:
-                val_col = _round((v - min_val) / (max_val - min_val) * width)
-                bar = _diverging_bar_run(zero_col, val_col, width, fill or "█")
+                bar = _diverging_bar_run(v, zero_col, unit, width, fill or "█", _axis_glyph(ramp))
             else:
                 bar = _render_bar_run(v / max_val * width, width, fill, fine, track, ascii_style)
             color = _series_color(s) if color_on else -1
@@ -1115,11 +1169,10 @@ def _render_horizontal_bars(labels, values, width, ramp, fine=False, track=False
 
     lines = []
     if min_val < 0:
-        zc = _zero_col(min_val, max_val, width)
+        zc, unit = _diverging_scale(min_val, max_val, width)
         for i, v in enumerate(values):
             pad = " " * (max_label - _width(labels[i]))
-            val_col = _round((v - min_val) / (max_val - min_val) * width)
-            bar = _diverging_bar_run(zc, val_col, width, fill or "█")
+            bar = _diverging_bar_run(v, zc, unit, width, fill or "█", _axis_glyph(ramp))
             lines.append(f"{labels[i]}{pad} {_sep(ramp)} {bar} {_fmt(v)}")
         return "\n".join(lines)
     for i, v in enumerate(values):
@@ -1149,6 +1202,7 @@ def _render_line(inp):
     refs = ([threshold] if threshold is not None else []) + [v for v, _ in inp["thresholds"]]
     if refs:
         lo, hi = min([lo] + refs), max([hi] + refs)
+    lo, hi = _zero_on_row(lo, hi, height)
     color_on = inp["color"]
 
     c = _Canvas(width, height)
@@ -1183,7 +1237,8 @@ def _render_line(inp):
     for ref in refs:
         row = _y_pixel(ref, lo, hi, height)
         for x in range(c.width):
-            if x % 2 == 0:
+            # a reference line goes behind the data: dashes only into empty cells
+            if x % 2 == 0 and not c.cell_char[row][x]:
                 c.set_marker(x, row, "-", tcolor)
     # `thresholds` are named right of the plot, on their own row, so they never cover data;
     # lines that land on the same row share it.
@@ -1285,7 +1340,7 @@ def _render_area(inp):
     elif inp["stacked"]:
         # Some value is negative: positive bands stack up from the zero row,
         # negative bands stack down from it, on a shared axis.
-        min_val, max_val = -max_neg, max_pos
+        min_val, max_val = _zero_on_row(-max_neg, max_pos, height)
         zero_row = _clamp(_y_pixel(0, min_val, max_val, height), 0, height - 1)
         if max_neg > 0 and zero_row == height - 1 and height > 1:
             zero_row = height - 2
@@ -1308,6 +1363,7 @@ def _render_area(inp):
         min_val, max_val = min(min_val, 0), max(max_val, 0)
         if max_val == min_val:
             max_val = min_val + 1
+        min_val, max_val = _zero_on_row(min_val, max_val, height)
         zero_row = _y_pixel(0, min_val, max_val, height)
         # Paint later series first so the first series ends up on top.
         for si in range(num_series - 1, -1, -1):
@@ -1341,20 +1397,26 @@ def _render_dotplot(inp):
     color_on = inp["color"]
     num_series = len(names)
 
-    min_val = max_val = matrix[0][0]
+    data_min = data_max = matrix[0][0]
     for row in matrix:
         for v in row:
-            min_val, max_val = min(min_val, v), max(max_val, v)
-    if max_val == min_val:
-        max_val = min_val + 1
+            data_min, data_max = min(data_min, v), max(data_max, v)
+    min_val, max_val = _scale_range(data_min, data_max)
     max_label = max(_width(l) for l in labels)
 
     lines = []
+    overlap = False
     for c, lbl in enumerate(labels):
         row = ["·"] * width
         crow = [-1] * width
+        owner = [-1] * width
         for s in range(num_series):
             col = _clamp(_round((matrix[s][c] - min_val) / (max_val - min_val) * (width - 1)), 0, width - 1)
+            if owner[col] >= 0:
+                row[col], crow[col] = OVERLAP_MARKER, -1
+                overlap = True
+                continue
+            owner[col] = s
             row[col] = MARKERS[s % len(MARKERS)]
             if color_on:
                 crow[col] = _series_color(s)
@@ -1364,9 +1426,9 @@ def _render_dotplot(inp):
             line += " " + _fmt(matrix[0][c])
         lines.append(line)
 
-    body = "\n".join(lines) + f"\nvalue axis: [{_fmt(min_val)}, {_fmt(max_val)}]"
+    body = "\n".join(lines) + f"\nvalue axis: [{_fmt(data_min)}, {_fmt(data_max)}]"
     if num_series > 1:
-        body += "\n" + _named_legend(names, color_on, MARKERS)
+        body += "\n" + _named_legend(names, color_on, MARKERS) + ("   " + OVERLAP_NOTE if overlap else "")
     return body
 
 
@@ -1381,28 +1443,33 @@ def _render_scatter(inp):
             raise ChartError(f"series {i} {_q(s['name'])} must contain at least one point")
         pts.extend(s["points"])
 
-    min_x, max_x = min(p[0] for p in pts), max(p[0] for p in pts)
-    min_y, max_y = min(p[1] for p in pts), max(p[1] for p in pts)
-    if max_x == min_x:
-        max_x = min_x + 1
-    if max_y == min_y:
-        max_y = min_y + 1
+    data_x = min(p[0] for p in pts), max(p[0] for p in pts)
+    data_y = min(p[1] for p in pts), max(p[1] for p in pts)
+    min_x, max_x = _scale_range(*data_x)
+    min_y, max_y = _scale_range(*data_y)
 
     color_on = inp["color"]
     c = _Canvas(width, height)
     pw, ph = width, height
+    owner = {}
+    overlap = False
     for si, s in enumerate(series):
         color = _series_color(si) if color_on else -1
         for px_, py_ in s["points"]:
             px = _round((px_ - min_x) / (max_x - min_x) * (pw - 1))
             py = ph - 1 - _round((py_ - min_y) / (max_y - min_y) * (ph - 1))
-            c.set_marker(px, py, MARKERS[si % len(MARKERS)], color)
+            if owner.setdefault((px, py), si) != si:
+                c.cell_char[py][px], c.cell_color[py][px] = OVERLAP_MARKER, -1
+                overlap = True
+                continue
+            if c.cell_char[py][px] != OVERLAP_MARKER:
+                c.set_marker(px, py, MARKERS[si % len(MARKERS)], color)
 
     body = "\n".join(c.render(color_on))
-    body += f"\nx: [{_fmt(min_x)}, {_fmt(max_x)}]  y: [{_fmt(min_y)}, {_fmt(max_y)}]"
+    body += f"\nx: [{_fmt(data_x[0])}, {_fmt(data_x[1])}]  y: [{_fmt(data_y[0])}, {_fmt(data_y[1])}]"
     if len(series) > 1:
         names = [_series_label(s, i) for i, s in enumerate(series)]
-        body += "\n" + _named_legend(names, color_on, MARKERS)
+        body += "\n" + _named_legend(names, color_on, MARKERS) + ("   " + OVERLAP_NOTE if overlap else "")
     return body
 
 
@@ -1422,7 +1489,7 @@ def _render_dual_axis(inp):
 
     mins, maxs = [0.0, 0.0], [0.0, 0.0]
     for si, s in enumerate(series):
-        mins[si], maxs[si] = _series_min_max([s])
+        mins[si], maxs[si] = _zero_on_row(*_series_min_max([s]), ph)
         color = _series_color(si) if color_on else -1
         glyph = DUAL_AXIS_GLYPHS[si]
         n = len(s["values"])
@@ -1477,14 +1544,14 @@ def _render_pie(inp):
     cx, cy = width / 2, height / 2
     radius = min(width / 2, height / 2 * PIE_ASPECT)
 
-    rows = []
+    # slice index per cell (-1 outside the circle), and each inside cell's angle as a fraction
+    grid = [[-1] * width for _ in range(height)]
+    fracs = {}
     for y in range(height):
-        cells = []
         for x in range(width):
             dx = x + 0.5 - cx
             dy = (y + 0.5 - cy) * PIE_ASPECT
             if math.hypot(dx, dy) > radius:
-                cells.append(" ")
                 continue
             angle = math.atan2(dx, -dy)
             if angle < 0:
@@ -1495,8 +1562,29 @@ def _render_pie(inp):
                 if frac <= cum:
                     sl = i
                     break
-            cells.append(_colorize(FILLS[sl % len(FILLS)], _series_color(sl), color_on))
-        rows.append("".join(cells))
+            grid[y][x] = sl
+            fracs[(x, y)] = frac
+
+    # A slice too thin to own a cell would exist only in the legend. Give it the cell nearest to
+    # the middle of its angle, taken from a slice that has cells to spare.
+    counts = {}
+    for row in grid:
+        for sl in row:
+            counts[sl] = counts.get(sl, 0) + 1
+    for i, v in enumerate(values):
+        if v <= 0 or counts.get(i, 0) > 0 or not fracs:
+            continue
+        mid = (cumulative[i] - v / total / 2) % 1.0
+        candidates = [(min(abs(f - mid), 1 - abs(f - mid)), y, x) for (x, y), f in fracs.items()
+                      if counts.get(grid[y][x], 0) > 1]
+        if candidates:
+            _, y, x = min(candidates)
+            counts[grid[y][x]] -= 1
+            grid[y][x] = i
+            counts[i] = 1
+
+    rows = ["".join(" " if sl < 0 else _colorize(FILLS[sl % len(FILLS)], _series_color(sl), color_on)
+                    for sl in row) for row in grid]
 
     legend = [
         f"{_legend_swatch(i, color_on, FILLS)} {names[i]}: {_fmt(v)} ({v / total * 100:.1f}%)"
@@ -1527,6 +1615,13 @@ def _render_histogram(inp):
     return _render_horizontal_bars(labels, counts, inp["width"], _bar_fill_ramp(inp["style"]), inp["style"] == "fine")
 
 
+def _level(norm: float, n: int) -> int:
+    """Which of n equal-width buckets norm (0..1) falls in: 0..n-1, the maximum in the top one.
+    (Scaling by n - 1 and flooring would give the top level to the maximum alone and leave the
+    bottom level to a sliver of the range.)"""
+    return min(n - 1, int(norm * n))
+
+
 def _render_heatmap(inp):
     series = inp["series"]
     if not series:
@@ -1544,9 +1639,7 @@ def _render_heatmap(inp):
         raise ChartError(f"labels length ({len(labels)}) must match each row's values length ({num_cols})")
 
     all_vals = [v for s in series for v in s["values"]]
-    lo, hi = min(all_vals), max(all_vals)
-    if hi == lo:
-        hi = lo + 1
+    lo, hi = _scale_range(min(all_vals), max(all_vals))
     color_on = inp["color"]
     row_label_w = max(_width(s["name"]) for s in series)
     # width is the grid's width (row labels excluded), 60 by default like line/area: cells widen
@@ -1561,9 +1654,10 @@ def _render_heatmap(inp):
         for v in s["values"]:
             norm = (v - lo) / (hi - lo)
             if color_on:
-                cell = _colorize("█" * cell_w, HEAT_RAMP[int(norm * (len(HEAT_RAMP) - 1))], True)
+                cell = _colorize("█" * cell_w, HEAT_RAMP[_level(norm, len(HEAT_RAMP))], True)
             else:
-                cell = SHADES[int(norm * (len(SHADES) - 1))] * cell_w
+                # blank is not a level: every value is data, so the lowest one still gets ░
+                cell = SHADES[1 + _level(norm, len(SHADES) - 1)] * cell_w
             line += cell + " "
         out.append(line)
     return "\n".join(out)
@@ -1592,8 +1686,7 @@ def _render_boxplot(inp):
         summaries.append(fn)
         names.append(_series_label(s, i))
         g_min, g_max = min(g_min, fn[0]), max(g_max, fn[4])
-    if g_max == g_min:
-        g_max = g_min + 1
+    g_min, g_max = _scale_range(g_min, g_max)
     max_name_w = max(_width(n) for n in names)
     color_on = inp["color"]
 
@@ -1608,7 +1701,8 @@ def _render_boxplot(inp):
             row[x] = "─"
         for x in range(q1_p, q3_p + 1):
             row[x] = "█"
-        row[min_p], row[max_p], row[med_p] = "├", "┤", "┃"
+        # ║, not the heavy ┃: heavy box drawing is missing from Consolas and Courier New
+        row[min_p], row[max_p], row[med_p] = "├", "┤", "║"
         body = _colorize("".join(row), _series_color(i), color_on)
         name = _pad(names[i], max_name_w)
         lines.append(f"{name} │ {body}  min={_fmt(mn)} q1={_fmt(q1)} med={_fmt(med)} "
