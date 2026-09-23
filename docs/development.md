@@ -8,7 +8,7 @@ server/                 the MCP server (installed as the `asciicharts_server` pa
 skills/asciicharts/     the skill: SKILL.md, scripts/, references/ — see docs/skill.md
 deploy/                 Dockerfile, docker-compose (dev and prod), Caddyfile, .env.example
 tests/                  pytest suite; tests/golden/ pins renderer output; tests/skill_evals/ holds the skill's evals
-scripts/                sync_skill.py, package_skill.py, gallery_refresh.py, site_examples.py
+scripts/                sync_skill.py, package_skill.py, gallery_refresh.py, site_examples.py, og_image.py
 docs/                   this file, gallery.md (every chart rendered), skill.md
 LICENSE  pyproject.toml
 ```

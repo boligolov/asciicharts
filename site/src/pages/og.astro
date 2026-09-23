@@ -1,0 +1,114 @@
+---
+// The social preview card (og:image), 1200×630: not a page for people. scripts/og_image.py
+// screenshots it into public/og.png. Built from the same fonts, logo and real render_chart()
+// output as the landing page, so the preview can't drift into a mockup.
+import "../styles/global.css";
+import Logo from "../components/Logo.astro";
+import charts from "../data/charts.json";
+
+const chart = charts.find((c) => c.id === "hero");
+if (!chart) {
+  throw new Error('No "hero" example — run: python scripts/site_examples.py');
+}
+---
+
+<html lang="en" data-theme="black" data-chart-color="on">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <title>asciicharts social card</title>
+    <!-- global: the page is standalone, and scoped styles wouldn't reach the Logo component's svg -->
+    <style is:global>
+      html,
+      body {
+        margin: 0;
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: var(--bg);
+      }
+
+      .card {
+        box-sizing: border-box;
+        width: 1200px;
+        height: 630px;
+        padding: 64px 56px 56px 72px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: center;
+        gap: 40px;
+        background:
+          radial-gradient(closest-side at 22% 40%, color-mix(in srgb, var(--accent) 14%, transparent), transparent 70%),
+          var(--bg);
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 26px;
+      }
+
+      .mark {
+        color: var(--accent);
+      }
+
+      .mark .logo {
+        width: 120px;
+        height: 56px;
+      }
+
+      .name {
+        font-family: "Press Start 2P", monospace;
+        font-size: 40px;
+        color: var(--accent);
+        margin: 0;
+      }
+
+      .tagline {
+        font-family: "Press Start 2P", monospace;
+        font-size: 17px;
+        line-height: 1.7;
+        color: var(--fg);
+        margin: 0;
+        text-transform: uppercase;
+      }
+
+      .offer {
+        font-family: var(--mono);
+        font-size: 18px;
+        white-space: nowrap;
+        color: var(--fg-muted);
+        margin: 0;
+      }
+
+      .chart {
+        margin: 0;
+        padding: 18px 16px;
+        background: var(--bg-elevated);
+        border: 1px solid var(--border);
+        font-family: var(--chart-font);
+        font-size: 13px;
+        line-height: 1.17;
+        white-space: pre;
+      }
+
+      .chart code {
+        font: inherit;
+        background: none;
+        border: none;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="brand">
+        <span class="mark"><Logo /></span>
+        <h1 class="name">ASCIICHARTS</h1>
+        <p class="tagline">Charts for the places<br />images can't go</p>
+        <p class="offer">One Python file · MCP server · agent skill</p>
+      </div>
+      <pre class="chart"><code class="chart-color" set:html={chart.color_html} /></pre>
+    </div>
+  </body>
+</html>
