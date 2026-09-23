@@ -63,10 +63,10 @@
   "name": "vbar (wide)",
   "spec": {
    "chartType": "vbar",
-   "title": "Revenue by quarter (width: 60)",
+   "title": "Revenue by quarter (width: 24)",
    "border": "rounded",
    "height": 10,
-   "width": 60,
+   "width": 24,
    "series": [
     {
      "name": "2025",
@@ -522,6 +522,47 @@
   }
  },
  {
+  "name": "line (labelled thresholds)",
+  "spec": {
+   "chartType": "line",
+   "title": "Latency p99 (ms)",
+   "height": 10,
+   "showPoints": true,
+   "labels": [
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat",
+    "Sun"
+   ],
+   "thresholds": [
+    {
+     "value": 106,
+     "label": "target"
+    },
+    {
+     "value": 140,
+     "label": "SLA"
+    }
+   ],
+   "series": [
+    {
+     "values": [
+      92,
+      98,
+      120,
+      131,
+      112,
+      101,
+      95
+     ]
+    }
+   ]
+  }
+ },
+ {
   "name": "line (dotted, Bloomberg-style)",
   "spec": {
    "chartType": "line",
@@ -744,7 +785,7 @@
    "height": 8,
    "series": [
     {
-     "name": "Temp °C",
+     "name": "Temp \u00b0C",
      "values": [
       10,
       12,

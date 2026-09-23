@@ -1,0 +1,669 @@
+@import "@fontsource/press-start-2p";
+@import "@fontsource/dejavu-mono/400.css";
+
+/* The body/code font is whatever monospace the visitor's own system already has — no webfont, no
+   request, no download. This stack just orders the common names so the nicest one available wins. */
+:root {
+  --mono: ui-monospace, "Cascadia Mono", "Segoe UI Mono", Consolas, "Liberation Mono",
+    Menlo, Monaco, "DejaVu Sans Mono", monospace;
+  /* Charts are the exception: they get a self-hosted font with every glyph the renderer can emit
+     (heavy/double/rounded frames, shades, eighth blocks). Consolas, the stock Windows monospace,
+     lacks some of them, and the browser's per-glyph fallback breaks the frame's right edge. */
+  --chart-font: "DejaVu Mono", var(--mono);
+}
+
+/* ------------------------------------------------------------------------------------------- */
+/* Theme tokens — "black" and "white" are literal: two near-monochrome variants, each with an    */
+/* accent picked from the standard 16 terminal colors (yellow on black, magenta on white) rather */
+/* than a custom brand hue. Default is black; toggled via :root[data-theme="white"], set by an   */
+/* inline script in Base.astro before first paint.                                               */
+/* ------------------------------------------------------------------------------------------- */
+
+:root,
+:root[data-theme="black"] {
+  --bg: #06070a;
+  --bg-elevated: #0d0f14;
+  --bg-inset: #111319;
+  --fg: #f0f1f4;
+  --fg-muted: #9096a1;
+  --border: #23262f;
+  --border-strong: #34384a;
+  --accent: #e0c200;
+  --accent-strong: #f5db3d;
+  --accent-ink: #06070a;
+  --accent-2: #6fb7d9;
+  --accent-3: #93b96a;
+  --band-bg: #0a1220;
+  --band-border: #1c3352;
+  --chart-filter: none;
+  color-scheme: dark;
+}
+
+:root[data-theme="white"] {
+  --bg: #fafaf7;
+  --bg-elevated: #ffffff;
+  --bg-inset: #f1efe8;
+  --fg: #101114;
+  --fg-muted: #53565f;
+  --border: #dcd9d0;
+  --border-strong: #c4c0b3;
+  --accent: #a3108f;
+  --accent-strong: #7d0c6d;
+  --accent-ink: #fffdf8;
+  --accent-2: #1c7ea3;
+  --accent-3: #4f7a2e;
+  --band-bg: #eef1ea;
+  --band-border: #cdd6c4;
+  --chart-filter: brightness(0.62) saturate(1.35);
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+  overflow-x: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--mono);
+  font-size: 16px;
+  line-height: 1.6;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  overflow-x: hidden;
+}
+
+/* Inline code in body text is its own small chip — system-monospace font, a subtle background.
+   (Inside a pixel heading it follows the heading's font instead; see .pixel-heading code.) */
+code {
+  font-family: var(--mono);
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  padding: 0.1em 0.4em;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+
+/* ...except inside a chart's own <pre><code> — that's the chart body itself, not inline code. */
+.chart-pre code {
+  font-family: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+a {
+  color: var(--accent-2);
+  text-decoration-color: color-mix(in srgb, var(--accent-2) 40%, transparent);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--accent-strong);
+}
+
+.pixel-heading {
+  font-family: "Press Start 2P", monospace;
+  color: var(--accent);
+  line-height: 1.55;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* An identifier inside a pixel heading stays in the heading's own font and size — a chip in the
+   system monospace would stand out as a different typeface. It keeps its real (lowercase) case
+   and a second color so it still reads as code. */
+.pixel-heading code {
+  font: inherit;
+  text-transform: none;
+  color: var(--fg);
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.section {
+  padding: 88px 0;
+  border-top: 1px solid var(--border);
+}
+
+.section-kicker {
+  font-family: "Press Start 2P", monospace;
+  font-size: 11px;
+  color: var(--fg-muted);
+  letter-spacing: 2px;
+  margin: 0 0 14px;
+}
+
+.section-title {
+  font-size: 26px;
+  margin: 0 0 20px;
+}
+
+.lede {
+  color: var(--fg-muted);
+  font-size: 15px;
+}
+
+/* --- pixel-corner shapes: a small notch cut from each corner, the retro/8-bit look ---------- */
+
+.pixel-corners {
+  clip-path: polygon(
+    0 8px, 8px 8px, 8px 0,
+    calc(100% - 8px) 0, calc(100% - 8px) 8px, 100% 8px,
+    100% calc(100% - 8px), calc(100% - 8px) calc(100% - 8px), calc(100% - 8px) 100%,
+    8px 100%, 8px calc(100% - 8px), 0 calc(100% - 8px)
+  );
+}
+
+.pixel-corners-sm {
+  clip-path: polygon(
+    0 4px, 4px 4px, 4px 0,
+    calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+    100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+    4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)
+  );
+}
+
+.pixel-frame {
+  background: var(--border-strong);
+  padding: 3px;
+  display: inline-block;
+}
+
+.pixel-frame > .pixel-frame-inner {
+  background: var(--bg-elevated);
+  display: block;
+}
+
+/* --- buttons --------------------------------------------------------------------------------- */
+
+.btn {
+  font-family: "Press Start 2P", monospace;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s ease, filter 0.15s ease;
+}
+
+.btn:hover {
+  filter: brightness(1.1);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.btn-secondary {
+  background: var(--bg-inset);
+  color: var(--fg);
+  border: 1px solid var(--border-strong);
+}
+
+/* --- top nav ----------------------------------------------------------------------------------- */
+
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 24px;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 13px;
+  color: var(--fg);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.nav-brand .glyphs {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+.logo {
+  display: block;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.nav-links a {
+  color: var(--fg-muted);
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
+
+.nav-links a:hover {
+  color: var(--accent);
+}
+
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle {
+  font-family: "Press Start 2P", monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  background: var(--bg-inset);
+  color: var(--fg-muted);
+  border: 1px solid var(--border-strong);
+  padding: 8px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggle:hover {
+  color: var(--fg);
+  border-color: var(--accent);
+}
+
+.toggles {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toggles-compact {
+  gap: 6px;
+}
+
+.toggles-compact .toggle {
+  font-size: 8px;
+  padding: 6px 8px;
+  gap: 6px;
+}
+
+.toggles-compact .toggle .dot {
+  width: 6px;
+  height: 6px;
+}
+
+.toggle .dot {
+  width: 7px;
+  height: 7px;
+  background: var(--fg-muted);
+}
+
+.toggle[data-active="true"] .dot {
+  background: var(--accent);
+}
+
+/* --- hero -------------------------------------------------------------------------------------- */
+
+.hero {
+  padding: 72px 0 60px;
+  text-align: center;
+  position: relative;
+}
+
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: -20% 0 auto 0;
+  height: 480px;
+  background: radial-gradient(closest-side, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.hero-title {
+  font-size: clamp(34px, 7vw, 64px);
+  margin: 0;
+}
+
+.hero-tagline {
+  font-size: clamp(13px, 2.4vw, 18px);
+  color: var(--fg);
+  margin: 18px 0 0;
+}
+
+.hero-pitch {
+  max-width: 60ch;
+  margin: 26px auto 0;
+  color: var(--fg-muted);
+  font-size: 15px;
+}
+
+.hero-pitch strong {
+  color: var(--fg);
+}
+
+.hero-ctas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 34px 0 0;
+  flex-wrap: wrap;
+}
+
+.hero-chart {
+  margin: 56px auto 0;
+  max-width: 760px;
+  text-align: left;
+}
+
+.hero-chart-caption {
+  font-size: 12px;
+  color: var(--fg-muted);
+  margin: 12px 4px 0;
+}
+
+/* --- chart panels -------------------------------------------------------------------------------- */
+
+.chart-panel {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+}
+
+.chart-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  padding: 8px 10px 8px 16px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--fg-muted);
+  letter-spacing: 0.5px;
+}
+
+.chart-panel-head .chart-type {
+  color: var(--accent);
+}
+
+.chart-pre {
+  font-family: var(--chart-font);
+  margin: 0;
+  padding: 20px 16px;
+  overflow-x: auto;
+  font-size: 14px;
+  /* tight enough that box-drawing verticals and full blocks touch from row to row */
+  line-height: 1.17;
+  white-space: pre;
+}
+
+.hero .chart-pre {
+  font-size: 15px;
+}
+
+/* The chart carries its own frame now, so center that box in the panel. fit-content + auto
+   margins (rather than flex centering) keeps the left edge reachable when a chart overflows on
+   a narrow screen. */
+.chart-pre code {
+  width: fit-content;
+  margin-inline: auto;
+}
+
+.chart-mono,
+.chart-color {
+  display: block;
+}
+
+html[data-chart-color="off"] .chart-color {
+  display: none;
+}
+
+html[data-chart-color="on"] .chart-mono {
+  display: none;
+}
+
+.chart-color {
+  filter: var(--chart-filter);
+}
+
+/* --- feature grid -------------------------------------------------------------------------------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.grid-item {
+  background: var(--bg-elevated);
+  padding: 26px 24px;
+}
+
+.grid-item h3 {
+  font-size: 13px;
+  margin: 0 0 10px;
+  color: var(--accent);
+  letter-spacing: 0.5px;
+}
+
+.grid-item p {
+  margin: 0;
+  color: var(--fg-muted);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+/* --- ways-in cards ------------------------------------------------------------------------------- */
+
+.ways {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.way-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+.way-card-body {
+  flex: 1;
+  padding: 20px 22px 6px;
+}
+
+.way-card h3 {
+  font-size: 13px;
+  margin: 0 0 8px;
+  letter-spacing: 0.5px;
+}
+
+.way-card p {
+  color: var(--fg-muted);
+  font-size: 13.5px;
+  margin: 0 0 16px;
+}
+
+.code-block {
+  min-height: 92px;
+  background: var(--bg-inset);
+  border-top: 1px solid var(--border);
+  padding: 14px 18px;
+  overflow-x: auto;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.code-block > div {
+  white-space: pre-wrap;
+}
+
+.code-block code {
+  color: var(--fg);
+}
+
+.tok-kw { color: var(--accent); }
+.tok-str { color: var(--accent-3); }
+.tok-cm { color: var(--fg-muted); }
+.tok-fn { color: var(--accent-2); }
+
+/* --- stat band ----------------------------------------------------------------------------------- */
+
+.band {
+  background: var(--band-bg);
+  border-top: 1px solid var(--band-border);
+  border-bottom: 1px solid var(--band-border);
+  padding: 56px 0;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+  text-align: center;
+}
+
+.stat-value {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(20px, 3.4vw, 30px);
+  color: var(--accent);
+}
+
+.stat-label {
+  margin-top: 10px;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+  letter-spacing: 1px;
+}
+
+/* --- gallery ------------------------------------------------------------------------------------- */
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.gallery .chart-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.gallery .chart-panel-wide {
+  grid-column: 1 / -1;
+}
+
+.gallery .chart-pre {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* --- footer ---------------------------------------------------------------------------------------- */
+
+.footer {
+  padding: 48px 0 64px;
+  border-top: 1px solid var(--border);
+}
+
+.footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-links {
+  display: flex;
+  gap: 20px;
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+
+.footer-note {
+  margin-top: 22px;
+  color: var(--fg-muted);
+  font-size: 12.5px;
+  max-width: 70ch;
+}
+
+/* --- responsive -------------------------------------------------------------------------------------- */
+
+@media (max-width: 860px) {
+  .grid,
+  .ways,
+  .gallery,
+  .stat-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .nav-links {
+    display: none;
+  }
+
+  .section {
+    padding: 60px 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .chart-pre,
+  .hero .chart-pre {
+    font-size: 12px;
+  }
+}

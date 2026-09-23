@@ -1,0 +1,44 @@
+---
+const features = [
+  {
+    title: "No dependencies, no install",
+    body: "asciicharts.py is one file of standard-library Python (3.10+). Copy it into a repo, a CI step or a gist.",
+  },
+  {
+    title: "Deterministic",
+    body: "A pure function of the spec: no clock, no randomness, no terminal probing. Same input, same bytes — safe to snapshot, diff and commit.",
+  },
+  {
+    title: "Built to be called by machines",
+    body: 'Bounded input and one-line errors that say what to fix — error: row 3, column "v" is not a number: "n/a" — so a script or an agent can correct itself.',
+  },
+  {
+    title: "Gets the hard cases right",
+    body: "Negative values grow both ways from a zero line, stacked ones too. Dirty CSV numbers ($1,200, 12%, decimal commas) are parsed, not silently dropped.",
+  },
+  {
+    title: "Font-safe by default",
+    body: "Whole █ blocks, glyphs even Consolas has, a pure-ASCII mode for terminals and mail. No ragged right edges.",
+  },
+  {
+    title: "No side effects",
+    body: "The renderer writes nothing and opens no sockets. The server is stateless; usage statistics are off by default.",
+  },
+];
+---
+
+<section class="section" id="why">
+  <div class="wrap">
+    <p class="section-kicker">// why it earns a place in your toolbox</p>
+    <div class="grid">
+      {
+        features.map((f) => (
+          <div class="grid-item">
+            <h3>{f.title}</h3>
+            <p>{f.body}</p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

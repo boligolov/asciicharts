@@ -1,0 +1,93 @@
+---
+import "../styles/global.css";
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const {
+  title = "asciicharts — text charts for agents, terminals and PRs",
+  description = "A dependency-free, single-file Python renderer for ASCII/Unicode charts, plus an MCP server and an agent skill. Charts for the places images can't go.",
+} = Astro.props;
+---
+
+<html lang="en" data-theme="black" data-chart-color="off">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="generator" content={Astro.generator} />
+
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <script is:inline>
+      // Runs before first paint so the page never flashes the wrong theme/toggle state.
+      (function () {
+        try {
+          var theme = localStorage.getItem("asciicharts-theme");
+          if (theme === "black" || theme === "white") {
+            document.documentElement.setAttribute("data-theme", theme);
+          }
+          var chartColor = localStorage.getItem("asciicharts-chart-color");
+          if (chartColor === "on" || chartColor === "off") {
+            document.documentElement.setAttribute("data-chart-color", chartColor);
+          }
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <slot />
+
+    <script is:inline>
+      // Every [data-toggle] button (the nav's pair and each chart panel's pair) flips the same
+      // page-wide attribute, then all of them re-sync their labels.
+      (function () {
+        var html = document.documentElement;
+        var toggles = {
+          theme: {
+            attr: "data-theme", key: "asciicharts-theme", fallback: "black",
+            next: function (v) { return v === "white" ? "black" : "white"; },
+            label: function (v) { return v.toUpperCase(); },
+            active: function (v) { return v === "white"; },
+          },
+          "chart-color": {
+            attr: "data-chart-color", key: "asciicharts-chart-color", fallback: "off",
+            next: function (v) { return v === "on" ? "off" : "on"; },
+            label: function (v) { return v === "on" ? "COLOR" : "MONO"; },
+            active: function (v) { return v === "on"; },
+          },
+        };
+        var buttons = document.querySelectorAll("[data-toggle]");
+
+        function sync() {
+          buttons.forEach(function (btn) {
+            var t = toggles[btn.getAttribute("data-toggle")];
+            var v = html.getAttribute(t.attr) || t.fallback;
+            btn.querySelector(".toggle-label").textContent = t.label(v);
+            btn.setAttribute("data-active", t.active(v) ? "true" : "false");
+          });
+        }
+
+        buttons.forEach(function (btn) {
+          btn.addEventListener("click", function () {
+            var t = toggles[btn.getAttribute("data-toggle")];
+            var v = t.next(html.getAttribute(t.attr) || t.fallback);
+            html.setAttribute(t.attr, v);
+            try {
+              localStorage.setItem(t.key, v);
+            } catch (e) {}
+            sync();
+          });
+        });
+        sync();
+      })();
+    </script>
+  </body>
+</html>

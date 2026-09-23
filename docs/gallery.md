@@ -13,7 +13,7 @@ styles; optional ANSI 256-color output.
 - **[sparkline](#sparkline)**
 - **vbar**: [grouped](#vbar-grouped) · [custom width](#vbar-custom-width) · [stacked](#vbar-stacked) · [halftone style](#vbar-halftone-style) · [ascii style](#vbar-ascii-style) · [diverging](#vbar-diverging) · [stacked, diverging](#vbar-stacked-diverging)
 - **hbar**: [single series](#hbar-single-series) · [fine style](#hbar-fine-style) · [stacked](#hbar-stacked) · [halftone, stacked](#hbar-halftone-stacked) · [ascii style](#hbar-ascii-style) · [ascii, many series](#hbar-ascii-many-series) · [diverging](#hbar-diverging) · [stacked, diverging](#hbar-stacked-diverging)
-- **line**: [default](#line) · [threshold + points](#line-threshold--points) · [dotted style, Bloomberg-inspired](#line-dotted-style-bloomberg-inspired)
+- **line**: [default](#line) · [threshold + points](#line-threshold--points) · [labelled thresholds](#line-labelled-thresholds) · [dotted style, Bloomberg-inspired](#line-dotted-style-bloomberg-inspired)
 - **area**: [single series](#area-single-series) · [stacked](#area-stacked) · [stacked, diverging](#area-stacked-diverging)
 - **[dotplot](#dotplot)**
 - **scatter**: [two groups](#scatter-two-groups)
@@ -75,49 +75,8 @@ latency ▃▅▄█▂▆▇▁▅█▃
 ```
 
 ```
-╭────────────────────╮
-│ Revenue by quarter │
-├────────────────────┤
-│ ░░ ░░ ░░ ░▓        │
-│ ░░ ░░ ░░ █▓        │
-│ ░░ ░░ ░▓ █▓        │
-│ ░░ ░▓ ░▓ █▓        │
-│ ░░ █▓ █▓ █▓        │
-│ ░▓ █▓ █▓ █▓        │
-│ █▓ █▓ █▓ █▓        │
-│ █▓ █▓ █▓ █▓        │
-│ █▓ █▓ █▓ █▓        │
-│ █▓ █▓ █▓ █▓        │
-│ Q1 Q2 Q3 Q4        │
-│                    │
-│ █ 2025   ▓ 2026    │
-╰────────────────────╯
-```
-
-With more than one series, each gets its own shade (`█`, `▓`, `▒`, …) even in the default `solid` style — matching the legend below the chart — not just when color is on. A lone series stays a plain solid block, no shading needed.
-
-### vbar (custom width)
-
-`width` isn't just cosmetic padding — it thickens every bar/column so the chart actually fills the requested width, rather than staying pencil-thin.
-
-```json
-{
-  "chartType": "vbar",
-  "title": "Revenue by quarter (width: 60)",
-  "border": "rounded",
-  "height": 10,
-  "width": 60,
-  "labels": ["Q1", "Q2", "Q3", "Q4"],
-  "series": [
-    { "name": "2025", "values": [30, 45, 40, 60] },
-    { "name": "2026", "values": [35, 50, 55, 70] }
-  ]
-}
-```
-
-```
 ╭─────────────────────────────────────────────────────────────╮
-│               Revenue by quarter (width: 60)                │
+│                     Revenue by quarter                      │
 ├─────────────────────────────────────────────────────────────┤
 │ ░░░░░░░░░░░░░░ ░░░░░░░░░░░░░░ ░░░░░░░░░░░░░░ ░░░░░░░▓▓▓▓▓▓▓ │
 │ ░░░░░░░░░░░░░░ ░░░░░░░░░░░░░░ ░░░░░░░░░░░░░░ ███████▓▓▓▓▓▓▓ │
@@ -133,6 +92,47 @@ With more than one series, each gets its own shade (`█`, `▓`, `▒`, …) ev
 │                                                             │
 │ █ 2025   ▓ 2026                                             │
 ╰─────────────────────────────────────────────────────────────╯
+```
+
+With more than one series, each gets its own shade (`█`, `▓`, `▒`, …) even in the default `solid` style — matching the legend below the chart — not just when color is on. A lone series stays a plain solid block, no shading needed.
+
+### vbar (custom width)
+
+`width` is optional: without it the bars thicken to fill a 60-character plot, as above. It isn't just cosmetic padding either way — pass a smaller one for a compact chart (here 24) and every bar/column narrows to fit it, down to one character with `"width": 1`.
+
+```json
+{
+  "chartType": "vbar",
+  "title": "Revenue by quarter (width: 24)",
+  "border": "rounded",
+  "height": 10,
+  "width": 24,
+  "labels": ["Q1", "Q2", "Q3", "Q4"],
+  "series": [
+    { "name": "2025", "values": [30, 45, 40, 60] },
+    { "name": "2026", "values": [35, 50, 55, 70] }
+  ]
+}
+```
+
+```
+╭────────────────────────────────╮
+│ Revenue by quarter (width: 24) │
+├────────────────────────────────┤
+│ ░░░░ ░░░░ ░░░░ ░░▓▓            │
+│ ░░░░ ░░░░ ░░░░ ██▓▓            │
+│ ░░░░ ░░░░ ░░▓▓ ██▓▓            │
+│ ░░░░ ░░▓▓ ░░▓▓ ██▓▓            │
+│ ░░░░ ██▓▓ ██▓▓ ██▓▓            │
+│ ░░▓▓ ██▓▓ ██▓▓ ██▓▓            │
+│ ██▓▓ ██▓▓ ██▓▓ ██▓▓            │
+│ ██▓▓ ██▓▓ ██▓▓ ██▓▓            │
+│ ██▓▓ ██▓▓ ██▓▓ ██▓▓            │
+│ ██▓▓ ██▓▓ ██▓▓ ██▓▓            │
+│  Q1   Q2   Q3   Q4             │
+│                                │
+│ █ 2025   ▓ 2026                │
+╰────────────────────────────────╯
 ```
 
 ### vbar (stacked)
@@ -152,23 +152,23 @@ With more than one series, each gets its own shade (`█`, `▓`, `▒`, …) ev
 ```
 
 ```
-╔══════════════════════════════╗
-║ Revenue by quarter (stacked) ║
-╠══════════════════════════════╣
-║          ▓                   ║
-║          ▓                   ║
-║    ▓     ▓                   ║
-║    ▓  ▓  █                   ║
-║    █  ▓  █                   ║
-║ ▓  █  █  █                   ║
-║ ▓  █  █  █                   ║
-║ █  █  █  █                   ║
-║ █  █  █  █                   ║
-║ █  █  █  █                   ║
-║ Q1 Q2 Q3 Q4                  ║
-║                              ║
-║ █ Product   ▓ Services       ║
-╚══════════════════════════════╝
+╔═════════════════════════════════════════════════════════════╗
+║                Revenue by quarter (stacked)                 ║
+╠═════════════════════════════════════════════════════════════╣
+║                                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ║
+║                                              ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ║
+║                ▓▓▓▓▓▓▓▓▓▓▓▓▓▓                ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ║
+║                ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ██████████████ ║
+║                ██████████████ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ██████████████ ║
+║ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ██████████████ ██████████████ ██████████████ ║
+║ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ██████████████ ██████████████ ██████████████ ║
+║ ██████████████ ██████████████ ██████████████ ██████████████ ║
+║ ██████████████ ██████████████ ██████████████ ██████████████ ║
+║ ██████████████ ██████████████ ██████████████ ██████████████ ║
+║       Q1             Q2             Q3             Q4       ║
+║                                                             ║
+║ █ Product   ▓ Services                                      ║
+╚═════════════════════════════════════════════════════════════╝
 ```
 
 ### vbar (halftone style)
@@ -191,23 +191,23 @@ With more than one series, each gets its own shade (`█`, `▓`, `▒`, …) ev
 ```
 
 ```
-╭───────────────────────────────╮
-│ Revenue by quarter (halftone) │
-├───────────────────────────────┤
-│           ▒                   │
-│          ▓▒                   │
-│        ▒ ▓▒                   │
-│     ▒  ▒ ▓▒                   │
-│    ▓▒ ▓▒ ▓▒                   │
-│  ▒ ▓▒ ▓▒ ▓▒                   │
-│ ▓▒ ▓▒ ▓▒ ▓▒                   │
-│ ▓▒ ▓▒ ▓▒ ▓▒                   │
-│ ▓▒ ▓▒ ▓▒ ▓▒                   │
-│ ▓▒ ▓▒ ▓▒ ▓▒                   │
-│ Q1 Q2 Q3 Q4                   │
-│                               │
-│ ▓ 2025   ▒ 2026               │
-╰───────────────────────────────╯
+╭─────────────────────────────────────────────────────────────╮
+│                Revenue by quarter (halftone)                │
+├─────────────────────────────────────────────────────────────┤
+│                                                     ▒▒▒▒▒▒▒ │
+│                                              ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ │
+│                                      ▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ │
+│                       ▒▒▒▒▒▒▒        ▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ │
+│                ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ │
+│        ▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ │
+│ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ │
+│ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ │
+│ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ │
+│ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▒▒▒▒▒▒▒ │
+│       Q1             Q2             Q3             Q4       │
+│                                                             │
+│ ▓ 2025   ▒ 2026                                             │
+╰─────────────────────────────────────────────────────────────╯
 ```
 
 > [!NOTE]
@@ -233,23 +233,23 @@ With more than one series, each gets its own shade (`█`, `▓`, `▒`, …) ev
 ```
 
 ```
-╭────────────────────────────╮
-│ Revenue by quarter (ascii) │
-├────────────────────────────┤
-│ ,, ,, ,, ,@                │
-│ ,, ,, ,, #@                │
-│ ,, ,, ,@ #@                │
-│ ,, ,@ ,@ #@                │
-│ ,, #@ #@ #@                │
-│ ,@ #@ #@ #@                │
-│ #@ #@ #@ #@                │
-│ #@ #@ #@ #@                │
-│ #@ #@ #@ #@                │
-│ #@ #@ #@ #@                │
-│ Q1 Q2 Q3 Q4                │
-│                            │
-│ # 2025   @ 2026            │
-╰────────────────────────────╯
+╭─────────────────────────────────────────────────────────────╮
+│                 Revenue by quarter (ascii)                  │
+├─────────────────────────────────────────────────────────────┤
+│ ,,,,,,,,,,,,,, ,,,,,,,,,,,,,, ,,,,,,,,,,,,,, ,,,,,,,@@@@@@@ │
+│ ,,,,,,,,,,,,,, ,,,,,,,,,,,,,, ,,,,,,,,,,,,,, #######@@@@@@@ │
+│ ,,,,,,,,,,,,,, ,,,,,,,,,,,,,, ,,,,,,,@@@@@@@ #######@@@@@@@ │
+│ ,,,,,,,,,,,,,, ,,,,,,,@@@@@@@ ,,,,,,,@@@@@@@ #######@@@@@@@ │
+│ ,,,,,,,,,,,,,, #######@@@@@@@ #######@@@@@@@ #######@@@@@@@ │
+│ ,,,,,,,@@@@@@@ #######@@@@@@@ #######@@@@@@@ #######@@@@@@@ │
+│ #######@@@@@@@ #######@@@@@@@ #######@@@@@@@ #######@@@@@@@ │
+│ #######@@@@@@@ #######@@@@@@@ #######@@@@@@@ #######@@@@@@@ │
+│ #######@@@@@@@ #######@@@@@@@ #######@@@@@@@ #######@@@@@@@ │
+│ #######@@@@@@@ #######@@@@@@@ #######@@@@@@@ #######@@@@@@@ │
+│       Q1             Q2             Q3             Q4       │
+│                                                             │
+│ # 2025   @ 2026                                             │
+╰─────────────────────────────────────────────────────────────╯
 ```
 
 ### vbar (diverging)
@@ -272,23 +272,23 @@ Any negative value switches vbar/hbar into a **diverging** chart: instead of eve
 ```
 
 ```
-╭───────────────────────────────────╮
-│ Subscriber growth YoY (diverging) │
-├───────────────────────────────────┤
-│                    @              │
-│           @     @  @              │
-│     @     @     @  @              │
-│  @  @  @  @  @  @  @              │
-│  @  @  @  @  @  @  @              │
-│ #@-#@-#@-#@-#@-#@-#@              │
-│ #  #  #  #  #  #  #               │
-│ #  #  #  #  #  #  #               │
-│ #  #     #  #     #               │
-│    #     #        #               │
-│ Q1 Q2 Q3 Q4 Q5 Q6 Q7              │
-│                                   │
-│ # Satellite TV   @ Third-party    │
-╰───────────────────────────────────╯
+╭──────────────────────────────────────────────────╮
+│        Subscriber growth YoY (diverging)         │
+├──────────────────────────────────────────────────┤
+│                                              @@@ │
+│                         @@@           @@@    @@@ │
+│           @@@           @@@           @@@    @@@ │
+│    @@@    @@@    @@@    @@@    @@@    @@@    @@@ │
+│    @@@    @@@    @@@    @@@    @@@    @@@    @@@ │
+│ ###@@@-###@@@-###@@@-###@@@-###@@@-###@@@-###@@@ │
+│ ###    ###    ###    ###    ###    ###    ###    │
+│ ###    ###    ###    ###    ###    ###    ###    │
+│ ###    ###           ###    ###           ###    │
+│        ###           ###                  ###    │
+│   Q1     Q2     Q3     Q4     Q5     Q6     Q7   │
+│                                                  │
+│ # Satellite TV   @ Third-party                   │
+╰──────────────────────────────────────────────────╯
 ```
 
 > [!NOTE]
@@ -345,25 +345,25 @@ With `stacked: true`, positive values stack upward from the zero baseline and ne
 ```
 
 ```
-╭────────────────────────────────────╮
-│   Cash flow by quarter (stacked)   │
-├────────────────────────────────────┤
-│          @                         │
-│          @                         │
-│    @     @                         │
-│    @     #                         │
-│ @  #  @  #                         │
-│ @  #  @  #                         │
-│ #  #  #  #                         │
-│ #  #  #  #                         │
-│ #  #  #  #                         │
-│ %  %  %  %                         │
-│    %  %                            │
-│       %                            │
-│ Q1 Q2 Q3 Q4                        │
-│                                    │
-│ # Product   @ Services   % Refunds │
-╰────────────────────────────────────╯
+╭─────────────────────────────────────────────────────────────╮
+│               Cash flow by quarter (stacked)                │
+├─────────────────────────────────────────────────────────────┤
+│                                              @@@@@@@@@@@@@@ │
+│                                              @@@@@@@@@@@@@@ │
+│                @@@@@@@@@@@@@@                @@@@@@@@@@@@@@ │
+│                @@@@@@@@@@@@@@                ############## │
+│ @@@@@@@@@@@@@@ ############## @@@@@@@@@@@@@@ ############## │
+│ @@@@@@@@@@@@@@ ############## @@@@@@@@@@@@@@ ############## │
+│ ############## ############## ############## ############## │
+│ ############## ############## ############## ############## │
+│ ############## ############## ############## ############## │
+│ %%%%%%%%%%%%%% %%%%%%%%%%%%%% %%%%%%%%%%%%%% %%%%%%%%%%%%%% │
+│                %%%%%%%%%%%%%% %%%%%%%%%%%%%%                │
+│                               %%%%%%%%%%%%%%                │
+│       Q1             Q2             Q3             Q4       │
+│                                                             │
+│ # Product   @ Services   % Refunds                          │
+╰─────────────────────────────────────────────────────────────╯
 ```
 
 ### hbar (single series)
@@ -715,6 +715,43 @@ The same idea sideways: positives stack right, negatives stack left, first serie
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
+### line (labelled thresholds)
+
+`thresholds` draws several reference lines at once — a target and an SLA, a budget and a hard limit. Each is a number or a `{value, label}` object; the scale stretches to take them all in, and each is named with its exact value to the right of the plot, on its own row, so the names never cover the data. (A line sits on the nearest row; the note keeps the precise value.)
+
+```json
+{
+  "chartType": "line",
+  "title": "Latency p99 (ms)",
+  "height": 10,
+  "showPoints": true,
+  "labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  "thresholds": [
+    { "value": 106, "label": "target" },
+    { "value": 140, "label": "SLA" }
+  ],
+  "series": [{ "values": [92, 98, 120, 131, 112, 101, 95] }]
+}
+```
+
+```
+┌───────────────────────────────────────────────────────────────────────────────────┐
+│                                 Latency p99 (ms)                                  │
+├───────────────────────────────────────────────────────────────────────────────────┤
+│    140 ┤- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -   SLA: 140    │
+│ 134.67 ┤                                                                          │
+│ 129.33 ┤                           ··●·                                           │
+│    124 ┤                      ·····    ···                                        │
+│ 118.67 ┤                  ·●··            ····                                    │
+│ 113.33 ┤                ··                    ·●··                                │
+│    108 ┤- - - - - - -·-·- - - - - - - - - - - - - -·-·- - - - - - -   target: 106 │
+│ 102.67 ┤           ··                                  ··●····                    │
+│  97.33 ┤     ····●·                                           ·····●              │
+│     92 ┤●····                                                                     │
+│         Mon     Tue       Wed       Thu       Fri       Sat      Sun              │
+└───────────────────────────────────────────────────────────────────────────────────┘
+```
+
 ### line (dotted style, Bloomberg-inspired)
 
 `style: "dotted"` replaces the solid connecting stroke with a sparse `+`-plotted trace — every other pixel along the path — which is exactly how the trend lines look in Bloomberg Businessweek's [Year Ahead 2016](https://www.bloomberg.com/graphics/year-ahead-2016/) ASCII graphics (the "APPLE REVENUE" chart there plots iPhone revenue the same way, `+` marks and all). Independent of `showPoints`/`pointChar`.
@@ -1061,17 +1098,17 @@ Two series sharing one x-axis, each with its own independent y-axis scale (left 
 ```
 
 ```
-┌──────────────────────────┐
-│     Traffic by hour      │
-├──────────────────────────┤
-│     Mon Tue Wed Thu Fri  │
-│ 9am             ░░░      │
-│ 1pm ░░░ ▒▒▒ ▒▒▒ ▒▒▒ ░░░  │
-│ 5pm ▓▓▓ ▒▒▒ ▓▓▓ ▓▓▓ ███  │
-└──────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                         Traffic by hour                          │
+├──────────────────────────────────────────────────────────────────┤
+│         Mon         Tue         Wed         Thu         Fri      │
+│ 9am                                     ░░░░░░░░░░░              │
+│ 1pm ░░░░░░░░░░░ ▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒▒▒ ░░░░░░░░░░░  │
+│ 5pm ▓▓▓▓▓▓▓▓▓▓▓ ▒▒▒▒▒▒▒▒▒▒▒ ▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓ ███████████  │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
-With `"useColor": "on"` cells render as colored `███` blocks along a blue→red ANSI 256 ramp instead of the `" ░▒▓█"` shade ladder.
+Without `width` the cells widen to fill a 60-character grid; with many columns they stay at least 3 characters wide. With `"useColor": "on"` cells render as colored `███` blocks along a blue→red ANSI 256 ramp instead of the `" ░▒▓█"` shade ladder.
 
 ### boxplot
 

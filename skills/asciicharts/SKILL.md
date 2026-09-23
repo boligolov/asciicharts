@@ -120,7 +120,7 @@ the data when you don't set them yourself.
 
 Required: `chartType`, `series` (each `{name, values}` or `{name, points}`). Optional, the ones you'll
 use most: `title`, `labels`, `border` (`none` is the most compact), `width`/`height` (max 500/200),
-`stacked`, `style`, `threshold`, `showPoints`, `bins`. Every option, the limits and the error
+`stacked`, `style`, `threshold` / `thresholds` (labelled, e.g. a target and an SLA), `showPoints`, `bins`. Every option, the limits and the error
 messages are in [references/reference.md](references/reference.md); every chart rendered, with the
 spec that made it, is in [references/gallery.md](references/gallery.md) — look there to choose a style.
 

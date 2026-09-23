@@ -64,7 +64,7 @@ def rows(out):
 
 
 def test_stacked_vbar_with_negatives_grows_both_ways():
-    out = render_chart({"chartType": "vbar", "stacked": True, "height": 8, "border": "none", "labels": ["a", "b"],
+    out = render_chart({"chartType": "vbar", "width": 1, "stacked": True, "height": 8, "border": "none", "labels": ["a", "b"],
                         "series": [{"name": "up", "values": [10, 10]}, {"name": "down", "values": [-10, -5]}]})
     grid = rows(out)[:8]
     # first series stays above the baseline, second below it, in every column
@@ -102,9 +102,53 @@ def test_all_negative_stacked_still_draws():
 
 
 def test_non_negative_stacked_is_unchanged_by_the_negative_support():
-    out = render_chart({"chartType": "vbar", "stacked": True, "height": 4, "border": "none", "labels": ["a"],
+    out = render_chart({"chartType": "vbar", "width": 1, "stacked": True, "height": 4, "border": "none", "labels": ["a"],
                         "series": [{"values": [1]}, {"values": [1]}]})
     assert rows(out)[:4] == ["▓", "▓", "█", "█"]
+
+
+def test_heatmap_width_widens_cells_to_fill_the_grid():
+    spec = {"chartType": "heatmap", "border": "none", "labels": ["Mon", "Tue"],
+            "series": [{"name": "am", "values": [0, 10]}]}
+    narrow = [r.rstrip() for r in rows(render_chart({**spec, "width": 7}))]
+    assert narrow == ["   Mon Tue", "am     ███"]
+    wide = [r.rstrip() for r in rows(render_chart({**spec, "width": 21}))]
+    assert wide == ["      Mon        Tue", "am            ██████████"]
+    # never narrower than a 3-character cell, however small width is
+    assert render_chart({**spec, "width": 2}) == render_chart({**spec, "width": 7})
+
+
+def test_charts_without_width_fill_the_default_plot_width():
+    heat = {"chartType": "heatmap", "border": "none", "labels": ["a", "b", "c"],
+            "series": [{"name": "r", "values": [1, 2, 3]}]}
+    assert render_chart(heat) == render_chart({**heat, "width": 60})
+    bars = {"chartType": "vbar", "border": "none", "labels": ["a", "b"], "series": [{"values": [1, 2]}]}
+    assert render_chart(bars) == render_chart({**bars, "width": 60})
+    assert 58 <= max(len(r) for r in rows(render_chart(bars))) <= 60  # two bars and a gap share 60
+
+
+def test_thresholds_are_dashed_and_named_right_of_the_plot():
+    out = render_chart({"chartType": "line", "border": "none", "height": 5, "width": 10,
+                        "thresholds": [{"value": 10, "label": "target"}, 0],
+                        "series": [{"values": [2, 4, 6]}]})
+    r = rows(out)
+    # the scale stretches to take in both lines: 10 is the top row, 0 the bottom one
+    assert r[0].lstrip().startswith("10 ┤- - - - - ") and r[0].endswith("  target: 10")
+    assert r[4].lstrip().startswith("0 ┤- - - - - ") and r[4].endswith("  0")
+    assert "threshold" not in out  # no footnote: every line is named on its own row
+
+
+def test_thresholds_on_the_same_row_share_it():
+    out = render_chart({"chartType": "line", "border": "none", "height": 3,
+                        "thresholds": [{"value": 5, "label": "a"}, {"value": 5.01, "label": "b"}],
+                        "series": [{"values": [0, 5]}]})
+    assert rows(out)[0].endswith("  a: 5, b: 5.01")
+
+
+def test_threshold_and_thresholds_combine():
+    out = render_chart({"chartType": "line", "border": "none", "height": 4, "threshold": 1,
+                        "thresholds": [{"value": 9, "label": "cap"}], "series": [{"values": [3, 5]}]})
+    assert rows(out)[0].endswith("  cap: 9") and rows(out)[-1] == "- - threshold: 1"
 
 
 def test_float_rounding_is_half_away_from_zero_like_go():
@@ -123,6 +167,13 @@ def test_float_rounding_is_half_away_from_zero_like_go():
     ({"chartType": "line", "style": "x", "series": [{"values": [1, 2]}]}, 'invalid style "x"'),
     ({"chartType": "line", "useColor": "x", "series": [{"values": [1, 2]}]}, 'invalid useColor "x"'),
     ({"chartType": "line", "series": [{"values": [1]}]}, "at least two values"),
+    ({"chartType": "line", "thresholds": 5, "series": [{"values": [1, 2]}]}, "thresholds must be an array"),
+    ({"chartType": "line", "thresholds": [{"label": "x"}], "series": [{"values": [1, 2]}]},
+     "thresholds 0 value must be a number"),
+    ({"chartType": "line", "thresholds": [{"value": 1, "label": "x" * 41}], "series": [{"values": [1, 2]}]},
+     "label must be at most 40 characters"),
+    ({"chartType": "line", "thresholds": list(range(21)), "series": [{"values": [1, 2]}]},
+     "thresholds must have at most 20 entries"),
     ({"chartType": "dual_axis", "series": [{"values": [1, 2]}]}, "exactly two series"),
     ({"chartType": "histogram", "series": [{"values": [1]}, {"values": [2]}]}, "exactly one series"),
     ({"chartType": "vbar", "series": [{"values": [1, 2]}, {"values": [1]}]}, "same number of values"),
@@ -245,7 +296,7 @@ def test_a_nonzero_value_never_disappears_but_zero_stays_empty():
                         "series": [{"values": [1000, 0.4, 0]}]})
     big, tiny, zero = out.split("\n")
     assert big.count("█") == 40 and tiny.count("█") == 1 and zero.count("█") == 0
-    out = render_chart({"chartType": "vbar", "border": "none", "height": 5, "labels": ["a", "b", "c"],
+    out = render_chart({"chartType": "vbar", "width": 1, "border": "none", "height": 5, "labels": ["a", "b", "c"],
                         "series": [{"values": [1000, 0.4, 0]}]})
     rows = out.split("\n")[:5]
     assert [sum(r[i] == "█" for r in rows) for i in (0, 2, 4)] == [5, 1, 0]
@@ -263,7 +314,7 @@ def test_track_fills_the_space_after_a_short_bar():
     full, short = out.split("\n")
     assert full == "a │ ████████████████████████████████████████ 10"
     assert short == "b │ ████████████████░░░░░░░░░░░░░░░░░░░░░░░░ 4"
-    out = render_chart({"chartType": "vbar", "border": "none", "height": 5, "labels": ["a", "b"], "series": [{"values": [10, 4]}]})
+    out = render_chart({"chartType": "vbar", "width": 1, "border": "none", "height": 5, "labels": ["a", "b"], "series": [{"values": [10, 4]}]})
     rows = out.split("\n")[:5]
     assert [r[0] for r in rows] == ["█", "█", "█", "█", "█"]  # full column: no track needed
     assert [r[2] for r in rows] == ["░", "░", "░", "█", "█"]  # short column: track above the bar
@@ -295,7 +346,7 @@ def test_ascii_style_gets_its_own_comma_track_never_the_unicode_shade():
     out = render_chart({"chartType": "hbar", "border": "none", "labels": ["a", "b"], "style": "ascii",
                         "series": [{"values": [10, 4]}]})
     assert out == "a | ######################################## 10\nb | ################,,,,,,,,,,,,,,,,,,,,,,,, 4"
-    out = render_chart({"chartType": "vbar", "border": "none", "height": 5, "labels": ["a", "b"], "style": "ascii",
+    out = render_chart({"chartType": "vbar", "width": 1, "border": "none", "height": 5, "labels": ["a", "b"], "style": "ascii",
                         "series": [{"values": [10, 4]}]})
     rows = out.split("\n")[:5]
     assert [r[0] for r in rows] == ["#", "#", "#", "#", "#"]  # full column: no track needed
@@ -305,7 +356,7 @@ def test_ascii_style_gets_its_own_comma_track_never_the_unicode_shade():
 def test_track_never_reuses_a_bars_own_fill_glyph():
     """Grouped vbar's 4th series is drawn in FILLS[3], which is the track glyph itself (░) — the
     track must fall back to a different shade there so the bar's own end is still visible."""
-    out = render_chart({"chartType": "vbar", "border": "none", "height": 8, "labels": ["a"],
+    out = render_chart({"chartType": "vbar", "width": 1, "border": "none", "height": 8, "labels": ["a"],
                         "series": [{"name": f"s{i}", "values": [v]} for i, v in enumerate([10, 10, 10, 4])]})
     rows = out.split("\n")[:8]
     fourth_col = [r[3] for r in rows]

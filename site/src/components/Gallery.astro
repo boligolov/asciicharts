@@ -1,0 +1,31 @@
+---
+import Chart from "./Chart.astro";
+
+// wide: the chart spans both columns (line charts are ~75 characters across)
+const items = [
+  { id: "pie", kind: "pie" },
+  { id: "vbar", kind: "vbar · grouped" },
+  { id: "line", kind: "line · threshold + points", wide: true },
+  { id: "diverging", kind: "hbar · stacked, diverging" },
+  { id: "heatmap", kind: "heatmap" },
+  { id: "dual_axis", kind: "dual_axis", wide: true },
+  { id: "ranking", kind: "hbar · ranking" },
+  { id: "ascii", kind: "hbar · style: ascii" },
+];
+---
+
+<section class="section" id="gallery">
+  <div class="wrap">
+    <p class="section-kicker">// the gallery</p>
+    <h2 class="section-title pixel-heading" style="font-size:20px;">
+      Every one of these is real <code>render_chart()</code> output
+    </h2>
+    <p class="lede" style="margin-bottom: 32px;">
+      Bars, stacks, diverging values, lines with thresholds, two y-axes, pies, heatmaps, a pure-ASCII style for when Unicode isn't
+      safe to assume. <a href="https://github.com/boligolov/asciicharts/blob/master/docs/gallery.md">See every chart type and style →</a>
+    </p>
+    <div class="gallery">
+      {items.map((it) => <Chart id={it.id} kind={it.kind} wide={it.wide} />)}
+    </div>
+  </div>
+</section>

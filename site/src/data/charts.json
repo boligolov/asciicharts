@@ -1,0 +1,368 @@
+[
+  {
+    "id": "hero",
+    "spec": {
+      "chartType": "hbar",
+      "border": "rounded",
+      "title": "Build time by stage (s)",
+      "width": 46,
+      "labels": [
+        "Compile",
+        "Test",
+        "Lint",
+        "Package"
+      ],
+      "series": [
+        {
+          "name": "before caching",
+          "values": [
+            64,
+            32,
+            16,
+            8
+          ]
+        },
+        {
+          "name": "after caching",
+          "values": [
+            40,
+            22,
+            10,
+            5
+          ]
+        }
+      ]
+    },
+    "mono_html": "╭──────────────────────────────────────────────────────────────────────╮\n│                       Build time by stage (s)                        │\n├──────────────────────────────────────────────────────────────────────┤\n│ Compile                                                              │\n│   before caching │ ██████████████████████████████████████████████ 64 │\n│   after caching  │ █████████████████████████████░░░░░░░░░░░░░░░░░ 40 │\n│                                                                      │\n│ Test                                                                 │\n│   before caching │ ███████████████████████░░░░░░░░░░░░░░░░░░░░░░░ 32 │\n│   after caching  │ ████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 22 │\n│                                                                      │\n│ Lint                                                                 │\n│   before caching │ ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 16 │\n│   after caching  │ ███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 10 │\n│                                                                      │\n│ Package                                                              │\n│   before caching │ ██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 8  │\n│   after caching  │ ████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ 5  │\n╰──────────────────────────────────────────────────────────────────────╯",
+    "color_html": "╭──────────────────────────────────────────────────────────────────────╮\n│                       Build time by stage (s)                        │\n├──────────────────────────────────────────────────────────────────────┤\n│ Compile                                                              │\n│   before caching │ <span style=\"color:#00afff\">██████████████████████████████████████████████</span> 64 │\n│   after caching  │ <span style=\"color:#ff8700\">█████████████████████████████░░░░░░░░░░░░░░░░░</span> 40 │\n│                                                                      │\n│ Test                                                                 │\n│   before caching │ <span style=\"color:#00afff\">███████████████████████░░░░░░░░░░░░░░░░░░░░░░░</span> 32 │\n│   after caching  │ <span style=\"color:#ff8700\">████████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</span> 22 │\n│                                                                      │\n│ Lint                                                                 │\n│   before caching │ <span style=\"color:#00afff\">████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</span> 16 │\n│   after caching  │ <span style=\"color:#ff8700\">███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</span> 10 │\n│                                                                      │\n│ Package                                                              │\n│   before caching │ <span style=\"color:#00afff\">██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</span> 8  │\n│   after caching  │ <span style=\"color:#ff8700\">████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</span> 5  │\n╰──────────────────────────────────────────────────────────────────────╯"
+  },
+  {
+    "id": "ranking",
+    "spec": {
+      "chartType": "hbar",
+      "border": "light",
+      "title": "Slowest endpoints, p99 ms",
+      "width": 34,
+      "labels": [
+        "/upload",
+        "/search",
+        "/checkout"
+      ],
+      "series": [
+        {
+          "values": [
+            4200,
+            1900,
+            950
+          ]
+        }
+      ]
+    },
+    "mono_html": "┌─────────────────────────────────────────────────────┐\n│              Slowest endpoints, p99 ms              │\n├─────────────────────────────────────────────────────┤\n│ /upload   │ ██████████████████████████████████ 4200 │\n│ /search   │ ███████████████░░░░░░░░░░░░░░░░░░░ 1900 │\n│ /checkout │ ████████░░░░░░░░░░░░░░░░░░░░░░░░░░ 950  │\n└─────────────────────────────────────────────────────┘",
+    "color_html": "┌─────────────────────────────────────────────────────┐\n│              Slowest endpoints, p99 ms              │\n├─────────────────────────────────────────────────────┤\n│ /upload   │ ██████████████████████████████████ 4200 │\n│ /search   │ ███████████████░░░░░░░░░░░░░░░░░░░ 1900 │\n│ /checkout │ ████████░░░░░░░░░░░░░░░░░░░░░░░░░░ 950  │\n└─────────────────────────────────────────────────────┘"
+  },
+  {
+    "id": "diverging",
+    "spec": {
+      "chartType": "hbar",
+      "stacked": true,
+      "border": "rounded",
+      "title": "Revenue vs refunds",
+      "width": 36,
+      "labels": [
+        "EMEA",
+        "APAC",
+        "Americas"
+      ],
+      "series": [
+        {
+          "name": "Product",
+          "values": [
+            40,
+            25,
+            55
+          ]
+        },
+        {
+          "name": "Refunds",
+          "values": [
+            -15,
+            -20,
+            -8
+          ]
+        }
+      ]
+    },
+    "mono_html": "╭────────────────────────────────────────────────────╮\n│                 Revenue vs refunds                 │\n├────────────────────────────────────────────────────┤\n│ EMEA     │   ▓▓▓▓▓▓▓▓███████████████████        25 │\n│ APAC     │ ▓▓▓▓▓▓▓▓▓▓████████████               5  │\n│ Americas │       ▓▓▓▓██████████████████████████ 47 │\n│                                                    │\n│ █ Product   ▓ Refunds                              │\n╰────────────────────────────────────────────────────╯",
+    "color_html": "╭────────────────────────────────────────────────────╮\n│                 Revenue vs refunds                 │\n├────────────────────────────────────────────────────┤\n│ EMEA     │   <span style=\"color:#ff8700\">▓▓▓▓▓▓▓▓</span><span style=\"color:#00afff\">███████████████████</span>        25 │\n│ APAC     │ <span style=\"color:#ff8700\">▓▓▓▓▓▓▓▓▓▓</span><span style=\"color:#00afff\">████████████</span>               5  │\n│ Americas │       <span style=\"color:#ff8700\">▓▓▓▓</span><span style=\"color:#00afff\">██████████████████████████</span> 47 │\n│                                                    │\n│ <span style=\"color:#00afff\">█</span> Product   <span style=\"color:#ff8700\">▓</span> Refunds                              │\n╰────────────────────────────────────────────────────╯"
+  },
+  {
+    "id": "vbar",
+    "spec": {
+      "chartType": "vbar",
+      "border": "heavy",
+      "title": "Revenue by quarter",
+      "height": 12,
+      "width": 44,
+      "labels": [
+        "Q1",
+        "Q2",
+        "Q3",
+        "Q4"
+      ],
+      "series": [
+        {
+          "name": "2025",
+          "values": [
+            42,
+            55,
+            61,
+            58
+          ]
+        },
+        {
+          "name": "2026",
+          "values": [
+            50,
+            60,
+            66,
+            70
+          ]
+        }
+      ]
+    },
+    "mono_html": "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃             Revenue by quarter              ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\n┃ ░░░░░░░░░░ ░░░░░░░░░░ ░░░░░░░░░░ ░░░░░▓▓▓▓▓ ┃\n┃ ░░░░░░░░░░ ░░░░░░░░░░ ░░░░░▓▓▓▓▓ ░░░░░▓▓▓▓▓ ┃\n┃ ░░░░░░░░░░ ░░░░░▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ ┃\n┃ ░░░░░▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ ┃\n┃ ░░░░░▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ ┃\n┃ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ ┃\n┃ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ ┃\n┃ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ ┃\n┃ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ ┃\n┃ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ ┃\n┃ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ ┃\n┃ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ █████▓▓▓▓▓ ┃\n┃     Q1         Q2         Q3         Q4     ┃\n┃                                             ┃\n┃ █ 2025   ▓ 2026                             ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛",
+    "color_html": "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n┃             Revenue by quarter              ┃\n┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫\n┃ ░░░░░░░░░░ ░░░░░░░░░░ ░░░░░░░░░░ ░░░░░<span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ┃\n┃ ░░░░░░░░░░ ░░░░░░░░░░ ░░░░░<span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ░░░░░<span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ┃\n┃ ░░░░░░░░░░ ░░░░░<span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ┃\n┃ ░░░░░<span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ┃\n┃ ░░░░░<span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ┃\n┃ <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ┃\n┃ <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ┃\n┃ <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ┃\n┃ <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ┃\n┃ <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ┃\n┃ <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ┃\n┃ <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span> ┃\n┃     Q1         Q2         Q3         Q4     ┃\n┃                                             ┃\n┃ <span style=\"color:#00afff\">█</span> 2025   <span style=\"color:#ff8700\">▓</span> 2026                             ┃\n┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛"
+  },
+  {
+    "id": "pie",
+    "spec": {
+      "chartType": "pie",
+      "border": "rounded",
+      "title": "Browser share",
+      "width": 36,
+      "series": [
+        {
+          "name": "Chrome",
+          "values": [
+            62
+          ]
+        },
+        {
+          "name": "Safari",
+          "values": [
+            21
+          ]
+        },
+        {
+          "name": "Firefox",
+          "values": [
+            12
+          ]
+        },
+        {
+          "name": "Other",
+          "values": [
+            5
+          ]
+        }
+      ]
+    },
+    "mono_html": "╭──────────────────────────────────────╮\n│            Browser share             │\n├──────────────────────────────────────┤\n│             ░░░░░░██████             │\n│         ▒▒▒▒▒░░░░░██████████         │\n│       ▒▒▒▒▒▒▒▒░░░░████████████       │\n│     ▒▒▒▒▒▒▒▒▒▒░░░░██████████████     │\n│   ▒▒▒▒▒▒▒▒▒▒▒▒▒░░░████████████████   │\n│  ▓▓▓▓▒▒▒▒▒▒▒▒▒▒▒░░█████████████████  │\n│  ▓▓▓▓▓▓▓▓▒▒▒▒▒▒▒░░█████████████████  │\n│ ▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒░██████████████████ │\n│ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒██████████████████ │\n│ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓███████████████████ │\n│ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓█████████████████████ │\n│  ▓▓▓▓▓▓▓▓▓▓▓▓██████████████████████  │\n│  ▓▓▓▓▓▓▓▓▓▓████████████████████████  │\n│   ▓▓▓▓▓▓▓▓████████████████████████   │\n│     ▓▓▓▓████████████████████████     │\n│       ████████████████████████       │\n│         ████████████████████         │\n│             ████████████             │\n│                                      │\n│ █ Chrome: 62 (62.0%)                 │\n│ ▓ Safari: 21 (21.0%)                 │\n│ ▒ Firefox: 12 (12.0%)                │\n│ ░ Other: 5 (5.0%)                    │\n╰──────────────────────────────────────╯",
+    "color_html": "╭──────────────────────────────────────╮\n│            Browser share             │\n├──────────────────────────────────────┤\n│             <span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>             │\n│         <span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>         │\n│       <span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>       │\n│     <span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>     │\n│   <span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>   │\n│  <span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>  │\n│  <span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>  │\n│ <span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#ff00ff\">░</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span> │\n│ <span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00d700\">▒</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span> │\n│ <span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span> │\n│ <span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span> │\n│  <span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>  │\n│  <span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>  │\n│   <span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>   │\n│     <span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#ff8700\">▓</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>     │\n│       <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>       │\n│         <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>         │\n│             <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>             │\n│                                      │\n│ <span style=\"color:#00afff\">█</span> Chrome: 62 (62.0%)                 │\n│ <span style=\"color:#ff8700\">▓</span> Safari: 21 (21.0%)                 │\n│ <span style=\"color:#00d700\">▒</span> Firefox: 12 (12.0%)                │\n│ <span style=\"color:#ff00ff\">░</span> Other: 5 (5.0%)                    │\n╰──────────────────────────────────────╯"
+  },
+  {
+    "id": "heatmap",
+    "spec": {
+      "chartType": "heatmap",
+      "border": "double",
+      "title": "Requests by hour x day",
+      "width": 44,
+      "labels": [
+        "Mon",
+        "Tue",
+        "Wed",
+        "Thu",
+        "Fri",
+        "Sat",
+        "Sun"
+      ],
+      "series": [
+        {
+          "name": "00h",
+          "values": [
+            2,
+            1,
+            1,
+            2,
+            3,
+            5,
+            4
+          ]
+        },
+        {
+          "name": "08h",
+          "values": [
+            8,
+            9,
+            9,
+            8,
+            7,
+            3,
+            2
+          ]
+        },
+        {
+          "name": "16h",
+          "values": [
+            6,
+            7,
+            8,
+            9,
+            9,
+            6,
+            4
+          ]
+        },
+        {
+          "name": "22h",
+          "values": [
+            3,
+            3,
+            4,
+            5,
+            8,
+            9,
+            6
+          ]
+        }
+      ]
+    },
+    "mono_html": "╔════════════════════════════════════════════════╗\n║             Requests by hour x day             ║\n╠════════════════════════════════════════════════╣\n║      Mon   Tue   Wed   Thu   Fri   Sat   Sun   ║\n║ 00h                         ░░░░░ ▒▒▒▒▒ ░░░░░  ║\n║ 08h ▓▓▓▓▓ █████ █████ ▓▓▓▓▓ ▓▓▓▓▓ ░░░░░        ║\n║ 16h ▒▒▒▒▒ ▓▓▓▓▓ ▓▓▓▓▓ █████ █████ ▒▒▒▒▒ ░░░░░  ║\n║ 22h ░░░░░ ░░░░░ ░░░░░ ▒▒▒▒▒ ▓▓▓▓▓ █████ ▒▒▒▒▒  ║\n╚════════════════════════════════════════════════╝",
+    "color_html": "╔════════════════════════════════════════════════╗\n║             Requests by hour x day             ║\n╠════════════════════════════════════════════════╣\n║      Mon   Tue   Wed   Thu   Fri   Sat   Sun   ║\n║ 00h <span style=\"color:#005fff\">█████</span> <span style=\"color:#0000ff\">█████</span> <span style=\"color:#0000ff\">█████</span> <span style=\"color:#005fff\">█████</span> <span style=\"color:#00afff\">█████</span> <span style=\"color:#87ffff\">█████</span> <span style=\"color:#00ffff\">█████</span>  ║\n║ 08h <span style=\"color:#ff8700\">█████</span> <span style=\"color:#ff0000\">█████</span> <span style=\"color:#ff0000\">█████</span> <span style=\"color:#ff8700\">█████</span> <span style=\"color:#ffd700\">█████</span> <span style=\"color:#00afff\">█████</span> <span style=\"color:#005fff\">█████</span>  ║\n║ 16h <span style=\"color:#d7ffff\">█████</span> <span style=\"color:#ffd700\">█████</span> <span style=\"color:#ff8700\">█████</span> <span style=\"color:#ff0000\">█████</span> <span style=\"color:#ff0000\">█████</span> <span style=\"color:#d7ffff\">█████</span> <span style=\"color:#00ffff\">█████</span>  ║\n║ 22h <span style=\"color:#00afff\">█████</span> <span style=\"color:#00afff\">█████</span> <span style=\"color:#00ffff\">█████</span> <span style=\"color:#87ffff\">█████</span> <span style=\"color:#ff8700\">█████</span> <span style=\"color:#ff0000\">█████</span> <span style=\"color:#d7ffff\">█████</span>  ║\n╚════════════════════════════════════════════════╝"
+  },
+  {
+    "id": "line",
+    "spec": {
+      "chartType": "line",
+      "border": "light",
+      "title": "Response time vs SLA",
+      "height": 10,
+      "width": 96,
+      "threshold": 50,
+      "showPoints": true,
+      "series": [
+        {
+          "values": [
+            20,
+            25,
+            22,
+            30,
+            45,
+            38,
+            55,
+            60,
+            48,
+            35,
+            30,
+            28
+          ]
+        }
+      ]
+    },
+    "mono_html": "┌─────────────────────────────────────────────────────────────────────────────────────────────────────────┐\n│                                          Response time vs SLA                                           │\n├─────────────────────────────────────────────────────────────────────────────────────────────────────────┤\n│    60 ┤                                                        ····●·                                   │\n│ 55.56 ┤                                                  ·●····      ···                                │\n│ 51.11 ┤- - - - - - - - - - - - - - - - - - - - - - - - -·- - - - - - - -·-·- - - - - - - - - - - - - -  │\n│ 46.67 ┤                                 ·●··         ··                    ·●·                          │\n│ 42.22 ┤                               ··    ····   ··                         ··                        │\n│ 37.78 ┤                             ··          ··●                             ···                     │\n│ 33.33 ┤                           ··                                               ·●····               │\n│ 28.89 ┤                       ··●·                                                       ····●········● │\n│ 24.44 ┤    ····●····      ····                                                                          │\n│    20 ┤●···         ····●·                                                                              │\n│                                                                                                         │\n│ - - threshold: 50                                                                                       │\n└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘",
+    "color_html": "┌─────────────────────────────────────────────────────────────────────────────────────────────────────────┐\n│                                          Response time vs SLA                                           │\n├─────────────────────────────────────────────────────────────────────────────────────────────────────────┤\n│    60 ┤                                                        <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">●</span><span style=\"color:#00afff\">·</span>                                   │\n│ 55.56 ┤                                                  <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">●</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>      <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>                                │\n│ 51.11 ┤<span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span><span style=\"color:#00afff\">·</span><span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span><span style=\"color:#00afff\">·</span><span style=\"color:#808080\">-</span><span style=\"color:#00afff\">·</span><span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span> <span style=\"color:#808080\">-</span>  │\n│ 46.67 ┤                                 <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">●</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>         <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>                    <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">●</span><span style=\"color:#00afff\">·</span>                          │\n│ 42.22 ┤                               <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>    <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>   <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>                         <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>                        │\n│ 37.78 ┤                             <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>          <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">●</span>                             <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>                     │\n│ 33.33 ┤                           <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>                                               <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">●</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>               │\n│ 28.89 ┤                       <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">●</span><span style=\"color:#00afff\">·</span>                                                       <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">●</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">●</span> │\n│ 24.44 ┤    <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">●</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>      <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>                                                                          │\n│    20 ┤<span style=\"color:#00afff\">●</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span>         <span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">·</span><span style=\"color:#00afff\">●</span><span style=\"color:#00afff\">·</span>                                                                              │\n│                                                                                                         │\n│ - - threshold: 50                                                                                       │\n└─────────────────────────────────────────────────────────────────────────────────────────────────────────┘"
+  },
+  {
+    "id": "dual_axis",
+    "spec": {
+      "chartType": "dual_axis",
+      "border": "rounded",
+      "title": "Temperature (left) vs humidity (right)",
+      "height": 10,
+      "width": 92,
+      "series": [
+        {
+          "name": "Temp °C",
+          "values": [
+            10,
+            12,
+            15,
+            14,
+            18,
+            20,
+            19
+          ]
+        },
+        {
+          "name": "Humidity %",
+          "values": [
+            80,
+            78,
+            65,
+            70,
+            60,
+            55,
+            58
+          ]
+        }
+      ]
+    },
+    "mono_html": "╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮\n│                                   Temperature (left) vs humidity (right)                                   │\n├────────────────────────────────────────────────────────────────────────────────────────────────────────────┤\n│    20 ┤▒▒▒▒▒▒▒▒                                                                ███████████         ├ 80    │\n│ 18.89 ┤        ▒▒▒▒▒▒▒▒▒                                               ████████           █████████├ 77.22 │\n│ 17.78 ┤                 ▒▒▒▒                                     ██████                            ├ 74.44 │\n│ 16.67 ┤                     ▒▒▒▒                            █████                                  ├ 71.67 │\n│ 15.56 ┤                         ▒▒▒▒         ▒▒▒▒▒▒▒▒▒▒█████                                       ├ 68.89 │\n│ 14.44 ┤                           ██▒▒▒▒▒▒▒▒▒██████████▒▒▒▒▒                                       ├ 66.11 │\n│ 13.33 ┤                   ████████                          ▒▒▒▒▒                                  ├ 63.33 │\n│ 12.22 ┤            ███████                                       ▒▒▒▒▒▒                            ├ 60.56 │\n│ 11.11 ┤    ████████                                                    ▒▒▒▒▒▒▒▒           ▒▒▒▒▒▒▒▒▒├ 57.78 │\n│    10 ┤████                                                                    ▒▒▒▒▒▒▒▒▒▒▒         ├ 55    │\n│                                                                                                            │\n│ left:  █ Temp °C                                                                                           │\n│ right: ▒ Humidity %                                                                                        │\n╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯",
+    "color_html": "╭────────────────────────────────────────────────────────────────────────────────────────────────────────────╮\n│                                   Temperature (left) vs humidity (right)                                   │\n├────────────────────────────────────────────────────────────────────────────────────────────────────────────┤\n│    20 ┤<span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span>                                                                <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>         ├ 80    │\n│ 18.89 ┤        <span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span>                                               <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>           <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>├ 77.22 │\n│ 17.78 ┤                 <span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span>                                     <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>                            ├ 74.44 │\n│ 16.67 ┤                     <span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span>                            <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>                                  ├ 71.67 │\n│ 15.56 ┤                         <span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span>         <span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>                                       ├ 68.89 │\n│ 14.44 ┤                           <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span>                                       ├ 66.11 │\n│ 13.33 ┤                   <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>                          <span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span>                                  ├ 63.33 │\n│ 12.22 ┤            <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>                                       <span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span>                            ├ 60.56 │\n│ 11.11 ┤    <span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>                                                    <span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span>           <span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span>├ 57.78 │\n│    10 ┤<span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span><span style=\"color:#00afff\">█</span>                                                                    <span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span><span style=\"color:#ff8700\">▒</span>         ├ 55    │\n│                                                                                                            │\n│ left:  <span style=\"color:#00afff\">█</span> Temp °C                                                                                           │\n│ right: <span style=\"color:#ff8700\">▒</span> Humidity %                                                                                        │\n╰────────────────────────────────────────────────────────────────────────────────────────────────────────────╯"
+  },
+  {
+    "id": "sparkline",
+    "spec": {
+      "chartType": "sparkline",
+      "border": "light",
+      "title": "Latency",
+      "series": [
+        {
+          "name": "latency",
+          "values": [
+            4,
+            6,
+            5,
+            9,
+            3,
+            7,
+            8,
+            2,
+            6,
+            9,
+            4
+          ]
+        }
+      ]
+    },
+    "mono_html": "┌─────────────────────┐\n│       Latency       │\n├─────────────────────┤\n│ latency ▃▅▄█▂▆▇▁▅█▃ │\n└─────────────────────┘",
+    "color_html": "┌─────────────────────┐\n│       Latency       │\n├─────────────────────┤\n│ latency <span style=\"color:#00afff\">▃▅▄█▂▆▇▁▅█▃</span> │\n└─────────────────────┘"
+  },
+  {
+    "id": "ascii",
+    "spec": {
+      "chartType": "hbar",
+      "style": "ascii",
+      "border": "ascii",
+      "title": "Tests by suite",
+      "width": 32,
+      "labels": [
+        "unit",
+        "integration",
+        "e2e"
+      ],
+      "series": [
+        {
+          "values": [
+            480,
+            120,
+            30
+          ]
+        }
+      ]
+    },
+    "mono_html": "+----------------------------------------------------+\n|                   Tests by suite                   |\n+----------------------------------------------------+\n| unit        | ################################ 480 |\n| integration | ########,,,,,,,,,,,,,,,,,,,,,,,, 120 |\n| e2e         | ##,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 30  |\n+----------------------------------------------------+",
+    "color_html": "+----------------------------------------------------+\n|                   Tests by suite                   |\n+----------------------------------------------------+\n| unit        | ################################ 480 |\n| integration | ########,,,,,,,,,,,,,,,,,,,,,,,, 120 |\n| e2e         | ##,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, 30  |\n+----------------------------------------------------+"
+  }
+]

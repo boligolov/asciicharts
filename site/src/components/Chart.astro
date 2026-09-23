@@ -1,0 +1,26 @@
+---
+import charts from "../data/charts.json";
+import Toggles from "./Toggles.astro";
+
+interface Props {
+  id: string;
+  /** shown as a small badge, e.g. "hbar · grouped" */
+  kind: string;
+  /** span the full row of the gallery grid */
+  wide?: boolean;
+}
+
+const { id, kind, wide = false } = Astro.props;
+const chart = charts.find((c) => c.id === id);
+if (!chart) {
+  throw new Error(`No rendered example for chart id "${id}" — run: python site/scripts/render_examples.py`);
+}
+---
+
+<div class:list={["chart-panel pixel-corners-sm", { "chart-panel-wide": wide }]}>
+  <div class="chart-panel-head">
+    <span class="chart-type">{kind}</span>
+    <Toggles compact />
+  </div>
+  <pre class="chart-pre"><code class="chart-mono" set:html={chart.mono_html} /><code class="chart-color" set:html={chart.color_html} /></pre>
+</div>

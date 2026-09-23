@@ -1,0 +1,33 @@
+---
+import Chart from "./Chart.astro";
+---
+
+<section class="hero" id="top">
+  <div class="wrap">
+    <h1 class="hero-title pixel-heading">ASCIICHARTS</h1>
+    <p class="hero-tagline pixel-heading" style="font-size: 14px; color: var(--fg);">
+      Charts for the places images can't go
+    </p>
+    <p class="hero-pitch">
+      PR descriptions, incident channels, CI logs, commit messages, ssh sessions — and the replies
+      of LLM agents. <strong>Numbers in, a monospace string out.</strong> One file, standard
+      library only, nothing to install.
+    </p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary pixel-corners" href="https://github.com/boligolov/asciicharts#three-ways-in">
+        GET STARTED ▸
+      </a>
+      <a class="btn btn-secondary pixel-corners" href="https://github.com/boligolov/asciicharts">
+        VIEW ON GITHUB
+      </a>
+    </div>
+
+    <div class="hero-chart">
+      <Chart id="hero" kind="hbar · grouped" />
+      <p class="hero-chart-caption">
+        Real <code>render_chart()</code> output, frame and title included — flip{" "}
+        <strong>MONO / COLOR</strong> or <strong>BLACK / WHITE</strong> right on the chart.
+      </p>
+    </div>
+  </div>
+</section>

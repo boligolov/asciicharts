@@ -10,7 +10,8 @@ import pytest
 from asciicharts import CHART_TYPES, CHARTS, list_charts, render_chart
 
 ROOT = Path(__file__).resolve().parent.parent
-KNOWN_OPTIONS = {"labels", "width", "height", "style", "stacked", "bins", "threshold", "showPoints", "pointChar"}
+KNOWN_OPTIONS = {"labels", "width", "height", "style", "stacked", "bins", "threshold", "thresholds", "showPoints",
+                 "pointChar"}
 
 
 def test_catalogue_covers_exactly_the_chart_types_in_order():
@@ -41,7 +42,7 @@ def test_listed_options_are_the_ones_that_change_the_output():
     variants = {
         "labels": ["x", "y", "z", "w", "v", "u"],
         "width": 25, "height": 7, "style": "ascii", "stacked": True, "bins": 3,
-        "threshold": 20, "showPoints": True, "pointChar": "*",
+        "threshold": 20, "thresholds": [{"value": 20, "label": "goal"}], "showPoints": True, "pointChar": "*",
     }
     for chart in list_charts():
         example = {**chart["example"], "border": "none"}

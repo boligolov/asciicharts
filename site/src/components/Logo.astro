@@ -1,0 +1,30 @@
+---
+// The brand mark: █▓░ drawn as pixels rather than typed. The pixel font has no block or shade
+// glyphs, so as text they'd come from whatever fallback font the visitor has, at its own height.
+// Each cell is 5×7 pixels; ░ lights every fourth pixel on a staggered grid (like the real glyph),
+// ▓ is its inverse, █ is solid. One path, currentColor, crisp at 2 CSS px per pixel.
+const W = 5;
+const H = 7;
+const sparse = (x: number, y: number) => (x + 2 * (y % 2)) % 4 === 0;
+const cells = [() => true, (x: number, y: number) => !sparse(x, y), sparse];
+
+let d = "";
+cells.forEach((lit, c) => {
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (lit(x, y)) d += `M${c * W + x} ${y}h1v1h-1z`;
+    }
+  }
+});
+---
+
+<svg
+  class="logo"
+  viewBox={`0 0 ${W * cells.length} ${H}`}
+  width={W * cells.length * 2}
+  height={H * 2}
+  shape-rendering="crispEdges"
+  aria-hidden="true"
+>
+  <path d={d} fill="currentColor" />
+</svg>

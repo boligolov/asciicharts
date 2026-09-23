@@ -51,6 +51,7 @@ Renders one chart and returns it as text (put it in a code block so it stays ali
 | `bins` | int | histogram buckets (default 10) |
 | `useColor` | enum | `auto` `on` `off` — ANSI 256-colour; leave off for a chat reply |
 | `threshold` | number | line: dashed reference line |
+| `thresholds` | `{value, label?}[]` | line: several dashed reference lines, each named right of the plot |
 | `showPoints`, `pointChar` | bool, string | line: mark each data point |
 
 The complete reference (defaults, every option, limits, errors) is in

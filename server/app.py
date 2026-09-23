@@ -64,6 +64,11 @@ class Series(BaseModel):
     points: Annotated[list[Point] | None, Field(description="(x, y) samples, used only by scatter charts")] = None
 
 
+class Threshold(BaseModel):
+    value: float
+    label: Annotated[str | None, Field(max_length=asciicharts.MAX_THRESHOLD_LABEL, description="shown right of the plot next to the value, e.g. \"target\" or \"SLA\"")] = None
+
+
 class ChartInfo(BaseModel):
     type: Annotated[str, Field(description="the chartType value to pass to render_chart")]
     summary: Annotated[str, Field(description="what the chart draws and when to use it")]
@@ -82,8 +87,8 @@ RENDER_CHART_DESCRIPTION = (
     "Render numeric data as an ASCII/Unicode text chart. Supports sparkline, vbar, hbar, line, area, scatter, "
     "dual_axis, pie, histogram, heatmap, boxplot and dotplot, with an optional title, border frame (none/ascii/light/"
     "heavy/double/rounded), bar/area fill "
-    "style (solid/halftone/ascii) and line style (solid/dotted), a dashed threshold line and configurable per-point "
-    "markers for line charts, a target chart width (vbar/hbar scale to fill it), automatic diverging bars for "
+    "style (solid/halftone/ascii) and line style (solid/dotted), dashed reference lines (a threshold, or several "
+    "labelled thresholds such as a target and an SLA) and configurable per-point markers for line charts, a target chart width (vbar/hbar scale to fill it), automatic diverging bars for "
     "negative values (including stacked), and optional ANSI 256-color output. Returns the chart as plain text — put "
     "it in a code block so it stays aligned. Use list_charts to see how `series` is filled for each chartType."
 )
@@ -156,12 +161,14 @@ def build_server(stats: Store | None = None) -> MCPServer:
         bins: Annotated[int | None, Field(ge=0, le=asciicharts.MAX_BINS, description="number of buckets for histogram charts (default: 10)")] = None,
         useColor: Annotated[Literal["auto", "on", "off"] | None, Field(description="ANSI 256-color output (default: auto, which is equivalent to off since tool output is plain text for an agent, not a terminal)")] = None,
         threshold: Annotated[float | None, Field(description="line charts only: draw a dashed horizontal reference line at this y-value")] = None,
+        thresholds: Annotated[list[Threshold] | None, Field(max_length=asciicharts.MAX_THRESHOLDS, description="line charts only: several dashed horizontal reference lines, each named with its value right of the plot, e.g. [{\"value\": 106, \"label\": \"target\"}]")] = None,
         showPoints: Annotated[bool | None, Field(description="line charts only: mark each individual data point with a glyph on top of the connecting line")] = None,
         pointChar: Annotated[str | None, Field(description="line charts only, with showPoints: single character used to mark points on every series (default: a large circle for the first series, with a distinct shape per additional series)")] = None,
     ) -> str:
         args = dict(
             chartType=chartType, labels=labels, title=title, width=width, height=height, border=border,
             style=style, stacked=stacked, bins=bins, useColor=useColor, threshold=threshold,
+            thresholds=None if thresholds is None else [t.model_dump(exclude_none=True) for t in thresholds],
             showPoints=showPoints, pointChar=pointChar,
         )
         spec = {k: v for k, v in args.items() if v is not None}

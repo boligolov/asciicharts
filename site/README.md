@@ -1,0 +1,66 @@
+# asciicharts.dev — the landing page
+
+A single static page presenting the library, the agent skill and the MCP server, in the visual
+language of [data-star.dev](https://data-star.dev): a near-black/near-white pixel-font aesthetic
+with one warm accent color. Built with [Astro](https://astro.build) — plain HTML/CSS/JS at build
+time, no framework runtime shipped to the browser.
+
+Two live toggles, both instant (no reload, no re-render). They sit in the nav and again in the
+head of every chart panel; all copies drive the same page-wide state:
+
+- **BLACK / WHITE** — the whole page's theme (literal near-black and near-white variants, one
+  shared accent color re-tuned for contrast in each).
+- **MONO / COLOR** — every chart on the page at once, switching between the plain render and the
+  same chart's `useColor: "on"` output. Both variants are pre-rendered HTML (see below); the
+  toggle just flips which one is visible via a CSS attribute selector.
+
+## Chart examples are real output, not mockups
+
+`scripts/render_examples.py` imports the actual `asciicharts.py` from the repository root, renders
+a curated set of specs (the same ones used in the README) in both a plain and a `useColor: "on"`
+variant, converts the ANSI 256-color codes to inline-styled HTML spans, and writes the result to
+`src/data/charts.json`. The `<Chart>` component just reads that file — the site never runs Python
+at request time or at deploy time, so any static host works.
+
+Re-run it whenever you add/change an example in the script, or after a renderer change that
+affects one of these specs:
+
+```sh
+python scripts/render_examples.py
+```
+
+Commit the resulting `src/data/charts.json` — it's checked-in build input, the same way the
+project's own golden test fixtures are.
+
+## Develop
+
+```sh
+npm install
+npm run dev       # http://localhost:4321
+```
+
+## Build
+
+```sh
+npm run build      # writes dist/ — a plain static site, ~500 KB including self-hosted fonts
+npm run preview     # serve dist/ locally to sanity-check the production build
+```
+
+## Deploy
+
+`dist/` is plain static output — any static host works (GitHub Pages, Netlify, Vercel, Cloudflare
+Pages, a bucket behind a CDN). For GitHub Pages specifically: if the site is served from a project
+path rather than a custom domain or a user/org page (i.e. `<user>.github.io/<repo>/` rather than a
+domain root), set `base: "/<repo>/"` in `astro.config.mjs` before building.
+
+## Structure
+
+```
+src/
+  layouts/Base.astro      html shell, meta tags, theme-init script (runs before first paint)
+  components/             Nav, Hero, Features, WaysIn, Stats, Gallery, Footer, Chart, Toggles
+  data/charts.json         generated — see "Chart examples" above
+  styles/global.css       theme tokens (black/white), layout, the pixel-corner button/frame look
+  pages/index.astro        assembles the components above
+scripts/render_examples.py  generates src/data/charts.json from the real renderer
+```

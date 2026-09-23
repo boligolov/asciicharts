@@ -28,7 +28,7 @@ Command line (JSON spec from a file, stdin, or --json)::
 
 Spec fields (identical to the MCP tool): chartType, series, labels, title,
 width, height, border, style, stacked, bins, useColor, threshold,
-showPoints, pointChar. See skills/asciicharts/SKILL.md and its references/reference.md.
+thresholds, showPoints, pointChar. See skills/asciicharts/SKILL.md and its references/reference.md.
 """
 
 from __future__ import annotations
@@ -72,9 +72,9 @@ CHARTS = {
         "example": {"chartType": "hbar", "labels": ["Chrome", "Firefox", "Safari"], "series": [{"values": [62, 21, 12]}]},
     },
     "line": {
-        "summary": "One or more lines with a value axis. Optional dashed threshold and per-point markers.",
+        "summary": "One or more lines with a value axis. Optional dashed reference lines (threshold, or several labelled thresholds) and per-point markers.",
         "series": "values: the samples in order (at least 2 per series). One line per series. labels (optional) become x-axis labels.",
-        "options": ["labels", "width", "height", "style", "threshold", "showPoints", "pointChar"],
+        "options": ["labels", "width", "height", "style", "threshold", "thresholds", "showPoints", "pointChar"],
         "example": {"chartType": "line", "series": [{"values": [12, 18, 15, 30, 42, 38]}]},
     },
     "area": {
@@ -113,7 +113,7 @@ CHARTS = {
     "heatmap": {
         "summary": "A 2-D matrix as shaded cells (or a blue-to-red color ramp with useColor).",
         "series": "One series per matrix row: name is the row label, values the cells. labels are the column headers.",
-        "options": ["labels"],
+        "options": ["labels", "width"],
         "example": {"chartType": "heatmap", "labels": ["Mon", "Tue", "Wed"],
                     "series": [{"name": "9am", "values": [20, 35, 25]}, {"name": "5pm", "values": [80, 70, 90]}]},
     },
@@ -493,6 +493,8 @@ MAX_WIDTH = 500
 MAX_HEIGHT = 200
 MAX_BINS = 500
 MAX_SERIES = 100
+MAX_THRESHOLDS = 20
+MAX_THRESHOLD_LABEL = 40
 MAX_VALUES = 50_000  # values + points across all series
 
 
@@ -524,6 +526,26 @@ def _text(spec: dict, key: str) -> str:
     if not isinstance(v, str):
         raise ChartError(f"{key} must be a string, got {_q(v)}")
     return v
+
+
+def _thresholds(raw) -> list:
+    """`thresholds`: a list of numbers or {value, label} objects -> [(value, label)]."""
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise ChartError("thresholds must be an array of numbers or {value, label} objects")
+    if len(raw) > MAX_THRESHOLDS:
+        raise ChartError(f"thresholds must have at most {MAX_THRESHOLDS} entries, got {len(raw)}")
+    out = []
+    for i, t in enumerate(raw):
+        if not isinstance(t, dict):
+            out.append((_num(t, f"thresholds {i}"), ""))
+            continue
+        label = _text(t, "label")
+        if len(label) > MAX_THRESHOLD_LABEL:
+            raise ChartError(f"thresholds {i}: label must be at most {MAX_THRESHOLD_LABEL} characters, got {len(label)}")
+        out.append((_num(t.get("value"), f"thresholds {i} value"), label))
+    return out
 
 
 def _normalize(spec: dict) -> dict:
@@ -581,6 +603,7 @@ def _normalize(spec: dict) -> dict:
         "color": use_color == "on",
         "useColor": use_color,
         "threshold": None if threshold is None else _num(threshold, "threshold"),
+        "thresholds": _thresholds(spec.get("thresholds")),
         "showPoints": bool(spec.get("showPoints")),
         "pointChar": _text(spec, "pointChar"),
     }
@@ -714,7 +737,8 @@ def _render_bar(inp):
     track = inp["style"] in ("", "solid", "fine", "ascii")
     ascii_style = inp["style"] == "ascii"
     if inp["chartType"] == "vbar":
-        return _render_vbar(labels, names, matrix, inp["width"], height, inp["stacked"], color_on, ramp, fine, track, ascii_style)
+        # Without width the bars thicken to fill the same default plot width as line/area.
+        return _render_vbar(labels, names, matrix, inp["width"] or 60, height, inp["stacked"], color_on, ramp, fine, track, ascii_style)
     if len(names) == 1:
         return _render_horizontal_bars(labels, matrix[0], width, ramp, fine, track, ascii_style)
     if inp["stacked"]:
@@ -1044,8 +1068,10 @@ def _render_line(inp):
 
     lo, hi = _series_min_max(series)
     threshold = inp["threshold"]
-    if threshold is not None:
-        lo, hi = min(lo, threshold), max(hi, threshold)
+    # every dashed reference line: the single unlabelled `threshold` plus the `thresholds` list
+    refs = ([threshold] if threshold is not None else []) + [v for v, _ in inp["thresholds"]]
+    if refs:
+        lo, hi = min([lo] + refs), max([hi] + refs)
     color_on = inp["color"]
 
     c = _Canvas(width, height)
@@ -1076,12 +1102,17 @@ def _render_line(inp):
                 c.set_dot(x, y, line_char, color)
             prev = (x, y)
 
-    if threshold is not None:
-        row = _y_pixel(threshold, lo, hi, height)
-        tcolor = THRESHOLD_COLOR if color_on else -1
+    tcolor = THRESHOLD_COLOR if color_on else -1
+    for ref in refs:
+        row = _y_pixel(ref, lo, hi, height)
         for x in range(c.width):
             if x % 2 == 0:
                 c.set_marker(x, row, "-", tcolor)
+    # `thresholds` are named right of the plot, on their own row, so they never cover data;
+    # lines that land on the same row share it.
+    notes = {}
+    for v, label in inp["thresholds"]:
+        notes.setdefault(_y_pixel(v, lo, hi, height), []).append(f"{label}: {_fmt(v)}" if label else _fmt(v))
 
     if inp["showPoints"]:
         custom = inp["pointChar"][0] if inp["pointChar"] else ""
@@ -1097,7 +1128,9 @@ def _render_line(inp):
     axis_labels, axis_w = _left_axis_labels(lo, hi, height)
     rows = c.render(color_on)
     tick = "+" if ascii_style else "┤"
-    body = "\n".join(f"{axis_labels[r]:>{axis_w}} {tick}{l}" for r, l in enumerate(rows))
+    body = "\n".join(f"{axis_labels[r]:>{axis_w}} {tick}{l}"
+                     + ("  " + _colorize(", ".join(notes[r]), tcolor, color_on) if r in notes else "")
+                     for r, l in enumerate(rows))
 
     x = _x_axis_labels(inp["labels"], _series_max_len(series), width, axis_w + 2)
     if x:
@@ -1439,18 +1472,21 @@ def _render_heatmap(inp):
         hi = lo + 1
     color_on = inp["color"]
     row_label_w = max(len(s["name"]) for s in series)
+    # width is the grid's width (row labels excluded), 60 by default like line/area: cells widen
+    # to fill it, but never shrink below HEAT_CELL_WIDTH, so many columns just widen the grid.
+    cell_w = max(HEAT_CELL_WIDTH, ((inp["width"] or 60) + 1) // num_cols - 1)
 
     out = []
     if labels:
-        out.append(" " * (row_label_w + 1) + "".join(_pad_center(c, HEAT_CELL_WIDTH) + " " for c in labels))
+        out.append(" " * (row_label_w + 1) + "".join(_pad_center(c, cell_w) + " " for c in labels))
     for s in series:
         line = s["name"] + " " * (row_label_w - len(s["name"])) + " "
         for v in s["values"]:
             norm = (v - lo) / (hi - lo)
             if color_on:
-                cell = _colorize("█" * HEAT_CELL_WIDTH, HEAT_RAMP[int(norm * (len(HEAT_RAMP) - 1))], True)
+                cell = _colorize("█" * cell_w, HEAT_RAMP[int(norm * (len(HEAT_RAMP) - 1))], True)
             else:
-                cell = SHADES[int(norm * (len(SHADES) - 1))] * HEAT_CELL_WIDTH
+                cell = SHADES[int(norm * (len(SHADES) - 1))] * cell_w
             line += cell + " "
         out.append(line)
     return "\n".join(out)
@@ -1550,7 +1586,7 @@ def render_chart(spec: dict) -> str:
 
 # Options that may be set from the command line with --set key=value.
 CSV_SETTABLE = ("title", "width", "height", "border", "style", "stacked", "bins", "useColor",
-                "threshold", "showPoints", "pointChar")
+                "threshold", "thresholds", "showPoints", "pointChar")
 
 _NUM_THOUSANDS = re.compile(r"^-?\d{1,3}(,\d{3})+(\.\d+)?$")
 _NUM_DECIMAL_COMMA = re.compile(r"^-?\d+,\d+$")

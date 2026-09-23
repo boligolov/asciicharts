@@ -1,0 +1,21 @@
+---
+// The BLACK/WHITE and MONO/COLOR switches. Rendered once in the nav and again in every chart
+// panel's head; all copies drive the same page-wide state (see the script in Base.astro).
+interface Props {
+  /** smaller buttons for the chart panel heads */
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+---
+
+<div class:list={["toggles", { "toggles-compact": compact }]}>
+  <button class="toggle" type="button" data-toggle="theme" aria-label="Toggle black/white theme">
+    <span class="dot"></span>
+    <span class="toggle-label">BLACK</span>
+  </button>
+  <button class="toggle" type="button" data-toggle="chart-color" aria-label="Toggle chart colors">
+    <span class="dot"></span>
+    <span class="toggle-label">MONO</span>
+  </button>
+</div>

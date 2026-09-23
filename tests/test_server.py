@@ -31,6 +31,10 @@ async def check_tools(client):
     ok = await client.call_tool("render_chart", ARGS)
     assert not ok.is_error and "Test" in ok.content[0].text and "┌" in ok.content[0].text
 
+    ref = await client.call_tool("render_chart", {"chartType": "line", "series": [{"values": [1, 5]}],
+                                                  "thresholds": [{"value": 4, "label": "target"}, {"value": 2}]})
+    assert not ref.is_error and "target: 4" in ref.content[0].text
+
     bad = await client.call_tool("render_chart", {"chartType": "line", "series": [{"values": [1]}]})
     assert bad.is_error and "at least two values" in bad.content[0].text
 

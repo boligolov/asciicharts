@@ -1,0 +1,53 @@
+---
+const ways = [
+  {
+    title: "CLI / library",
+    for_: "scripts, CI, notebooks",
+    body: "Copy asciicharts.py — nothing else needed. Reads a JSON spec or a CSV file, writes a chart to stdout.",
+    code: [
+      ['<span class="tok-kw">$</span> python asciicharts.py --csv latency.csv \\'],
+      ["    --chart hbar --sort -p99 --limit 3"],
+    ],
+  },
+  {
+    title: "Agent skill",
+    for_: "Claude Code and other agents with a shell",
+    body: "A self-contained folder — SKILL.md, the script, references — that an agent finds by scanning a directory. No registry.",
+    code: [['<span class="tok-kw">$</span> cp -r skills/asciicharts ~/.claude/skills/']],
+  },
+  {
+    title: "MCP server",
+    for_: "any MCP client, one shared deployment",
+    body: "Two tools: list_charts (the catalogue) and render_chart. stdio or stateless streamable HTTP.",
+    code: [
+      ['<span class="tok-kw">$</span> pip install .'],
+      ['<span class="tok-kw">$</span> claude mcp add asciicharts -- asciicharts-mcp'],
+    ],
+  },
+];
+---
+
+<section class="section" id="ways-in">
+  <div class="wrap">
+    <p class="section-kicker">// three ways in</p>
+    <h2 class="section-title pixel-heading" style="font-size:20px;">Pick the one that fits</h2>
+    <div class="ways">
+      {
+        ways.map((w) => (
+          <div class="way-card">
+            <div class="way-card-body">
+              <h3>{w.title}</h3>
+              <p style="color: var(--accent-2); font-size: 12px; margin-bottom: 10px;">{w.for_}</p>
+              <p>{w.body}</p>
+            </div>
+            <div class="code-block">
+              {w.code.map((line) => (
+                <div set:html={line[0]} />
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
