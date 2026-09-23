@@ -53,7 +53,7 @@ def test_body_is_lean():
 def test_every_relative_link_stays_inside_the_skill_and_exists():
     _, body = frontmatter_and_body()
     links = re.findall(r"\]\(([^)#]+)(?:#[^)]*)?\)", body)
-    assert "references/reference.md" in links and "references/gallery.md" in links
+    assert {"references/reference.md", "references/gallery.md", "references/principles.md"} <= set(links)
     for link in links:
         if re.match(r"^[a-z]+://", link):
             continue
@@ -106,7 +106,7 @@ def test_list_flag_and_error_convention():
     assert r.returncode == 1 and r.stdout == "" and r.stderr.startswith("error: ")
 
 
-@pytest.mark.parametrize("ref", ["reference.md", "gallery.md"])
+@pytest.mark.parametrize("ref", ["reference.md", "gallery.md", "principles.md"])
 def test_references_exist_and_are_not_empty(ref):
     assert len((SKILL / "references" / ref).read_text(encoding="utf-8")) > 1000
 

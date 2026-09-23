@@ -3,8 +3,8 @@
 
 The skill (skills/asciicharts/) must be self-contained so it can be copied,
 zipped or uploaded on its own, but the renderer and the licence live at the
-repository root (the MCP server, the tests and pip use them) and the gallery in
-docs/ (where readers of the repository look for it). This script
+repository root (the MCP server, the tests and pip use them) and the gallery and the
+principles in docs/ (where readers of the repository look for them). This script
 copies them in; the test suite fails if they ever differ.
 
     python scripts/sync_skill.py           # copy
@@ -20,6 +20,7 @@ SHARED = {
     ROOT / "asciicharts.py": SKILL / "scripts" / "asciicharts.py",
     ROOT / "LICENSE": SKILL / "LICENSE",
     ROOT / "docs" / "gallery.md": SKILL / "references" / "gallery.md",
+    ROOT / "docs" / "principles.md": SKILL / "references" / "principles.md",
 }
 
 
