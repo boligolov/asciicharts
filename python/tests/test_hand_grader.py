@@ -44,6 +44,18 @@ def perfect(name):
                             "series": [{"name": n, "values": [v]} for n, v in zip(d["labels"], d["values"])]})
         shares = ", ".join(f"{n} {v}%" for n, v in zip(d["labels"], d["values"]))
         return fenced(bar, "A pie is hard to draw in text, so here is a 100% stacked bar: " + shares + ".")
+    if name == "hand-hbar-many":
+        return fenced(render_chart({"chartType": "hbar", "title": "Open incidents", "width": 20,
+                                    "labels": d["labels"], "series": [{"values": d["values"]}]}))
+    if name == "hand-cjk-framed":
+        return fenced(render_chart({"chartType": "hbar", "width": 20, "labels": d["labels"],
+                                    "series": [{"values": d["values"]}]}))
+    if name == "hand-stacked-negative":
+        return fenced(render_chart({"chartType": "hbar", "stacked": True, "width": 30, "labels": d["labels"],
+                                    "series": [{"name": n, "values": v} for n, v in d["series"].items()]}))
+    if name == "hand-line-large":
+        return fenced(render_chart({"chartType": "line", "height": 12, "width": 40, "labels": d["labels"],
+                                    "series": [{"values": d["values"]}]}))
     raise KeyError(name)
 
 
@@ -102,3 +114,42 @@ def test_bars_not_sharing_a_zero_line_are_caught():
 def test_wrong_percentages_are_caught():
     reply = perfect("hand-pie").replace("Chrome 64%", "Chrome 60%")
     assert any("percentage" in t for t in failed(reply, "hand-pie"))
+
+
+# --- the harder set (roadmap 1.6) ----------------------------------------------------------------
+
+def test_a_missing_frame_is_caught():
+    chart = render_chart({"chartType": "hbar", "border": "none", "width": 20, "labels": DATA["hand-hbar-many"]["labels"],
+                          "series": [{"values": DATA["hand-hbar-many"]["values"]}]})
+    assert any("box frame" in t for t in failed(fenced(chart), "hand-hbar-many"))
+
+
+def test_cjk_labels_padded_by_characters_not_columns_are_caught():
+    """The classic CJK mistake: labels padded to the same number of characters, each CJK one being two
+    columns wide, so the frame's right edge is ragged."""
+    d = DATA["hand-cjk-framed"]
+    rows = [f"│ {lab:<4} │ {'█' * round(v / 48 * 20):<20} {v:<2} │" for lab, v in zip(d["labels"], d["values"])]
+    width = len(rows[0])
+    chart = chr(10).join(["┌" + "─" * (width - 2) + "┐", *rows, "└" + "─" * (width - 2) + "┘"])
+    fails = failed(fenced(chart), "hand-cjk-framed")
+    assert any("display width" in t for t in fails) and not any("proportional" in t for t in fails)
+
+
+def test_stacked_segments_in_one_glyph_are_caught():
+    reply = perfect("hand-stacked-negative").replace("▓", "█")
+    assert any("told apart" in t for t in failed(reply, "hand-stacked-negative"))
+
+
+def test_refunds_on_the_wrong_side_are_caught():
+    d = DATA["hand-stacked-negative"]
+    flipped = {**d["series"], "refunds": [-v for v in d["series"]["refunds"]]}
+    chart = render_chart({"chartType": "hbar", "stacked": True, "width": 30, "labels": d["labels"],
+                          "series": [{"name": n, "values": v} for n, v in flipped.items()]})
+    assert any("zero line" in t for t in failed(fenced(chart), "hand-stacked-negative"))
+
+
+def test_a_line_too_short_is_caught():
+    d = DATA["hand-line-large"]
+    chart = render_chart({"chartType": "line", "height": 6, "width": 40, "labels": d["labels"], "series": [{"values": d["values"]}]})
+    assert any("12 rows" in t for t in failed(fenced(chart), "hand-line-large"))
+

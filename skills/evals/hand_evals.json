@@ -1,56 +1,296 @@
 {
-  "skill_name": "asciicharts",
-  "mode": "hand-drawn: the agent may not run code, scripts or tools",
-  "note": "Each prompt is followed at run time by: 'You cannot run any code, scripts or tools for this; write the chart yourself. Save your final reply to me, exactly as you'd send it, to the file {OUT}/reply.md.' Grade with skills/evals/hand_grade.py <run_dir> <eval_name>.",
-  "evals": [
-    {
-      "id": 0,
-      "eval_name": "hand-hbar-ranking",
-      "tier": "A",
-      "prompt": "Number of public repositories by language in our org: Python 412, JavaScript 388, Go 197, Rust 143, Java 131, C 64. Make a text bar chart of this ranking for our wiki page.",
-      "data": {"labels": ["Python", "JavaScript", "Go", "Rust", "Java", "C"], "values": [412, 388, 197, 143, 131, 64]}
-    },
-    {
-      "id": 1,
-      "eval_name": "hand-hbar-grouped",
-      "tier": "A",
-      "prompt": "Deploys per team, 2025 vs 2026: Payments 42 and 57, Search 35 and 31, Mobile 18 and 29. A plain-text chart comparing the two years for each team, please.",
-      "data": {"labels": ["Payments", "Search", "Mobile"], "series": {"2025": [42, 35, 18], "2026": [57, 31, 29]}}
-    },
-    {
-      "id": 2,
-      "eval_name": "hand-sparkline",
-      "tier": "A",
-      "prompt": "Weekly signups for the last 8 weeks: 5, 8, 6, 12, 9, 15, 14, 20. Give me a one-line sparkline I can drop into a status sentence.",
-      "data": {"values": [5, 8, 6, 12, 9, 15, 14, 20]}
-    },
-    {
-      "id": 3,
-      "eval_name": "hand-vbar",
-      "tier": "A",
-      "prompt": "Quarterly revenue in $M: Q1 18, Q2 27, Q3 24, Q4 36. Draw it as a vertical bar chart in plain text for a slide note.",
-      "data": {"labels": ["Q1", "Q2", "Q3", "Q4"], "values": [18, 27, 24, 36]}
-    },
-    {
-      "id": 4,
-      "eval_name": "hand-diverging",
-      "tier": "A",
-      "prompt": "Profit change by region this quarter, in $k: North +12, South -5, East +8, West -9. Chart it as text so that losses grow to the left and gains to the right of a zero line.",
-      "data": {"labels": ["North", "South", "East", "West"], "values": [12, -5, 8, -9]}
-    },
-    {
-      "id": 5,
-      "eval_name": "hand-line",
-      "tier": "B",
-      "prompt": "Median build time in minutes over six releases: v1 14, v2 11, v3 12, v4 8, v5 9, v6 6. A small plain-text line chart for the release notes.",
-      "data": {"labels": ["v1", "v2", "v3", "v4", "v5", "v6"], "values": [14, 11, 12, 8, 9, 6]}
-    },
-    {
-      "id": 6,
-      "eval_name": "hand-pie",
-      "tier": "C",
-      "prompt": "Browser share of our visitors: Chrome 64, Safari 19, Other 9, Edge 5, Firefox 3. Make a pie chart of it in plain text for a Slack post, with the percentages.",
-      "data": {"labels": ["Chrome", "Safari", "Other", "Edge", "Firefox"], "values": [64, 19, 9, 5, 3]}
+ "skill_name": "asciicharts",
+ "mode": "hand-drawn: the agent may not run code, scripts or tools",
+ "note": "Each prompt is followed at run time by: 'You cannot run any code, scripts or tools for this; write the chart yourself. Save your final reply to me, exactly as you'd send it, to the file {OUT}/reply.md.' Grade with skills/evals/hand_grade.py <run_dir> <eval_name>.",
+ "evals": [
+  {
+   "id": 0,
+   "eval_name": "hand-hbar-ranking",
+   "tier": "A",
+   "prompt": "Number of public repositories by language in our org: Python 412, JavaScript 388, Go 197, Rust 143, Java 131, C 64. Make a text bar chart of this ranking for our wiki page.",
+   "data": {
+    "labels": [
+     "Python",
+     "JavaScript",
+     "Go",
+     "Rust",
+     "Java",
+     "C"
+    ],
+    "values": [
+     412,
+     388,
+     197,
+     143,
+     131,
+     64
+    ]
+   }
+  },
+  {
+   "id": 1,
+   "eval_name": "hand-hbar-grouped",
+   "tier": "A",
+   "prompt": "Deploys per team, 2025 vs 2026: Payments 42 and 57, Search 35 and 31, Mobile 18 and 29. A plain-text chart comparing the two years for each team, please.",
+   "data": {
+    "labels": [
+     "Payments",
+     "Search",
+     "Mobile"
+    ],
+    "series": {
+     "2025": [
+      42,
+      35,
+      18
+     ],
+     "2026": [
+      57,
+      31,
+      29
+     ]
     }
-  ]
+   }
+  },
+  {
+   "id": 2,
+   "eval_name": "hand-sparkline",
+   "tier": "A",
+   "prompt": "Weekly signups for the last 8 weeks: 5, 8, 6, 12, 9, 15, 14, 20. Give me a one-line sparkline I can drop into a status sentence.",
+   "data": {
+    "values": [
+     5,
+     8,
+     6,
+     12,
+     9,
+     15,
+     14,
+     20
+    ]
+   }
+  },
+  {
+   "id": 3,
+   "eval_name": "hand-vbar",
+   "tier": "A",
+   "prompt": "Quarterly revenue in $M: Q1 18, Q2 27, Q3 24, Q4 36. Draw it as a vertical bar chart in plain text for a slide note.",
+   "data": {
+    "labels": [
+     "Q1",
+     "Q2",
+     "Q3",
+     "Q4"
+    ],
+    "values": [
+     18,
+     27,
+     24,
+     36
+    ]
+   }
+  },
+  {
+   "id": 4,
+   "eval_name": "hand-diverging",
+   "tier": "A",
+   "prompt": "Profit change by region this quarter, in $k: North +12, South -5, East +8, West -9. Chart it as text so that losses grow to the left and gains to the right of a zero line.",
+   "data": {
+    "labels": [
+     "North",
+     "South",
+     "East",
+     "West"
+    ],
+    "values": [
+     12,
+     -5,
+     8,
+     -9
+    ]
+   }
+  },
+  {
+   "id": 5,
+   "eval_name": "hand-line",
+   "tier": "B",
+   "prompt": "Median build time in minutes over six releases: v1 14, v2 11, v3 12, v4 8, v5 9, v6 6. A small plain-text line chart for the release notes.",
+   "data": {
+    "labels": [
+     "v1",
+     "v2",
+     "v3",
+     "v4",
+     "v5",
+     "v6"
+    ],
+    "values": [
+     14,
+     11,
+     12,
+     8,
+     9,
+     6
+    ]
+   }
+  },
+  {
+   "id": 6,
+   "eval_name": "hand-pie",
+   "tier": "C",
+   "prompt": "Browser share of our visitors: Chrome 64, Safari 19, Other 9, Edge 5, Firefox 3. Make a pie chart of it in plain text for a Slack post, with the percentages.",
+   "data": {
+    "labels": [
+     "Chrome",
+     "Safari",
+     "Other",
+     "Edge",
+     "Firefox"
+    ],
+    "values": [
+     64,
+     19,
+     9,
+     5,
+     3
+    ]
+   }
+  },
+  {
+   "id": 7,
+   "eval_name": "hand-hbar-many",
+   "tier": "B",
+   "prompt": "Open incidents per service this month, for the on-call review: auth 47, payments 41, search 38, gateway 33, billing 29, notifications 24, profile 19, catalog 17, reports 12, uploads 9, audit 7, export 5, admin 3, legal 2. Draw it as a ranked text bar chart inside a box frame.",
+   "data": {
+    "labels": [
+     "auth",
+     "payments",
+     "search",
+     "gateway",
+     "billing",
+     "notifications",
+     "profile",
+     "catalog",
+     "reports",
+     "uploads",
+     "audit",
+     "export",
+     "admin",
+     "legal"
+    ],
+    "values": [
+     47,
+     41,
+     38,
+     33,
+     29,
+     24,
+     19,
+     17,
+     12,
+     9,
+     7,
+     5,
+     3,
+     2
+    ]
+   }
+  },
+  {
+   "id": 8,
+   "eval_name": "hand-stacked-negative",
+   "tier": "B",
+   "prompt": "Monthly cash flow in $k — subscriptions, services, and refunds (negative): Jan 40, 15, -8; Feb 46, 12, -5; Mar 52, 18, -14; Apr 49, 21, -6. Draw stacked horizontal text bars, one per month: subscriptions and services stacked to the right of a zero line, refunds hanging to its left, with a legend.",
+   "data": {
+    "labels": [
+     "Jan",
+     "Feb",
+     "Mar",
+     "Apr"
+    ],
+    "series": {
+     "subscriptions": [
+      40,
+      46,
+      52,
+      49
+     ],
+     "services": [
+      15,
+      12,
+      18,
+      21
+     ],
+     "refunds": [
+      -8,
+      -5,
+      -14,
+      -6
+     ]
+    }
+   }
+  },
+  {
+   "id": 9,
+   "eval_name": "hand-cjk-framed",
+   "tier": "B",
+   "prompt": "Headcount by team at the Tokyo office: 開発 48, 営業 31, サポート 22, デザイン 12, 人事 7. Draw a horizontal bar chart in plain text inside a box frame (┌ ┐ └ ┘), keeping the Japanese team names as the labels — it goes into our Japanese wiki.",
+   "data": {
+    "labels": [
+     "開発",
+     "営業",
+     "サポート",
+     "デザイン",
+     "人事"
+    ],
+    "values": [
+     48,
+     31,
+     22,
+     12,
+     7
+    ]
+   }
+  },
+  {
+   "id": 10,
+   "eval_name": "hand-line-large",
+   "tier": "C",
+   "prompt": "Daily active users, in thousands, over the last 14 days: 38, 41, 36, 44, 40, 29, 45, 52, 64, 57, 55, 61, 48, 50. Draw a plain-text line chart about 12 rows tall with a value axis on the left and the days labelled d1 to d14.",
+   "data": {
+    "labels": [
+     "d1",
+     "d2",
+     "d3",
+     "d4",
+     "d5",
+     "d6",
+     "d7",
+     "d8",
+     "d9",
+     "d10",
+     "d11",
+     "d12",
+     "d13",
+     "d14"
+    ],
+    "values": [
+     38,
+     41,
+     36,
+     44,
+     40,
+     29,
+     45,
+     52,
+     64,
+     57,
+     55,
+     61,
+     48,
+     50
+    ]
+   }
+  }
+ ]
 }

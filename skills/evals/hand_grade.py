@@ -87,8 +87,9 @@ def check_rectangular(block):
     return ("If the chart is framed, every line has the same display width", len(widths) == 1, f"line widths: {widths}")
 
 
-def check_glyphs(block, allow_spark=False):
-    allowed = SAFE | (set(SPARK) if allow_spark else set())
+def check_glyphs(block, allow_spark=False, text=""):
+    """text: characters the data itself brings (e.g. CJK labels), allowed as they are."""
+    allowed = SAFE | (set(SPARK) if allow_spark else set()) | set(text)
     bad = sorted({c for c in block if ord(c) > 0xFF and c not in allowed})
     return ("Only font-safe glyphs (ASCII, Latin-1, WGL4 box drawing, shades, half blocks, markers)", not bad,
             f"unsafe: {''.join(bad) or 'none'}")
@@ -181,7 +182,7 @@ def grade_hbar_ranking(reply, data):
         lengths.append(len(bar_cells(lines[i], end, track)) if i is not None else 0)
     order = [lab for _, lab in sorted((i, lab) for i, lab in zip(at, data["labels"]) if i is not None)]
     return [check_block(reply), check_rectangular(block), check_glyphs(block),
-            ("Every language has a bar, in ranking order", order == data["labels"], f"rows: {order}"),
+            ("Every row has a bar, in ranking order", order == data["labels"], f"rows: {order}"),
             check_lengths(lengths, data["values"], "Bar lengths"),
             check_values_printed(block, data["values"])]
 
@@ -332,9 +333,171 @@ def grade_pie(reply, data):
              proportional or pie_rows >= 6, f"bar segments {segs}; rows with fills: {pie_rows}")]
 
 
+# --- the harder set (roadmap 1.6): many bars, a requested frame, CJK labels, stacked negatives, a larger line
+
+def check_framed(block):
+    _, framed = unframe(block)
+    return ("The chart is inside a box frame, as asked", framed, "framed" if framed else "no frame")
+
+
+def hbar_lengths(lines, labels, track):
+    lengths, at = [], []
+    for lab in labels:
+        i, end = label_line(lines, lab)
+        at.append(i)
+        lengths.append(len(bar_cells(lines[i], end, track)) if i is not None else 0)
+    return lengths, at
+
+
+def grade_hbar_many(reply, data):
+    block = chart_block(reply)
+    lines, _ = unframe(block)
+    lengths, at = hbar_lengths(lines, data["labels"], uses_track(block))
+    order = [lab for _, lab in sorted((i, lab) for i, lab in zip(at, data["labels"]) if i is not None)]
+    return [check_block(reply), check_framed(block), check_rectangular(block), check_glyphs(block),
+            ("Every service has a bar, in ranking order", order == data["labels"], f"rows: {order}"),
+            check_lengths(lengths, data["values"], "Bar lengths"),
+            check_values_printed(block, data["values"])]
+
+
+def grade_cjk_framed(reply, data):
+    block = chart_block(reply)
+    lines, _ = unframe(block)
+    lengths, at = hbar_lengths(lines, data["labels"], uses_track(block))
+    missing = [lab for lab, i in zip(data["labels"], at) if i is None]
+    return [check_block(reply), check_framed(block), check_rectangular(block),
+            check_glyphs(block, text="".join(data["labels"])),
+            ("Every team has a bar, labelled with its Japanese name", not missing, f"missing: {missing}"),
+            check_lengths(lengths, data["values"], "Bar lengths"),
+            check_values_printed(block, data["values"])]
+
+
+def glyph_runs(line, cells):
+    """Consecutive cells drawn with the same glyph: [(glyph, length)], left to right."""
+    runs = []
+    for c in cells:
+        if runs and line[c] == runs[-1][0] and c == runs[-1][2] + 1:
+            runs[-1] = (runs[-1][0], runs[-1][1] + 1, c)
+        else:
+            runs.append((line[c], 1, c))
+    return [(g, n) for g, n, _ in runs]
+
+
+def zero_axis(rows, track):
+    """The column holding a vertical line in every row, the one most bar cells touch."""
+    axes = None
+    for line, end in rows.values():
+        cols = {k for k in range(end, len(line)) if line[k] in VERTICALS}
+        axes = cols if axes is None else axes & cols
+    # an axis has bars on its left in some row; the label separator never does
+    axes = {k for k in axes or () if any(c < k for line, end in rows.values() for c in bar_cells(line, end, track))}
+    if not axes:
+        return None
+
+    def touching(k):
+        return sum(1 for line, end in rows.values() for c in bar_cells(line, end, track) if abs(c - k) == 1)
+    return max(sorted(axes), key=touching)
+
+
+def zero_split(rows, track):
+    """(z, axis): negative cells are left of column z, positive ones from z on. The zero line is a vertical
+    axis glyph shared by every row, or, as in the renderer's stacked bars, no glyph at all: the column where
+    the glyph changes in every row."""
+    axis = zero_axis(rows, track)
+    if axis is not None:
+        return axis + 1, axis
+    common = None
+    for line, end in rows.values():
+        cells = bar_cells(line, end, track)
+        starts = {c for i, c in enumerate(cells) if i and (line[c] != line[cells[i - 1]] or c != cells[i - 1] + 1)}
+        common = starts if common is None else common & starts
+    return (min(common) if common else None), None
+
+
+def grade_stacked_negative(reply, data):
+    block = chart_block(reply)
+    lines, _ = unframe(block)
+    names = list(data["series"])
+    pos, neg = names[:2], names[2]
+    track = uses_track(block)
+    rows = {}
+    for lab in data["labels"]:
+        i, end = label_line(lines, lab)
+        if i is not None:
+            rows[lab] = (lines[i], end)
+    z, axis = zero_split(rows, track)
+    lengths, values, sides_ok, split_ok = [], [], z is not None, True
+    glyphs = {n: set() for n in names}
+    for m, lab in enumerate(data["labels"]):
+        line, end = rows.get(lab, ("", 0))
+        cells = bar_cells(line, end, track)
+        left = [c for c in cells if z is not None and c < z]
+        right = [c for c in cells if z is not None and c >= z]
+        sides_ok &= bool(left) and bool(right)
+        runs = glyph_runs(line, right)
+        split_ok &= len(runs) == 2
+        segs = [n for _, n in runs] + [0, 0]
+        for k, n in enumerate(pos):
+            if k < len(runs):
+                glyphs[n].add(runs[k][0])
+        glyphs[neg] |= {line[c] for c in left}
+        lengths += [segs[0], segs[1], len(left)]
+        values += [data["series"][pos[0]][m], data["series"][pos[1]][m], data["series"][neg][m]]
+    apart = (split_ok and len(glyphs[pos[0]]) == 1 and len(glyphs[pos[1]]) == 1
+             and not (glyphs[pos[0]] & glyphs[pos[1]]))
+    legend = [n for n in names if n not in reply.lower()]
+    return [check_block(reply), check_rectangular(block), check_glyphs(block),
+            ("Refunds hang left and income stacks right of one shared zero line, in every month",
+             sides_ok and len(rows) == len(data["labels"]),
+             f"zero at column {z} (axis glyph: {axis is not None}); months found {list(rows)}"),
+            ("Subscriptions and services are two segments told apart by glyph, the same glyph every month", apart,
+             f"glyphs: { {n: ''.join(sorted(g)) for n, g in glyphs.items()} }"),
+            check_lengths(lengths, values, "Segment lengths"),
+            ("A legend names the three series", not legend, f"missing: {legend}")]
+
+
+AXIS_ROW = re.compile(r"^\s*(-?\d+(?:\.\d+)?)?\s*[┤|+├│┼]")
+NOT_MARKS = set(" ─-·.:┈┄╌'`")
+
+
+def grade_line_large(reply, data):
+    block = chart_block(reply)
+    vals = data["values"]
+    lines, _ = unframe(block)
+    plot = []  # (axis label, the plot part of the row) for every row that carries a value label
+    for l in lines:
+        m = AXIS_ROW.match(l)
+        if m and m.group(1):
+            plot.append((m.group(1), l[m.end():]))
+    axis = [v for v, _ in plot]
+    top, bottom = str(max(vals)), str(min(vals))
+    axis_ok = bool(axis) and axis[0].rstrip("0").rstrip(".") == top and axis[-1].rstrip("0").rstrip(".") == bottom
+    width = max((len(r) for _, r in plot), default=0)
+
+    def place(row, i):
+        """Marks on this plot row, and whether one is near the horizontal position of point i."""
+        if not plot or width < 2:
+            return False, None
+        ks = [k for k, c in enumerate(plot[row][1]) if c not in NOT_MARKS and not c.isdigit()]
+        want = i / (len(vals) - 1) * (width - 1)
+        return any(abs(k - want) <= 0.15 * width for k in ks), ks
+    hi_ok, hi = place(0, vals.index(max(vals)))
+    lo_ok, lo = place(-1, vals.index(min(vals)))
+    return [check_block(reply), check_rectangular(block), check_glyphs(block),
+            (f"The value axis runs from the maximum ({top}) at the top to the minimum ({bottom}) at the bottom",
+             axis_ok, f"axis labels: {axis}"),
+            ("The plot is about 12 rows tall, as asked (10 or more labelled rows)", len(plot) >= 10,
+             f"{len(plot)} labelled rows"),
+            ("The peak (d9) is on the top row and the low (d6) on the bottom row, each at its place along x",
+             hi_ok and lo_ok, f"top-row marks {hi}, bottom-row marks {lo}, plot width {width}"),
+            ("The first and last days are labelled on the x axis", "d1" in block and "d14" in block,
+             f"d1: {'d1' in block}, d14: {'d14' in block}")]
+
 CHECKS = {"hand-hbar-ranking": grade_hbar_ranking, "hand-hbar-grouped": grade_hbar_grouped,
           "hand-sparkline": grade_sparkline, "hand-vbar": grade_vbar, "hand-diverging": grade_diverging,
-          "hand-line": grade_line, "hand-pie": grade_pie}
+          "hand-line": grade_line, "hand-pie": grade_pie,
+          "hand-hbar-many": grade_hbar_many, "hand-cjk-framed": grade_cjk_framed,
+          "hand-stacked-negative": grade_stacked_negative, "hand-line-large": grade_line_large}
 
 
 def grade(reply, eval_name):
