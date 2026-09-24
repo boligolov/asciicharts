@@ -151,11 +151,14 @@ Done when: 100% of `spec/conformance/` passes in Go.
 
 ## Phase 5 — The Go CLI
 
-- [ ] **5.1** `go/cmd/asciicharts`: JSON spec (file / stdin / `--json`), `--list`, `--csv` with the same
-      options and messages as the Python CLI (ExCSV: decide in this step — port, or later).
+- [x] **5.1** `go/cmd/asciicharts`: JSON spec (file / stdin / `--json`), `--list`, `--csv` with the same
+      options and messages as the Python CLI (ExCSV: decided — later, step 5.4).
 - [ ] **5.2** Release: static binaries for linux/macOS/windows (amd64/arm64), e.g. goreleaser + GitHub
       Releases; install instructions.
 - [ ] **5.3** The skill learns the binary as a tool option (phase 1 flow already names it).
+- [ ] **5.4** ExCSV in Go (`#!excsv` files: `#column` roles, `#chart` suggestions, `--chart-name`,
+      `--list-charts`), checked against the Python reader on `python/tests/golden/excsv_fixtures`. Until
+      then the Go CLI refuses an ExCSV file with a message that points to the Python CLI.
 
 ## Phase 6 — The MCP server in Go
 
@@ -188,3 +191,4 @@ Done when: 100% of `spec/conformance/` passes in Go.
 | 2026-09-24 | 2.1–2.5 | `spec/`: principles.md is *asciicharts principles v1.0* (§0 status, RFC 2119 key words, two kinds of conformance; §15 = requirements R1–R15), CHANGELOG.md, LICENSE (CC BY 4.0); goldens moved to `spec/conformance/` with a README of the exact format; `scripts/conformance_refresh.py` (report / `--write`); every reference updated; README and site footer state the licence split. 1.6 postponed (tokens) |
 | 2026-09-24 | 3.1–3.3 | `asciicharts.py`, `pyproject.toml`, `server/`, `tests/` → `python/` (with `python/README.md` and a synced `python/LICENSE`); the skill's evals → `skills/evals/`; repository scripts import from `python/`; `sync_skill.py` keeps (source, copy) pairs; Dockerfile, `.dockerignore`, README, docs, site updated. Verified: a fresh venv `pip install -e ./python[stats,dev]` passes 675/675, skill package builds, derived files current, site builds. **Not verified: `docker build`** (Docker daemon was not running) — run it before relying on the image |
 | 2026-09-24 | 4.1–4.4 | `go/` (module `github.com/boligolov/asciicharts/go`, package `asciicharts`, stdlib only): RenderJSON/Render/ListCharts/ChartTypes/ChartError. Passes the whole conformance suite byte for byte — 317 corpus + 104 curated (new: `spec/conformance/curated.json`, text in any script, controls, number formatting, every validation message) + 31 gallery — and 30 000/30 000 random specs against Python (`scripts/differential.py`). Unicode tables and catalogue generated from Python (`gen_go_unicode.py`, `gen_go_catalog.py`, checked by a test). Robustness: hostile specs, 1 000 random specs rectangular, 8.8M fuzz executions without a panic |
+| 2026-09-24 | 5.1 | `go/cmd/asciicharts` (exit codes 0/1/2 as Python's) + in the library `SpecFromCSV`, `ParseSet`, `ListText`, an ordered `Object` with `PyJSON` (Python's `json.dumps`). The CSV reader ports CPython's `csv.Sniffer` (its backreference regexes by hand) and `_csv` state machine, Python's `float()` (underscores, Unicode digits), `str.lower()` (final sigma, İ). Checked: `scripts/differential_csv.py` 100 000/100 000 random CSV files (spec text and chart), `scripts/cli_parity.py` 42/42 command lines (stdout, stderr, exit code). Found a real divergence in the library: Go's `math.Log10` is an ulp off next to a power of ten (a histogram edge printed `-0.10` for Python's `-0.100`) → correctly rounded `floorLog10`; principles §4.13 clarified, curated case `number/next to a power of ten` (105). ExCSV → 5.4 |

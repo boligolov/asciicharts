@@ -3,6 +3,8 @@ package asciicharts
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"strings"
 )
 
 // ChartInfo describes one chart type: what it draws, how its series are read, the options that
@@ -34,4 +36,29 @@ func ChartTypes() []string {
 		names[i] = c.Type
 	}
 	return names
+}
+
+// ListText is the chart catalogue as the command line's --list prints it.
+func ListText() string {
+	all, err := DecodeOrdered([]byte(catalogJSON))
+	if err != nil {
+		panic("asciicharts: bad generated catalogue: " + err.Error())
+	}
+	var b strings.Builder
+	for _, c := range all.([]any) {
+		o := c.(*Object)
+		get := func(k string) any { v, _ := o.Get(k); return v }
+		var opts []string
+		for _, x := range get("options").([]any) {
+			opts = append(opts, x.(string))
+		}
+		optText := strings.Join(opts, ", ")
+		if optText == "" {
+			optText = "-"
+		}
+		fmt.Fprintf(&b, "%s\n  %s\n  series:  %s\n  options: %s\n  example: %s\n\n",
+			get("type"), get("summary"), get("series"), optText, PyJSONCompact(get("example")))
+	}
+	b.WriteString("Every chart also accepts: title, border, useColor.\n")
+	return b.String()
 }

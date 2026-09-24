@@ -4,7 +4,7 @@ The Go reference implementation of [asciicharts principles v1.0](../spec/princip
 chart out. No dependencies beyond the standard library.
 
 It is byte-for-byte identical to the Python implementation: it passes the whole
-[conformance suite](../spec/conformance/) — 317 corpus cases, 104 curated cases (text in any script,
+[conformance suite](../spec/conformance/) — 317 corpus cases, 105 curated cases (text in any script,
 control characters, number formatting, every validation message), the 31 gallery examples — and agrees
 with Python on tens of thousands of random specs (`scripts/differential.py`).
 
@@ -31,7 +31,26 @@ fmt.Println(out)
 - `Render(spec any) (string, error)` — a decoded spec: `map[string]any` with `json.Number` (or `float64`)
   numbers.
 - `ListCharts() []ChartInfo`, `ChartTypes() []string` — the chart catalogue.
+- `SpecFromCSV(text, chartType, CSVOptions)` — a spec straight from a CSV file (§9.5), exactly as the
+  Python reference builds it: the same delimiter sniffing, quoting, number decorations (`1,234.5`, `3,14`,
+  `$5`, `12%`), column matching and messages. The spec is an ordered `*Object`; `PyJSON` prints it as
+  Python's `json.dumps` does, `Plain` turns it into a map for `Render`.
 - `ChartError`, the limits (`MaxWidth`, `MaxValues`, …), `Version`, `PrinciplesVersion`, `UnicodeVersion`.
+
+## Command line
+
+```sh
+go install github.com/boligolov/asciicharts/go/cmd/asciicharts@latest
+
+asciicharts spec.json                      # a JSON spec from a file, - for stdin, or --json '{...}'
+asciicharts --list                         # every chart type, how to fill series, an example
+asciicharts --csv data.csv --chart hbar --sort -p99 --limit 10 --set title=Slowest
+asciicharts --csv data.csv --chart line --print-spec   # the JSON spec it built
+```
+
+It is the Python command line (`python asciicharts.py`) in one static binary: the same charts, error
+messages and exit codes (0 ok, 1 error, 2 bad usage), `--csv` with the same options. Only the help texts
+differ. ExCSV files (`#!excsv`) are not read yet; the Python command line reads them.
 
 ## Tests
 
@@ -39,6 +58,8 @@ fmt.Println(out)
 go test ./...                                          # conformance (corpus, curated, gallery) + robustness
 go test -run '^$' -fuzz FuzzRenderJSON -fuzztime 60s ./asciicharts/
 python ../scripts/differential.py 10000                # compare with the Python reference on random specs
+python ../scripts/differential_csv.py 10000            # … on random CSV files
+python ../scripts/cli_parity.py                        # both command lines: stdout, stderr, exit code
 ```
 
 ## Generated files

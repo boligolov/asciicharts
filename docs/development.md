@@ -72,19 +72,23 @@ python scripts/sync_skill.py
 
 ## The Go implementation
 
-`go/` holds the Go reference implementation, byte-for-byte identical to the Python one.
+`go/` holds the Go reference implementation, byte-for-byte identical to the Python one: the library
+(`go/asciicharts`) and the command line (`go/cmd/asciicharts`).
 
 ```sh
-cd go && go test ./...                                   # conformance suite (corpus, curated, gallery) + robustness
+cd go && go test ./...                                   # conformance suite (corpus, curated, gallery) + robustness + CLI
 go test -run '^$' -fuzz FuzzRenderJSON -fuzztime 60s ./asciicharts/
 python scripts/differential.py 10000 [seed]             # from the root: Go vs Python on random specs
+python scripts/differential_csv.py 10000 [seed]         # … on random CSV files (--csv)
+python scripts/cli_parity.py                            # both command lines: stdout, stderr, exit code
 ```
 
 Two of its files are generated from the Python implementation, so both measure text and describe charts
 identically: `python scripts/gen_go_unicode.py` (display-width tables from `unicodedata`) and
 `python scripts/gen_go_catalog.py` (the chart catalogue). A Python test fails if either is stale. A change
 to how charts are drawn goes into both implementations in the same change, with the conformance suite
-regenerated (`scripts/conformance_refresh.py`) and `scripts/differential.py` run.
+regenerated (`scripts/conformance_refresh.py`) and `scripts/differential.py` run; a change to the CSV
+reader or the command line, in both too, with `scripts/differential_csv.py` and `scripts/cli_parity.py`.
 
 ## Docker
 
