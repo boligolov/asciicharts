@@ -136,15 +136,15 @@ package files.
 
 ## Phase 4 — The Go library
 
-- [ ] **4.1** `go/go.mod` (module `github.com/boligolov/asciicharts/go`), package `asciicharts`:
+- [x] **4.1** `go/go.mod` (module `github.com/boligolov/asciicharts/go`), package `asciicharts`:
       `Render(spec Spec) (string, error)`, `ListCharts()`, typed `Spec`/`Series`, `ChartError`.
-- [ ] **4.2** Port chart by chart, following the principles; a conformance test runs
+- [x] **4.2** Port chart by chart, following the principles; a conformance test runs
       `spec/conformance/` and must match **byte for byte, including error messages**.
-- [ ] **4.3** Parity details (see principles §14): half-away-from-zero rounding; left-to-right sums; stable
+- [x] **4.3** Parity details (see principles §14): half-away-from-zero rounding; left-to-right sums; stable
       sort in the largest-remainder method; `%.0f`/`%.2f` and the significant-digit rule; 12-significant-digit
       axis labels; display width — pin the Unicode version and test CJK/emoji/combining against Python's
       `unicodedata` results; limits and text sanitising identical.
-- [ ] **4.4** Go tests beyond conformance: property tests (rectangular frames, no panics on hostile specs —
+- [x] **4.4** Go tests beyond conformance: property tests (rectangular frames, no panics on hostile specs —
       the stress set from the MCP stress test).
 
 Done when: 100% of `spec/conformance/` passes in Go.
@@ -187,3 +187,4 @@ Done when: 100% of `spec/conformance/` passes in Go.
 | 2026-09-24 | 1.5 | 14 runs (7 prompts × with/without skill, same model): 37/37 both. A strong model draws small charts right without the skill; the skill's effects were smaller charts, tier-C routing, visible self-checks, at ~+40% tokens. The grader was fixed to be layout-agnostic (4 correct baseline charts had failed it); the skill's glyph rule was made consistent. Next: weaker model + harder prompts (1.6) |
 | 2026-09-24 | 2.1–2.5 | `spec/`: principles.md is *asciicharts principles v1.0* (§0 status, RFC 2119 key words, two kinds of conformance; §15 = requirements R1–R15), CHANGELOG.md, LICENSE (CC BY 4.0); goldens moved to `spec/conformance/` with a README of the exact format; `scripts/conformance_refresh.py` (report / `--write`); every reference updated; README and site footer state the licence split. 1.6 postponed (tokens) |
 | 2026-09-24 | 3.1–3.3 | `asciicharts.py`, `pyproject.toml`, `server/`, `tests/` → `python/` (with `python/README.md` and a synced `python/LICENSE`); the skill's evals → `skills/evals/`; repository scripts import from `python/`; `sync_skill.py` keeps (source, copy) pairs; Dockerfile, `.dockerignore`, README, docs, site updated. Verified: a fresh venv `pip install -e ./python[stats,dev]` passes 675/675, skill package builds, derived files current, site builds. **Not verified: `docker build`** (Docker daemon was not running) — run it before relying on the image |
+| 2026-09-24 | 4.1–4.4 | `go/` (module `github.com/boligolov/asciicharts/go`, package `asciicharts`, stdlib only): RenderJSON/Render/ListCharts/ChartTypes/ChartError. Passes the whole conformance suite byte for byte — 317 corpus + 104 curated (new: `spec/conformance/curated.json`, text in any script, controls, number formatting, every validation message) + 31 gallery — and 30 000/30 000 random specs against Python (`scripts/differential.py`). Unicode tables and catalogue generated from Python (`gen_go_unicode.py`, `gen_go_catalog.py`, checked by a test). Robustness: hostile specs, 1 000 random specs rectangular, 8.8M fuzz executions without a panic |

@@ -88,6 +88,15 @@ def test_site_examples_are_current():
     assert r.returncode == 0, r.stderr
 
 
+@pytest.mark.parametrize("script", ["gen_go_unicode.py", "gen_go_catalog.py"])
+def test_the_go_implementations_generated_files_are_current(script):
+    """The Go implementation's Unicode tables and chart catalogue are generated from this one."""
+    import subprocess
+    import sys
+    r = subprocess.run([sys.executable, str(ROOT / "scripts" / script), "--check"], capture_output=True, encoding="utf-8")
+    assert r.returncode == 0, r.stderr
+
+
 def test_every_gallery_output_is_current():
     """In the gallery and in the skill's hand-drawing guide, the printed output under each spec is
     exactly what the renderer produces today, and the gallery's contents list matches its headings."""

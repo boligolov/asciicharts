@@ -11,6 +11,7 @@ deploy/                 Dockerfile, docker-compose (dev and prod), Caddyfile, .e
 spec/                   the principles (principles.md, v1.0), CHANGELOG.md, LICENSE (CC BY 4.0), conformance/ — the
                         language-neutral suite every implementation must pass byte for byte
 python/tests/           pytest suite (runs spec/conformance/); tests/golden/excsv_fixtures/
+go/                     the Go implementation: package asciicharts (conformance, robustness and fuzz tests); see go/README.md
 skills/evals/           the skill's evals (prompts, programmatic graders, recorded runs)
 scripts/                sync_skill.py, package_skill.py, gallery_refresh.py, site_examples.py, og_image.py,
                         conformance_refresh.py
@@ -68,6 +69,22 @@ python scripts/sync_skill.py
 ```
 
 `tests/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn or adding an example, `python scripts/gallery_refresh.py` re-renders every printed output — in the gallery and in the skill's `references/drawing.md` — and rebuilds the gallery's contents list; a test fails if either is stale) and `python scripts/sync_skill.py` copies it, and `spec/principles.md`, into the skill.
+
+## The Go implementation
+
+`go/` holds the Go reference implementation, byte-for-byte identical to the Python one.
+
+```sh
+cd go && go test ./...                                   # conformance suite (corpus, curated, gallery) + robustness
+go test -run '^$' -fuzz FuzzRenderJSON -fuzztime 60s ./asciicharts/
+python scripts/differential.py 10000 [seed]             # from the root: Go vs Python on random specs
+```
+
+Two of its files are generated from the Python implementation, so both measure text and describe charts
+identically: `python scripts/gen_go_unicode.py` (display-width tables from `unicodedata`) and
+`python scripts/gen_go_catalog.py` (the chart catalogue). A Python test fails if either is stale. A change
+to how charts are drawn goes into both implementations in the same change, with the conformance suite
+regenerated (`scripts/conformance_refresh.py`) and `scripts/differential.py` run.
 
 ## Docker
 
