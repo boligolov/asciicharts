@@ -135,17 +135,51 @@ def find_rows(rows, label):
     return exact or [bar for lab, bar in rows if re.search(r"(?<!\w)" + re.escape(label) + r"(?!\w)", lab)]
 
 
+# --- format-agnostic row reading -------------------------------------------------------------------
+# Agents draw bars in many layouts: with or without a separator, values before or after the bar, a
+# value axis, an x axis below. These helpers find a row by its label and count the glyphs that draw
+# bars, instead of assuming the renderer's own layout.
+
+ASCII_FILLS = set("#@%&$*=")
+VERTICALS = set("│|¦┃")
+
+
+def is_fill(c):
+    return "\u2580" <= c <= "\u259f" or c in ASCII_FILLS
+
+
+def uses_track(text):
+    """░ is a track only when denser fills are drawn too; a series drawn in ░ alone is a fill."""
+    return any(is_fill(c) and c != "░" for c in text)
+
+
+def bar_cells(line, start, track):
+    """Columns (indices) of bar glyphs in line from start on; numbers are not bars."""
+    masked = re.sub(r"[-+]?\$?\d[\d,.]*%?", lambda m: " " * len(m.group()), line)
+    return [i for i in range(start, len(masked)) if is_fill(masked[i]) and not (track and masked[i] == "░")]
+
+
+def label_line(lines, label, after=0):
+    """(index, end of the label) of the first line from `after` whose text starts with label."""
+    for i in range(after, len(lines)):
+        m = re.match(r"^\s*" + re.escape(label) + r"(?!\w)", lines[i])
+        if m:
+            return i, m.end()
+    return None, None
+
+
 # --- per-eval checks -----------------------------------------------------------------------------
 
 def grade_hbar_ranking(reply, data):
     block = chart_block(reply)
     lines, _ = unframe(block)
-    rows = bar_rows(lines)
-    lengths = []
+    track = uses_track(block)
+    lengths, at = [], []
     for lab in data["labels"]:
-        found = find_rows(rows, lab)
-        lengths.append(filled(found[0]) if found else 0)
-    order = [lab for lab, _ in rows if lab in data["labels"]]
+        i, end = label_line(lines, lab)
+        at.append(i)
+        lengths.append(len(bar_cells(lines[i], end, track)) if i is not None else 0)
+    order = [lab for _, lab in sorted((i, lab) for i, lab in zip(at, data["labels"]) if i is not None)]
     return [check_block(reply), check_rectangular(block), check_glyphs(block),
             ("Every language has a bar, in ranking order", order == data["labels"], f"rows: {order}"),
             check_lengths(lengths, data["values"], "Bar lengths"),
@@ -160,16 +194,23 @@ def grade_hbar_grouped(reply, data):
     glyphs = {n: set() for n in names}
     # a row is "<year> │ bar" under a team heading, or "<team> <year> │ bar": either way the k-th row
     # that names a year belongs to the k-th team
-    per_year = {n: [bar for l, bar in rows if n in l] for n in names}
+    # decided row by row: ░ behind a denser bar is its track, but a series may be drawn in ░ alone
+    per_year = {n: [] for n in names}
+    for l in lines:
+        for n in names:
+            m = re.search(r"(?<!\d)" + n + r"(?!\d)", l)
+            if m and bar_cells(l, m.end(), uses_track(l[m.end():])):
+                per_year[n].append(l[m.end():])
     lengths = []
     values = []
     for i, _ in enumerate(data["labels"]):
         for n in names:
             bars = per_year[n]
             bar = bars[i] if i < len(bars) else ""
-            lengths.append(filled(bar))
+            cells = bar_cells(bar, 0, uses_track(bar))
+            lengths.append(len(cells))
             values.append(data["series"][n][i])
-            glyphs[n] |= {c for c in bar if c not in TRACK and c not in SEPARATORS and c not in "+-"}
+            glyphs[n] |= {bar[c] for c in cells}
     named = all(len(per_year[n]) >= len(data["labels"]) for n in names)
     distinct = all(glyphs[n] for n in names) and not (glyphs[names[0]] & glyphs[names[1]])
     return [check_block(reply), check_rectangular(block), check_glyphs(block),
@@ -201,22 +242,17 @@ def grade_vbar(reply, data):
     heights = []
     if label_row:
         grid = lines[:label_row]
-        grid = [l for l in grid if l.strip() and not re.match(r"^\s*[-─=+]+\s*$", l)]
+        track = uses_track("\n".join(grid))
         width = max((len(l) for l in grid), default=0)
-        grid = [l.ljust(width) for l in grid]
-        bottom = grid[-1] if grid else ""
-        cols = [x for x in range(width) if bottom[x] not in TRACK and bottom[x] not in SEPARATORS + "+-┤├"]
+        counts = [sum(1 for l in grid if x < len(l) and is_fill(l[x]) and not (track and l[x] == "░"))
+                  for x in range(width)]
         groups = []
-        for x in cols:
-            if groups and x == groups[-1][-1] + 1:
+        for x, n in enumerate(counts):
+            if n and groups and x == groups[-1][-1] + 1:
                 groups[-1].append(x)
-            else:
+            elif n:
                 groups.append([x])
-        for g in groups:
-            x = g[0]
-            heights.append(sum(1 for l in grid if l[x] not in TRACK and l[x] not in SEPARATORS + "+-┤├"))
-        # drop an axis column made of digits on the left, if any
-        heights = heights[-len(data["values"]):] if len(heights) > len(data["values"]) else heights
+        heights = [max(counts[x] for x in g) for g in groups]
     return [check_block(reply), check_rectangular(block), check_glyphs(block),
             ("Every quarter is labelled under the bars", label_row is not None, f"label row: {label_row}"),
             check_lengths(heights, data["values"], "Column heights")]
@@ -225,19 +261,33 @@ def grade_vbar(reply, data):
 def grade_diverging(reply, data):
     block = chart_block(reply)
     lines, _ = unframe(block)
-    rows = bar_rows(lines)
-    spans, lengths = {}, []
+    track = uses_track(block)
+    rows = {}
+    for lab in data["labels"]:
+        i, end = label_line(lines, lab)
+        if i is not None:
+            rows[lab] = (lines[i], end)
+    # the zero axis: a column holding a vertical line in every row, next to the bars
+    axes = None
+    for line, end in rows.values():
+        cols = {k for k in range(end, len(line)) if line[k] in VERTICALS}
+        axes = cols if axes is None else axes & cols
+    axis = None
+    if axes:
+        def touching(k):
+            return sum(1 for line, end in rows.values() for c in bar_cells(line, end, track) if abs(c - k) == 1)
+        axis = max(sorted(axes), key=touching)
+    spans, lengths, sides_ok = {}, [], axis is not None
     for lab, v in zip(data["labels"], data["values"]):
-        found = find_rows(rows, lab)
-        bar = found[0] if found else ""
-        cells = [i for i, c in enumerate(bar) if c not in TRACK and c not in SEPARATORS and c not in "+-"]
+        line, end = rows.get(lab, ("", 0))
+        cells = bar_cells(line, end, track)
         spans[lab] = (min(cells), max(cells)) if cells else None
         lengths.append(len(cells))
-    pos = [spans[l] for l, v in zip(data["labels"], data["values"]) if v > 0 and spans[l]]
-    neg = [spans[l] for l, v in zip(data["labels"], data["values"]) if v < 0 and spans[l]]
-    axis_ok = bool(pos) and bool(neg) and len({s[0] for s in pos}) == 1 and max(s[1] for s in neg) < pos[0][0]
+        if axis is not None and cells:
+            sides_ok &= all(c > axis for c in cells) if v > 0 else all(c < axis for c in cells)
     return [check_block(reply), check_rectangular(block), check_glyphs(block),
-            ("Losses grow left and gains right of one shared zero line", axis_ok, f"spans {spans}"),
+            ("Losses grow left and gains right of one shared zero line", sides_ok and len(rows) == len(data["labels"]),
+             f"axis column {axis}; spans {spans}"),
             check_lengths(lengths, data["values"], "Bar lengths"),
             check_values_printed(block, data["values"])]
 

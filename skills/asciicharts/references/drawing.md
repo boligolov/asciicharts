@@ -99,7 +99,8 @@ Check: `cells + track = 20` on every row; the longest bar is exactly `W`; every 
 ### hbar — several series (grouped)
 
 Each category on its own line, then one indented row per series; a blank line between categories. The
-series names are in the rows, so no legend is needed. Scale everything to the **overall** maximum.
+series names are in the rows, so every bar can be `█` and no legend is needed (one glyph per series
+with a legend is fine too — the point is that series can be told apart without color). Scale everything to the **overall** maximum.
 
 ```json
 { "chartType": "hbar", "border": "none", "width": 12, "labels": ["Q1", "Q2"], "series": [{ "name": "2025", "values": [30, 45] }, { "name": "2026", "values": [36, 48] }] }

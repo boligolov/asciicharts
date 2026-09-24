@@ -68,8 +68,9 @@ The full reasoning is in [references/principles.md](references/principles.md); t
 - **Only font-safe glyphs**: `█ ▓ ▒ ░ ▌ ▄ ▐ ▀`, light box lines `─ │ ┌ ┐ └ ┘ ├ ┤`, markers `● ○ ▲ ■`.
   A glyph the reader's font lacks is drawn from another font and breaks the alignment. When you don't
   know where the text will be shown, use plain ASCII.
-- **One glyph per series**, the densest first; the legend shows the exact glyph (`█ 2025   ▓ 2026`).
-  Color is never the only difference.
+- **Series must be told apart without color**: one glyph per series, the densest first, and a legend
+  with the exact glyph (`█ 2025   ▓ 2026`) — or, where every bar row names its own series (grouped
+  hbar), the same `█` for all of them.
 - **Print the numbers** where the grid is approximate: after each bar, in the legend, as axis labels.
 - **Keep it small**: 60–80 columns in total; by hand, bars of 10–20 cells.
 - **Every line the same width.** Pad labels to the longest one; count CJK characters and most emoji as

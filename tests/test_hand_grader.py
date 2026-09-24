@@ -56,6 +56,15 @@ def test_the_renderers_own_chart_passes_every_check(name):
     assert failed(perfect(name), name) == []
 
 
+@pytest.mark.parametrize("name", ["hand-hbar-ranking", "hand-hbar-grouped", "hand-vbar", "hand-diverging"])
+def test_correct_charts_in_other_layouts_pass(name):
+    """Real replies from the eval baseline, drawn correctly but not in the renderer's layout: no separator,
+    ░ as a series, a value axis and values over the columns, the zero axis as the only vertical line.
+    An early grader failed all four — it must judge the chart, not its resemblance to ours."""
+    reply = (HERE / "formats" / f"{name}.md").read_text(encoding="utf-8")
+    assert failed(reply, name) == []
+
+
 def test_a_miscounted_bar_is_caught():
     reply = perfect("hand-hbar-ranking").replace("█" * 6 + "░", "█" * 9 + "░", 1)  # Go's 6... bar made longer
     assert any("proportional" in t for t in failed(reply, "hand-hbar-ranking"))

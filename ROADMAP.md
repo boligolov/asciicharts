@@ -95,9 +95,13 @@ Steps:
       grader that checks a rectangular frame **by display width** (the current `grade.py` uses `len()` —
       the same bug we fixed in the renderer), bar lengths within ±1 cell of `round(v / max × W)`, glyph
       safety, legend-glyph agreement, value labels.
-- [ ] **1.5** Run the evals (with the skill / without it, several prompts, independent agents), record
+- [x] **1.5** Run the evals (with the skill / without it, several prompts, independent agents), record
       the results in `tests/skill_evals/README.md`, and adjust the tiers and recipes to what the numbers
       show.
+
+- [ ] **1.6** The harder test 1.5 pointed to: the same seven prompts with a **weaker model** (e.g. Haiku), plus
+      harder prompts where counting fails — 10+ bars, stacked with negatives, a requested frame, CJK labels,
+      a line on a larger grid. Only there can the principles show what they are worth for correctness.
 
 Done when: tier-A charts pass the no-script evals reliably; tier C is routed to tools or clearly flagged.
 
@@ -180,3 +184,4 @@ Done when: 100% of `spec/conformance/` passes in Go.
 | 2026-09-24 | 1.2 | `glyphs.md`: safe alphabet by tier (WGL4), density ramp, series glyphs, roles, frames, widths; a test pins its glyph sets to the renderer's constants |
 | 2026-09-24 | 1.3 | `SKILL.md` rewritten around the flow (pick → tool if available → else draw by hand → self-check → code block); chart table with hand-drawability tiers; the core rules; the script, CSV and ExCSV sections kept; `docs/skill.md` updated (no requirement to draw) |
 | 2026-09-24 | 1.4 | `hand_evals.json` (7 prompts, tiers A/B/C) + `hand_grade.py` (lengths ±1, display-width frames, safe glyphs, series identity, shared zero line, sparkline order, percentages); `test_hand_grader.py` proves the grader on perfect and broken replies — it found a renderer bug (stacked bars dropped small segments, fixed in its own commit); `grade.py` measures display width too |
+| 2026-09-24 | 1.5 | 14 runs (7 prompts × with/without skill, same model): 37/37 both. A strong model draws small charts right without the skill; the skill's effects were smaller charts, tier-C routing, visible self-checks, at ~+40% tokens. The grader was fixed to be layout-agnostic (4 correct baseline charts had failed it); the skill's glyph rule was made consistent. Next: weaker model + harder prompts (1.6) |

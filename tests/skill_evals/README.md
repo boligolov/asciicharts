@@ -33,6 +33,40 @@ the line chart's axis from the maximum to the minimum; correct percentages, and 
 bar substitute) in proportion. `tests/test_hand_grader.py` checks the grader itself: the renderer's own
 chart for each prompt passes everything, and each typical mistake fails the check meant to catch it.
 
+### Hand-drawn results (2026-09-24, one run per configuration, the same model for both)
+
+| eval | tier | with skill | without skill |
+|---|---|---|---|
+| hand-hbar-ranking | A | 6/6 | 6/6 |
+| hand-hbar-grouped | A | 7/7 | 7/7 |
+| hand-sparkline | A | 3/3 | 3/3 |
+| hand-vbar | A | 5/5 | 5/5 |
+| hand-diverging | A | 6/6 | 6/6 |
+| hand-line | B | 5/5 | 5/5 |
+| hand-pie | C | 5/5 | 5/5 |
+| **total** | | **37/37** | **37/37** |
+
+What this run showed:
+
+- **A strong model draws small charts correctly without the skill.** Every baseline chart was right; on
+  correctness the skill made no difference at this size. The skill is not what makes simple hand-drawn
+  charts correct for a capable model — its measurable effects are elsewhere:
+  - **smaller, denser charts** (the chart blocks were 21–38 columns wide with the skill, 28–76 without;
+    e.g. a 57-cell bar without it), as the "keep it small" rule asks;
+  - **tier C routed as designed**: with the skill the pie became a 100% stacked bar, said so, and kept the
+    3% slice (the baseline drew a true 21-row pie, which was also right);
+  - **visible self-checking**: one skilled agent's self-check caught two rows off by a column and fixed them;
+  - a cost of roughly **+40% tokens** (≈ 47k vs 33k per task) for reading the skill.
+- **The first grader was wrong, not the baseline.** It failed four correct baseline charts because they
+  weren't laid out like the renderer's (no separator, `░` as a series, a value axis with values above the
+  columns, the zero axis as the only vertical line). The grader now reads rows by label and bars by glyph;
+  those four replies are kept in `formats/` as test fixtures.
+- **A contradiction in the skill**, found by a skilled agent: "one glyph per series" versus the grouped
+  example drawing both years with `█`. The rule now says what it means: series must be told apart without
+  color — by glyph and legend, or by naming the series on every row.
+- Still open: whether the principles help **weaker models** and **harder charts** (more bars, stacked with
+  negatives, frames, CJK labels) — where counting errors are likely. That is the next test (roadmap 1.6).
+
 ## Results (one run per configuration, so read the numbers as indicative)
 
 | | pass rate, with skill | pass rate, without | tokens (with / without) | time (with / without) |
