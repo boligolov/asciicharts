@@ -7,10 +7,12 @@ asciicharts.py          the renderer: one file, standard library only (also ship
 server/                 the MCP server (installed as the `asciicharts_server` package) — see server/README.md
 skills/asciicharts/     the skill: SKILL.md, scripts/, references/ — see docs/skill.md
 deploy/                 Dockerfile, docker-compose (dev and prod), Caddyfile, .env.example
-tests/                  pytest suite; tests/golden/ pins renderer output; tests/skill_evals/ holds the skill's evals
-scripts/                sync_skill.py, package_skill.py, gallery_refresh.py, site_examples.py, og_image.py
-docs/                   this file, principles.md (how text charts work, for agents and ports), gallery.md
-                        (every chart rendered), skill.md
+spec/                   the principles (principles.md, v1.0), CHANGELOG.md, LICENSE (CC BY 4.0), conformance/ — the
+                        language-neutral suite every implementation must pass byte for byte
+tests/                  pytest suite (runs spec/conformance/); tests/golden/excsv_fixtures/; tests/skill_evals/ holds the skill's evals
+scripts/                sync_skill.py, package_skill.py, gallery_refresh.py, site_examples.py, og_image.py,
+                        conformance_refresh.py
+docs/                   this file, gallery.md (every chart rendered), skill.md
 LICENSE  pyproject.toml
 ```
 
@@ -47,7 +49,7 @@ PORT=8080 python -m asciicharts_server    # streamable HTTP at :8080/mcp, health
 pytest
 ```
 
-- `tests/test_charts.py` — the renderers. `tests/golden/` holds outputs captured from the original Go implementation this project was ported from (the gallery plus a corpus of 317 random specs and their exact output), so every chart is pinned byte-for-byte. If you change how something is drawn on purpose, regenerate the affected golden files and review the diff.
+- `tests/test_charts.py` — the renderers. They run the conformance suite in `spec/conformance/` — first captured from the original Go implementation this project was ported from: the gallery plus a corpus of 317 random specs and their exact output — so every chart is pinned byte-for-byte. If you change how something is drawn on purpose, that is a new version of the principles: `python scripts/conformance_refresh.py` reports which cases change (by chart type), `--write` writes them; review the diff and add an entry to `spec/CHANGELOG.md`.
 - `tests/test_server.py` — the MCP server (`server/`) in-process, over real stdio, and over real HTTP. The tests import the installed `asciicharts_server` package, so run `pip install -e ".[stats,dev]"` first (`tests/conftest.py` says so if you forget).
 - `tests/test_store.py` — the optional statistics store.
 - `tests/test_csv.py` — CSV input (`--csv`).
@@ -63,7 +65,7 @@ pytest
 python scripts/sync_skill.py
 ```
 
-`tests/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn or adding an example, `python scripts/gallery_refresh.py` re-renders every printed output — in the gallery and in the skill's `references/drawing.md` — and rebuilds the gallery's contents list; a test fails if either is stale) and `python scripts/sync_skill.py` copies it, and `docs/principles.md`, into the skill.
+`tests/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn or adding an example, `python scripts/gallery_refresh.py` re-renders every printed output — in the gallery and in the skill's `references/drawing.md` — and rebuilds the gallery's contents list; a test fails if either is stale) and `python scripts/sync_skill.py` copies it, and `spec/principles.md`, into the skill.
 
 ## Docker
 

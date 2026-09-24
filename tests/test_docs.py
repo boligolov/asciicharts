@@ -102,5 +102,5 @@ def test_the_doc_gallery_shows_exactly_the_golden_examples():
     from asciicharts import render_chart
     blocks = _fenced((ROOT / "docs" / "gallery.md").read_text(encoding="utf-8"))
     printed = [c for lang, c in blocks if lang != "json"]
-    golden = json.loads((ROOT / "tests" / "golden" / "gallery.json").read_text(encoding="utf-8"))
+    golden = json.loads((ROOT / "spec" / "conformance" / "gallery.json").read_text(encoding="utf-8"))
     assert sorted(render_chart(x["spec"]) for x in golden) == sorted(printed)  # same examples (the doc groups them by chart type)

@@ -8,7 +8,7 @@ step (and the log at the bottom) in the same commit that finishes it.
 
 The cornerstone of this repository is **knowledge**: the principles of building charts out of text
 characters — the cell model, the glyph alphabet and ink density, the arithmetic, the layout rules, and
-the mistakes behind them (`docs/principles.md` today). Everything else serves it:
+the mistakes behind them (`spec/principles.md`). Everything else serves it:
 
 - **The specification** — the principles, made normative and versioned: *asciicharts principles v1.0*.
 - **The conformance suite** — specs with their exact expected output (the golden corpus), language
@@ -107,16 +107,16 @@ Done when: tier-A charts pass the no-script evals reliably; tier C is routed to 
 
 ## Phase 2 — The specification and the conformance suite
 
-- [ ] **2.1** Create `spec/`: move `docs/principles.md` → `spec/principles.md`; mark it
+- [x] **2.1** Create `spec/`: move `docs/principles.md` → `spec/principles.md`; mark it
       *asciicharts principles v1.0*; turn rules into MUST / SHOULD language where they are normative;
       keep the rationale, mistakes and examples.
-- [ ] **2.2** `spec/CHANGELOG.md` (v1.0: the rules as of the fixes of 2026-09-24).
-- [ ] **2.3** `spec/LICENSE` — CC BY 4.0; README and site state the split (knowledge CC BY 4.0, code MIT).
-- [ ] **2.4** Move `tests/golden/{corpus.json, gallery.json, gallery.txt}` → `spec/conformance/`, with a
+- [x] **2.2** `spec/CHANGELOG.md` (v1.0: the rules as of the fixes of 2026-09-24).
+- [x] **2.3** `spec/LICENSE` — CC BY 4.0; README and site state the split (knowledge CC BY 4.0, code MIT).
+- [x] **2.4** Move `tests/golden/{corpus.json, gallery.json, gallery.txt}` → `spec/conformance/`, with a
       `README.md` describing the format (`{spec, out}` or `{spec, err}`; gallery = named specs; exact
       bytes, `\n` line endings, no trailing newline) and how an implementation runs it. Python tests read
       from the new place. The ExCSV fixtures stay with the Python tests (input parsing, not rendering).
-- [ ] **2.5** Update every reference: `scripts/sync_skill.py` (skill copy of the principles), links in
+- [x] **2.5** Update every reference: `scripts/sync_skill.py` (skill copy of the principles), links in
       README / docs / SKILL.md, `docs/development.md`.
 
 Done when: `spec/` stands on its own, the Python suite passes against `spec/conformance/`.
@@ -185,3 +185,4 @@ Done when: 100% of `spec/conformance/` passes in Go.
 | 2026-09-24 | 1.3 | `SKILL.md` rewritten around the flow (pick → tool if available → else draw by hand → self-check → code block); chart table with hand-drawability tiers; the core rules; the script, CSV and ExCSV sections kept; `docs/skill.md` updated (no requirement to draw) |
 | 2026-09-24 | 1.4 | `hand_evals.json` (7 prompts, tiers A/B/C) + `hand_grade.py` (lengths ±1, display-width frames, safe glyphs, series identity, shared zero line, sparkline order, percentages); `test_hand_grader.py` proves the grader on perfect and broken replies — it found a renderer bug (stacked bars dropped small segments, fixed in its own commit); `grade.py` measures display width too |
 | 2026-09-24 | 1.5 | 14 runs (7 prompts × with/without skill, same model): 37/37 both. A strong model draws small charts right without the skill; the skill's effects were smaller charts, tier-C routing, visible self-checks, at ~+40% tokens. The grader was fixed to be layout-agnostic (4 correct baseline charts had failed it); the skill's glyph rule was made consistent. Next: weaker model + harder prompts (1.6) |
+| 2026-09-24 | 2.1–2.5 | `spec/`: principles.md is *asciicharts principles v1.0* (§0 status, RFC 2119 key words, two kinds of conformance; §15 = requirements R1–R15), CHANGELOG.md, LICENSE (CC BY 4.0); goldens moved to `spec/conformance/` with a README of the exact format; `scripts/conformance_refresh.py` (report / `--write`); every reference updated; README and site footer state the licence split. 1.6 postponed (tokens) |

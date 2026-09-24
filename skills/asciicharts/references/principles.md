@@ -1,4 +1,6 @@
-# Principles of text charts
+# asciicharts principles v1.0
+
+*The principles of text charts* — version 1.0, 2026-09-24. Licensed under CC BY 4.0.
 
 This document is the distilled knowledge behind `asciicharts`: how to turn numbers into a chart made of
 characters, what every rule is for, which calculations produce which cells, and which mistakes we made on
@@ -12,9 +14,37 @@ the way. It is written for two readers:
 
 Every example output in this document is real output of `asciicharts.py`, not a drawing.
 
-**Contents:** 1 The medium · 2 The glyph alphabet · 3 Identity without color · 4 From numbers to cells ·
-5 Layout · 6 Text · 7 The twelve chart types · 8 Styles · 9 Input, limits and errors · 10 Other media ·
-11 Mistakes we made · 12 Limitations and choices · 13 Drawing by hand · 14 Porting checklist · 15 Summary
+**Contents:** 0 Status and conformance · 1 The medium · 2 The glyph alphabet · 3 Identity without color ·
+4 From numbers to cells · 5 Layout · 6 Text · 7 The twelve chart types · 8 Styles · 9 Input, limits and
+errors · 10 Other media · 11 Mistakes we made · 12 Limitations and choices · 13 Drawing by hand ·
+14 Porting checklist · 15 The requirements
+
+---
+
+## 0. Status and conformance
+
+**Version.** asciicharts principles **v1.0**, published 2026-09-24. Every change to how a chart is drawn is
+a new version, recorded in `spec/CHANGELOG.md` of the asciicharts repository
+(https://github.com/boligolov/asciicharts), together with regenerated conformance outputs.
+
+**Licence.** The principles and the conformance suite are licensed under the Creative Commons Attribution
+4.0 International License (CC BY 4.0, https://creativecommons.org/licenses/by/4.0/): copy, adapt and build
+on them, commercially too, with credit — *"asciicharts principles v1.0" by asciicharts contributors*. The
+reference implementations are MIT-licensed code.
+
+**Key words.** "MUST", "MUST NOT", "SHOULD", "SHOULD NOT" and "MAY" in section 15 are to be interpreted as
+described in RFC 2119 and RFC 8174 when, and only when, they appear in capitals. Sections 1–14 are
+informative: they explain, derive and illustrate; section 15 and the conformance suite are normative.
+
+**Two kinds of conformance.**
+
+1. **A renderer** conforms to v1.0 when it reproduces the conformance suite — `spec/conformance/` in the
+   repository: 317 specs with their exact output or error message, and the 31 documented examples —
+   **byte for byte**. Sections 4–9 describe the arithmetic and layout the suite pins down; where prose
+   and suite disagree, the suite wins and the prose is a bug.
+2. **A chart**, however it was made — by a renderer, another library, or an agent drawing by hand —
+   follows the principles when it meets every MUST of section 15. That is the standard section 13's
+   hand-drawing recipes aim for; exact byte equality with the reference output is not required of it.
 
 ---
 
@@ -1079,8 +1109,9 @@ Charts that draw freely (line, scatter, dual_axis) share a canvas: a grid of `(g
 `set` (bounds-checked, out-of-range ignored) and Bresenham `line`. Keep the catalogue (section 9.1) as
 data; generate `--list`, the tool description and tests from it.
 
-**Conformance.** `tests/golden/corpus.json` holds 317 random specs with their exact output (or, for a few,
-their exact error message); `tests/golden/gallery.json` / `gallery.txt` the documented examples. Run them against
+**Conformance.** `spec/conformance/corpus.json` holds 317 random specs with their exact output (or, for a few,
+their exact error message); `spec/conformance/gallery.json` / `gallery.txt` the documented examples; its
+`README.md` gives the exact format. Run them against
 the port. To reach byte parity:
 
 - rounding half away from zero (4.1); left-to-right float sums;
@@ -1119,22 +1150,46 @@ handful of glyphs); build rows as arrays and join once.
 
 ---
 
-## 15. The principles in one page
+## 15. The requirements
 
-1. A chart is a grid of equal cells; a row is twice as tall as a column is wide.
-2. Use only glyphs every common monospace font has; a missing glyph breaks alignment, not just looks.
-3. Density is meaning: `" ░▒▓█"` for magnitude; far-apart glyphs for series identity.
-4. One glyph, one role. The legend shows the exact glyph.
-5. Color is additive; shape carries identity.
-6. Bars start at zero; lines and dotplots may zoom, but say the range.
-7. The grid shows shape; printed numbers carry precision.
-8. Round half away from zero, sum left to right, split stacks by largest remainder — exactly, everywhere.
-9. A non-zero value never disappears (bars, diverging bars, pie slices); a zero value is visibly empty.
-   Blank never stands for a value; a series never silently hides another.
-10. Fill a sensible default width; `width` is the plot, not the decoration.
-11. Measure text in display columns; never cut a wide character; sanitise control characters.
-12. Frames are always rectangular.
-13. Deterministic: same spec, same bytes.
-14. Bounded input, strict types, one-line errors that say how to fix the call. Never crash on input.
-15. Examples are generated, checked and never hand-edited. Golden files pin behaviour; they don't prove it
-    right — review what they preserve.
+Normative for v1.0 (section 0). Each requirement names the section that explains it.
+
+**Any chart** — rendered or hand-drawn:
+
+- **R1** (§1.3) A chart MUST be plain text meant for a monospace grid. If it is framed, every line MUST
+  have the same display width.
+- **R2** (§2.1) By default a chart MUST use only tier-0 and tier-1 glyphs: ASCII, Latin-1, the WGL4 box
+  drawing, the shades `░▒▓█`, the half blocks `▌▄▐▀` and the markers `●○▲■□▼♦◊►◄`. Tier-2 glyphs (heavy
+  or rounded box lines, eighth blocks, braille) MAY be used only when asked for, and in sparklines.
+- **R3** (§2.3, §3.2) Within a chart, a glyph MUST have one role. A legend MUST show the exact glyph each
+  series is drawn with.
+- **R4** (§3.1) Series MUST be distinguishable without color: by glyph and legend, or by naming the series
+  on every row. Color MAY be added; it MUST NOT be the only difference.
+- **R5** (§2.2) Magnitude SHOULD be encoded by ink density (`░▒▓█`); series SHOULD get glyphs far apart in
+  density or texture, the first series the densest.
+- **R6** (§4.2, §4.5) A bar MUST start at zero, or grow both ways from a marked zero axis that belongs to
+  no bar. A line or dot plot MAY zoom to its data; it MUST then show the range it uses.
+- **R7** (§4.1, §4.4) Lengths and positions MUST be computed from the values — `round(v / max × W)`,
+  rounding half away from zero — not estimated.
+- **R8** (§4.4, §4.6, §4.9, §4.12) A non-zero value MUST NOT disappear: at least one cell for a bar, a
+  stacked segment or a pie slice, and a visible (never blank) heatmap cell. Zero MUST be visibly empty.
+- **R9** (§7) A series MUST NOT silently hide another: overlapping marks of different series MUST be
+  marked as overlaps.
+- **R10** (§1.2) Where the grid only approximates a value, the value SHOULD be printed — after the bar,
+  in the legend, on the axis, or as a range.
+- **R11** (§6) Text MUST be measured in display columns (CJK and most emoji take two, combining marks
+  none); a wide character MUST NOT be cut in half; control characters MUST NOT reach the output.
+- **R12** (§5.7) Without a requested size, a chart SHOULD fill a readable default plot width;
+  a requested width SHOULD mean the plot, not the decoration around it.
+
+**A renderer**, in addition:
+
+- **R13** (§1.3) A renderer MUST be deterministic: the same spec gives the same bytes, with no dependence
+  on time, randomness, locale or terminal.
+- **R14** (§4.1, §4.6) A renderer MUST sum left to right and split stacks by the largest-remainder method,
+  so that every stack adds up exactly.
+- **R15** (§9) A renderer MUST bound its input (§9.2), accept only well-typed values (§9.3), and reject an
+  invalid spec with a one-line message that says what to fix (§9.4). It MUST NOT crash on any input.
+
+**Documentation** of charts SHOULD show examples generated from their specs and checked against the
+renderer, never hand-edited (§11): a golden file pins behaviour; it does not prove it right.

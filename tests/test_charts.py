@@ -1,5 +1,5 @@
-"""Renderer tests: golden outputs (captured from the original Go implementation),
-behavioral regressions, validation and limits."""
+"""Renderer tests: the conformance suite of the principles (spec/conformance/, first captured from the
+original Go implementation), behavioural regressions, validation and limits."""
 
 import json
 from pathlib import Path
@@ -8,7 +8,8 @@ import pytest
 
 from asciicharts import CHART_TYPES, ChartError, render_chart
 
-GOLDEN = Path(__file__).parent / "golden"
+# The language-neutral conformance suite every implementation of the principles must pass byte for byte.
+GOLDEN = Path(__file__).resolve().parent.parent / "spec" / "conformance"
 
 
 def load(name):

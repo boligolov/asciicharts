@@ -95,7 +95,7 @@ python asciicharts.py --json '{"chartType":"hbar","style":"ascii","border":"asci
 | `pie` | shares of a whole |
 | `heatmap` | a matrix, e.g. hour × weekday |
 
-Styles: `solid` (default), `halftone`, `ascii`, `dotted` (line), `fine` (eighth-block bar ends, needs a capable font). Six borders (`none`, `ascii`, `light`, `heavy`, `double`, `rounded`), a centred title, optional ANSI 256-colour. **[The gallery](docs/gallery.md)** shows every one; **[the reference](skills/asciicharts/references/reference.md)** lists every option. **[The principles](docs/principles.md)** explain how it all works — the glyphs, the arithmetic, the layout rules and the mistakes behind them — enough to draw a chart by hand or to port the renderer to another language.
+Styles: `solid` (default), `halftone`, `ascii`, `dotted` (line), `fine` (eighth-block bar ends, needs a capable font). Six borders (`none`, `ascii`, `light`, `heavy`, `double`, `rounded`), a centred title, optional ANSI 256-colour. **[The gallery](docs/gallery.md)** shows every one; **[the reference](skills/asciicharts/references/reference.md)** lists every option. **[The principles](spec/principles.md)** — *asciicharts principles v1.0*, with a [conformance suite](spec/conformance/) — explain how it all works — the glyphs, the arithmetic, the layout rules and the mistakes behind them — enough to draw a chart by hand or to port the renderer to another language.
 
 ## Three ways in
 
@@ -170,11 +170,12 @@ Default output is built to survive any font: bars end on whole `█` blocks, fra
 pip install -e ".[stats,dev]" && pytest
 ```
 
-The renderer is pinned byte-for-byte by golden files (see [docs/development.md](docs/development.md#tests)). After editing `asciicharts.py` run `python scripts/sync_skill.py` to refresh the copy inside the skill folder (a test fails if you forget). The project began as a Go MCP server and was ported to Python; the Go source lives in this repository's git history.
+The renderer is pinned byte-for-byte by the conformance suite of the principles ([spec/conformance/](spec/conformance/); see also [docs/development.md](docs/development.md#tests)). After editing `asciicharts.py` run `python scripts/sync_skill.py` to refresh the copy inside the skill folder (a test fails if you forget). The project began as a Go MCP server and was ported to Python; the Go source lives in this repository's git history.
 
 ## License
 
-[MIT](LICENSE).
+The code is [MIT](LICENSE). The principles and the conformance suite in [`spec/`](spec/) are
+[CC BY 4.0](spec/LICENSE): use and adapt them freely, with credit.
 
 ## Credits
 
