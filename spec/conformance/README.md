@@ -25,7 +25,7 @@ draw every chart the same way.
 
 Read `corpus.json`, render each `spec`, and compare with `out` (or check that rendering fails with exactly
 `err`); render each spec of `gallery.json` and compare the concatenation with `gallery.txt`. In Python
-this is `test_corpus_matches_golden` and `test_gallery_matches_golden` in `tests/test_charts.py`.
+this is `test_corpus_matches_golden` and `test_gallery_matches_golden` in `python/tests/test_charts.py`.
 
 ## Changing it
 

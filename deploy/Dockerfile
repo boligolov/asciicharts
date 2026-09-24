@@ -12,9 +12,9 @@ ENV PYTHONUNBUFFERED=1 \
     ASCIICHARTS_STATS=off
 
 WORKDIR /app
-COPY pyproject.toml README.md LICENSE ./
-COPY asciicharts.py ./
-COPY server ./server
+COPY python/pyproject.toml python/README.md python/LICENSE ./
+COPY python/asciicharts.py ./
+COPY python/server ./server
 RUN pip install ".[stats]" && useradd --system --no-create-home app
 USER app
 

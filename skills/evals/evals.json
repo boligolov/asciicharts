@@ -41,5 +41,5 @@
       ]
     }
   ],
-  "note": "Each prompt is followed at run time by: 'Save your final reply to me, exactly as you'd send it, to the file {OUT}/reply.md.' Grade with tests/skill_evals/grade.py."
+  "note": "Each prompt is followed at run time by: 'Save your final reply to me, exactly as you'd send it, to the file {OUT}/reply.md.' Grade with skills/evals/grade.py."
 }

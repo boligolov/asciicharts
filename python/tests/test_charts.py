@@ -9,7 +9,7 @@ import pytest
 from asciicharts import CHART_TYPES, ChartError, render_chart
 
 # The language-neutral conformance suite every implementation of the principles must pass byte for byte.
-GOLDEN = Path(__file__).resolve().parent.parent / "spec" / "conformance"
+GOLDEN = Path(__file__).resolve().parents[2] / "spec" / "conformance"
 
 
 def load(name):

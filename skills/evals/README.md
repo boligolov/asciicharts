@@ -30,7 +30,7 @@ What it checks — the ways hand-drawn charts go wrong: bar lengths and column h
 (ASCII, Latin-1, WGL4 box drawing, shades, half blocks, markers); series that can be told apart; the
 diverging bars sharing one zero line; sparkline ticks in value order with the extremes at `▁` and `█`;
 the line chart's axis from the maximum to the minimum; correct percentages, and a pie (or its 100% stacked
-bar substitute) in proportion. `tests/test_hand_grader.py` checks the grader itself: the renderer's own
+bar substitute) in proportion. `python/tests/test_hand_grader.py` checks the grader itself: the renderer's own
 chart for each prompt passes everything, and each typical mistake fails the check meant to catch it.
 
 ### Hand-drawn results (2026-09-24, one run per configuration, the same model for both)

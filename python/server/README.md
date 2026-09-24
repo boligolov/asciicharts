@@ -88,7 +88,7 @@ sequences) are replaced by spaces.
 ## Running it
 
 ```sh
-pip install .                    # from the repository root; or `pip install ".[stats]"` for statistics
+pip install ./python             # from the repository root; or `pip install "./python[stats]"` for statistics
 asciicharts-mcp                  # MCP over stdio  (same as: python -m asciicharts_server)
 PORT=8080 asciicharts-mcp        # streamable HTTP at :8080/mcp, health check at /healthz
 ```

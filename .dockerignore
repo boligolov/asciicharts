@@ -7,7 +7,11 @@ __pycache__
 .pytest_cache
 .env
 ref
-tests
+python/tests
+spec
+site
+scripts
+dist
 docs
 deploy
 skills

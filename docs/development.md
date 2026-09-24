@@ -3,17 +3,19 @@
 ## Repository layout
 
 ```
-asciicharts.py          the renderer: one file, standard library only (also shipped inside the skill)
-server/                 the MCP server (installed as the `asciicharts_server` package) — see server/README.md
+python/                 the Python implementation: asciicharts.py (the renderer, one file, standard library only,
+                        also shipped inside the skill), server/, pyproject.toml, tests/
+python/server/          the MCP server (installed as the `asciicharts_server` package) — see python/server/README.md
 skills/asciicharts/     the skill: SKILL.md, scripts/, references/ — see docs/skill.md
 deploy/                 Dockerfile, docker-compose (dev and prod), Caddyfile, .env.example
 spec/                   the principles (principles.md, v1.0), CHANGELOG.md, LICENSE (CC BY 4.0), conformance/ — the
                         language-neutral suite every implementation must pass byte for byte
-tests/                  pytest suite (runs spec/conformance/); tests/golden/excsv_fixtures/; tests/skill_evals/ holds the skill's evals
+python/tests/           pytest suite (runs spec/conformance/); tests/golden/excsv_fixtures/
+skills/evals/           the skill's evals (prompts, programmatic graders, recorded runs)
 scripts/                sync_skill.py, package_skill.py, gallery_refresh.py, site_examples.py, og_image.py,
                         conformance_refresh.py
 docs/                   this file, gallery.md (every chart rendered), skill.md
-LICENSE  pyproject.toml
+LICENSE  ROADMAP.md
 ```
 
 ## Setup
@@ -22,7 +24,7 @@ Python 3.10+ (developed and tested on 3.12).
 
 ```sh
 python -m venv .venv
-.venv/bin/pip install -e ".[stats,dev]"      # Windows: .venv\Scripts\pip
+.venv/bin/pip install -e "./python[stats,dev]"      # Windows: .venv\Scripts\pip
 ```
 
 `asciicharts.py` itself needs nothing but the standard library — the dependencies (`mcp`, optionally `asyncpg`) are only for the server.
@@ -32,8 +34,8 @@ python -m venv .venv
 Render a chart from JSON:
 
 ```sh
-echo '{"chartType":"sparkline","series":[{"values":[1,3,2,5]}]}' | python asciicharts.py -
-python asciicharts.py --list           # every chart type with an example spec
+echo '{"chartType":"sparkline","series":[{"values":[1,3,2,5]}]}' | python python/asciicharts.py -
+python python/asciicharts.py --list    # every chart type with an example spec
 ```
 
 Run the MCP server:
@@ -50,7 +52,7 @@ pytest
 ```
 
 - `tests/test_charts.py` — the renderers. They run the conformance suite in `spec/conformance/` — first captured from the original Go implementation this project was ported from: the gallery plus a corpus of 317 random specs and their exact output — so every chart is pinned byte-for-byte. If you change how something is drawn on purpose, that is a new version of the principles: `python scripts/conformance_refresh.py` reports which cases change (by chart type), `--write` writes them; review the diff and add an entry to `spec/CHANGELOG.md`.
-- `tests/test_server.py` — the MCP server (`server/`) in-process, over real stdio, and over real HTTP. The tests import the installed `asciicharts_server` package, so run `pip install -e ".[stats,dev]"` first (`tests/conftest.py` says so if you forget).
+- `tests/test_server.py` — the MCP server (`python/server/`) in-process, over real stdio, and over real HTTP. The tests import the installed `asciicharts_server` package, so run `pip install -e "./python[stats,dev]"` first (`tests/conftest.py` says so if you forget).
 - `tests/test_store.py` — the optional statistics store.
 - `tests/test_csv.py` — CSV input (`--csv`).
 - `tests/test_excsv.py` — [ExCSV](https://github.com/boligolov/excsv) input: `#chart` suggestions resolved into a spec (`--chart-name`/`--list-charts`, `spec_from_excsv`), checked in part against `tests/golden/excsv_fixtures/` — that spec's own `#chart` fixtures, copied verbatim (CC0) from its shared fixture corpus, so this is tested against the format's ground truth rather than only our own assumptions about it.
@@ -117,7 +119,7 @@ To try the whole stack locally without a domain, set `DOMAIN=localhost` (Caddy i
 
 ## Using it from an MCP client
 
-Local process (needs the package installed, e.g. `pip install .` or `uvx --from . asciicharts-mcp`):
+Local process (needs the package installed, e.g. `pip install ./python` or `uvx --from ./python asciicharts-mcp`):
 
 ```json
 { "mcpServers": { "asciicharts": { "command": "asciicharts-mcp" } } }

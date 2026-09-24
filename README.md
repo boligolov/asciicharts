@@ -30,9 +30,9 @@ The light `░` track behind each bar is the rest of the axis — `/checkout` is
 
 ## Why it earns a place in your toolbox
 
-- **No dependencies, no install.** `asciicharts.py` is one ~1,800-line file of standard-library Python (3.10+, developed on 3.12). Copy it into a repo, a CI step or a gist. Only the optional MCP server needs a package (`mcp`); the renderer never does.
+- **No dependencies, no install.** [`python/asciicharts.py`](python/asciicharts.py) is one ~2,000-line file of standard-library Python (3.10+, developed on 3.12). Copy it into a repo, a CI step or a gist. Only the optional MCP server needs a package (`mcp`); the renderer never does.
 - **Deterministic.** A pure function of the spec: no clock, no randomness, no locale, no terminal probing. Same input, same bytes — safe to snapshot, diff and commit. 500+ tests pin the output byte-for-byte, including a corpus of 300+ generated specs.
-- **Built to be called by machines.** Input is validated and bounded (width ≤ 500, height ≤ 200, 50,000 values, finite numbers only) and every error is one line that says what to fix — `error: row 3, column "v" is not a number: "n/a"` — so a script or an agent can correct itself. The skill was tuned against real agent runs ([`tests/skill_evals`](tests/skill_evals)).
+- **Built to be called by machines.** Input is validated and bounded (width ≤ 500, height ≤ 200, 50,000 values, finite numbers only) and every error is one line that says what to fix — `error: row 3, column "v" is not a number: "n/a"` — so a script or an agent can correct itself. The skill was tuned against real agent runs ([`skills/evals`](skills/evals)).
 - **Gets the cases hand-drawn charts get wrong.** Negative values grow both ways from a zero line, stacked ones too. Dirty CSV numbers (`$1,200`, `12%`, `1,234.5`, decimal commas) are parsed, and bad cells are reported by row and column instead of silently dropped. Many series stay tellable apart: 8 Unicode fills, 23 glyphs in pure ASCII.
 - **Looks right where you paste it.** Font-safe defaults (whole `█` blocks, glyphs that even Consolas has), a pure-ASCII mode for terminals and mail, no ANSI escapes unless you ask.
 - **No side effects.** The renderer writes nothing and opens no sockets. The server is stateless; usage statistics are off by default and never contain what you chart.
@@ -101,9 +101,9 @@ Styles: `solid` (default), `halftone`, `ascii`, `dotted` (line), `fine` (eighth-
 
 | | for | get started |
 |---|---|---|
-| **CLI / library** | scripts, CI, notebooks | copy `asciicharts.py` — nothing else needed |
+| **CLI / library** | scripts, CI, notebooks | copy [`python/asciicharts.py`](python/asciicharts.py) — nothing else needed |
 | **[Agent skill](docs/skill.md)** | Claude Code and other agents with a shell | `cp -r skills/asciicharts ~/.claude/skills/` |
-| **[MCP server](server/README.md)** | any MCP client; one shared always-on deployment | `pip install .` then `asciicharts-mcp` |
+| **[MCP server](python/server/README.md)** | any MCP client; one shared always-on deployment | `pip install ./python` then `asciicharts-mcp` |
 
 ### CLI and library
 
@@ -136,12 +136,12 @@ A self-contained folder — `SKILL.md`, the one-file script, and references — 
 Two tools: **`list_charts`** (the catalogue: every chart type, how to fill `series`, which options apply, an example call) and **`render_chart`**. stdio or stateless streamable HTTP.
 
 ```sh
-pip install .                                     # or ".[stats]" for optional Postgres statistics
+pip install ./python                              # or "./python[stats]" for optional Postgres statistics
 claude mcp add asciicharts -- asciicharts-mcp     # e.g. register it with Claude Code
 PORT=8080 asciicharts-mcp                         # or serve HTTP: /mcp and /healthz
 ```
 
-Arguments, transports, configuration, client setup: **[server/README.md](server/README.md)**.
+Arguments, transports, configuration, client setup: **[python/server/README.md](python/server/README.md)**.
 
 ## Deploy
 
@@ -167,10 +167,10 @@ Default output is built to survive any font: bars end on whole `█` blocks, fra
 ## Development
 
 ```sh
-pip install -e ".[stats,dev]" && pytest
+pip install -e "./python[stats,dev]" && pytest python/tests
 ```
 
-The renderer is pinned byte-for-byte by the conformance suite of the principles ([spec/conformance/](spec/conformance/); see also [docs/development.md](docs/development.md#tests)). After editing `asciicharts.py` run `python scripts/sync_skill.py` to refresh the copy inside the skill folder (a test fails if you forget). The project began as a Go MCP server and was ported to Python; the Go source lives in this repository's git history.
+The renderer is pinned byte-for-byte by the conformance suite of the principles ([spec/conformance/](spec/conformance/); see also [docs/development.md](docs/development.md#tests)). After editing `python/asciicharts.py` run `python scripts/sync_skill.py` to refresh the copy inside the skill folder (a test fails if you forget). The project began as a Go MCP server and was ported to Python; the Go source lives in this repository's git history.
 
 ## License
 

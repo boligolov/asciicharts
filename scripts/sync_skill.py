@@ -16,16 +16,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SKILL = ROOT / "skills" / "asciicharts"
-SHARED = {
-    ROOT / "asciicharts.py": SKILL / "scripts" / "asciicharts.py",
-    ROOT / "LICENSE": SKILL / "LICENSE",
-    ROOT / "docs" / "gallery.md": SKILL / "references" / "gallery.md",
-    ROOT / "spec" / "principles.md": SKILL / "references" / "principles.md",
-}
+# (source, copy) pairs: a list, since one source (LICENSE) has two copies
+SHARED = [
+    (ROOT / "python" / "asciicharts.py", SKILL / "scripts" / "asciicharts.py"),
+    (ROOT / "LICENSE", SKILL / "LICENSE"),
+    (ROOT / "LICENSE", ROOT / "python" / "LICENSE"),  # the Python package ships its own copy (PEP 639)
+    (ROOT / "docs" / "gallery.md", SKILL / "references" / "gallery.md"),
+    (ROOT / "spec" / "principles.md", SKILL / "references" / "principles.md"),
+]
 
 
 def stale():
-    return [dst for src, dst in SHARED.items() if not dst.exists() or dst.read_bytes() != src.read_bytes()]
+    return [dst for src, dst in SHARED if not dst.exists() or dst.read_bytes() != src.read_bytes()]
 
 
 def main(argv):
@@ -34,7 +36,7 @@ def main(argv):
         for dst in out_of_date:
             print(f"out of date: {dst.relative_to(ROOT)} (run python scripts/sync_skill.py)", file=sys.stderr)
         return 1 if out_of_date else 0
-    for src, dst in SHARED.items():
+    for src, dst in SHARED:
         dst.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(src, dst)
         print(f"{src.relative_to(ROOT)} -> {dst.relative_to(ROOT)}")

@@ -123,12 +123,12 @@ Done when: `spec/` stands on its own, the Python suite passes against `spec/conf
 
 ## Phase 3 — Python moves to `python/`
 
-- [ ] **3.1** `git mv` `asciicharts.py`, `pyproject.toml`, `server/`, `tests/` → `python/`. Repository
+- [x] **3.1** `git mv` `asciicharts.py`, `pyproject.toml`, `server/`, `tests/` → `python/`. Repository
       tooling stays in `scripts/` and imports the renderer from `python/`.
-- [ ] **3.2** Fix every path: `pyproject.toml` (package dirs, readme), `deploy/Dockerfile` (build context),
+- [x] **3.2** Fix every path: `pyproject.toml` (package dirs, readme), `deploy/Dockerfile` (build context),
       `scripts/*` (ROOT / import path), skill sync (`python/asciicharts.py` → skill copy), README install
       instructions (`pip install ./python`), `docs/development.md`, `site/README.md`.
-- [ ] **3.3** Verify: fresh venv, `pip install -e "./python[stats,dev]"`, full test suite, `docker build`,
+- [x] **3.3** Verify: fresh venv, `pip install -e "./python[stats,dev]"`, full test suite, `docker build`,
       skill package build, site examples `--check`.
 
 Done when: everything that worked from the root works from `python/`, and the repo root holds no Python
@@ -186,3 +186,4 @@ Done when: 100% of `spec/conformance/` passes in Go.
 | 2026-09-24 | 1.4 | `hand_evals.json` (7 prompts, tiers A/B/C) + `hand_grade.py` (lengths ±1, display-width frames, safe glyphs, series identity, shared zero line, sparkline order, percentages); `test_hand_grader.py` proves the grader on perfect and broken replies — it found a renderer bug (stacked bars dropped small segments, fixed in its own commit); `grade.py` measures display width too |
 | 2026-09-24 | 1.5 | 14 runs (7 prompts × with/without skill, same model): 37/37 both. A strong model draws small charts right without the skill; the skill's effects were smaller charts, tier-C routing, visible self-checks, at ~+40% tokens. The grader was fixed to be layout-agnostic (4 correct baseline charts had failed it); the skill's glyph rule was made consistent. Next: weaker model + harder prompts (1.6) |
 | 2026-09-24 | 2.1–2.5 | `spec/`: principles.md is *asciicharts principles v1.0* (§0 status, RFC 2119 key words, two kinds of conformance; §15 = requirements R1–R15), CHANGELOG.md, LICENSE (CC BY 4.0); goldens moved to `spec/conformance/` with a README of the exact format; `scripts/conformance_refresh.py` (report / `--write`); every reference updated; README and site footer state the licence split. 1.6 postponed (tokens) |
+| 2026-09-24 | 3.1–3.3 | `asciicharts.py`, `pyproject.toml`, `server/`, `tests/` → `python/` (with `python/README.md` and a synced `python/LICENSE`); the skill's evals → `skills/evals/`; repository scripts import from `python/`; `sync_skill.py` keeps (source, copy) pairs; Dockerfile, `.dockerignore`, README, docs, site updated. Verified: a fresh venv `pip install -e ./python[stats,dev]` passes 675/675, skill package builds, derived files current, site builds. **Not verified: `docker build`** (Docker daemon was not running) — run it before relying on the image |

@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]  # the repository
 
 # Fractional block glyphs that Consolas, Courier New and Lucida Console (the default monospace fonts on
 # Windows, hence GitHub and most IDEs there) do not contain. When a font lacks a glyph the OS substitutes
@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # (Verified against those fonts' character maps.) The gallery is exempt: its job is to show every glyph.
 NOT_IN_COMMON_FONTS = "▁▂▃▅▆▇▉▊▋▍▎▏"
 
-LANDING_PAGES = ["README.md", "server/README.md", "docs/development.md", "docs/skill.md",
+LANDING_PAGES = ["README.md", "python/server/README.md", "docs/development.md", "docs/skill.md",
                  "skills/asciicharts/SKILL.md", "skills/asciicharts/references/reference.md"]
 
 
