@@ -1,0 +1,2771 @@
+[
+ {
+  "name": "text/cjk hbar framed",
+  "spec": {
+   "chartType": "hbar",
+   "title": "売上高 (東京)",
+   "labels": [
+    "東京",
+    "大阪",
+    "名古屋"
+   ],
+   "width": 12,
+   "series": [
+    {
+     "values": [
+      5,
+      3,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌─────────────────────────┐\n│      売上高 (東京)      │\n├─────────────────────────┤\n│ 東京   │ ████████████ 5 │\n│ 大阪   │ ███████░░░░░ 3 │\n│ 名古屋 │ █████░░░░░░░ 2 │\n└─────────────────────────┘"
+ },
+ {
+  "name": "text/emoji labels and title",
+  "spec": {
+   "chartType": "hbar",
+   "title": "🔥 hot",
+   "labels": [
+    "🍕 pizza",
+    "🍣 sushi"
+   ],
+   "width": 10,
+   "series": [
+    {
+     "values": [
+      5,
+      3
+     ]
+    }
+   ]
+  },
+  "out": "┌─────────────────────────┐\n│         🔥 hot          │\n├─────────────────────────┤\n│ 🍕 pizza │ ██████████ 5 │\n│ 🍣 sushi │ ██████░░░░ 3 │\n└─────────────────────────┘"
+ },
+ {
+  "name": "text/combining accents",
+  "spec": {
+   "chartType": "hbar",
+   "labels": [
+    "été",
+    "plain"
+   ],
+   "width": 10,
+   "series": [
+    {
+     "values": [
+      5,
+      3
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────┐\n│ été   │ ██████████ 5 │\n│ plain │ ██████░░░░ 3 │\n└──────────────────────┘"
+ },
+ {
+  "name": "text/rtl label",
+  "spec": {
+   "chartType": "hbar",
+   "labels": [
+    "שלום",
+    "hello"
+   ],
+   "width": 10,
+   "series": [
+    {
+     "values": [
+      5,
+      3
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────┐\n│ שלום  │ ██████████ 5 │\n│ hello │ ██████░░░░ 3 │\n└──────────────────────┘"
+ },
+ {
+  "name": "text/fullwidth latin",
+  "spec": {
+   "chartType": "hbar",
+   "labels": [
+    "ＡＢＣ",
+    "abc"
+   ],
+   "width": 10,
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────┐\n│ ＡＢＣ │ █████░░░░░ 1 │\n│ abc    │ ██████████ 2 │\n└───────────────────────┘"
+ },
+ {
+  "name": "text/zwj emoji",
+  "spec": {
+   "chartType": "hbar",
+   "labels": [
+    "👨‍👩‍👧",
+    "x"
+   ],
+   "width": 10,
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────┐\n│ 👨‍👩‍👧 │ █████░░░░░ 1 │\n│ x      │ ██████████ 2 │\n└───────────────────────┘"
+ },
+ {
+  "name": "text/leading combining mark",
+  "spec": {
+   "chartType": "hbar",
+   "labels": [
+    "́x",
+    "y"
+   ],
+   "width": 10,
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────┐\n│ ́x │ █████░░░░░ 1 │\n│ y  │ ██████████ 2 │\n└───────────────────┘"
+ },
+ {
+  "name": "text/vbar cjk labels",
+  "spec": {
+   "chartType": "vbar",
+   "labels": [
+    "東京",
+    "大阪",
+    "été"
+   ],
+   "width": 24,
+   "height": 4,
+   "series": [
+    {
+     "values": [
+      3,
+      5,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌─────────────────────────┐\n│ ░░░░░░░ ███████ ░░░░░░░ │\n│ ░░░░░░░ ███████ ░░░░░░░ │\n│ ███████ ███████ ███████ │\n│ ███████ ███████ ███████ │\n│  東京    大阪     été   │\n└─────────────────────────┘"
+ },
+ {
+  "name": "text/line cjk x labels crowded",
+  "spec": {
+   "chartType": "line",
+   "labels": [
+    "一月一日一月一日",
+    "一月一日一月一日",
+    "一月一日一月一日",
+    "一月一日一月一日",
+    "一月一日一月一日",
+    "一月一日一月一日",
+    "一月一日一月一日",
+    "一月一日一月一日",
+    "一月一日一月一日",
+    "一月一日一月一日",
+    "一月一日一月一日",
+    "一月一日一月一日"
+   ],
+   "width": 30,
+   "height": 4,
+   "series": [
+    {
+     "values": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────────────────────┐\n│   11 ┤                         █████ │\n│ 7.33 ┤              ███████████      │\n│ 3.67 ┤    ██████████                 │\n│    0 ┤████                           │\n│       一月一日 一月一日     一月一日 │\n└──────────────────────────────────────┘"
+ },
+ {
+  "name": "text/heatmap wide headers truncated",
+  "spec": {
+   "chartType": "heatmap",
+   "labels": [
+    "月曜日",
+    "火",
+    "🍕🍕🍕🍕"
+   ],
+   "width": 18,
+   "series": [
+    {
+     "name": "朝",
+     "values": [
+      1,
+      2,
+      3
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────┐\n│    月曜   火   🍕🍕   │\n│ 朝 ░░░░░ ▓▓▓▓▓ █████  │\n└───────────────────────┘"
+ },
+ {
+  "name": "text/pie cjk legend",
+  "spec": {
+   "chartType": "pie",
+   "width": 16,
+   "series": [
+    {
+     "name": "東京",
+     "values": [
+      3
+     ]
+    },
+    {
+     "name": "大阪",
+     "values": [
+      1
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────┐\n│     ▓▓▓▓████      │\n│   ▓▓▓▓▓▓██████    │\n│  ▓▓▓▓▓▓▓███████   │\n│ ▓▓▓▓▓▓▓▓████████  │\n│ ████████████████  │\n│  ██████████████   │\n│   ████████████    │\n│     ████████      │\n│                   │\n│ █ 東京: 3 (75.0%) │\n│ ▓ 大阪: 1 (25.0%) │\n└───────────────────┘"
+ },
+ {
+  "name": "text/dual axis cjk names",
+  "spec": {
+   "chartType": "dual_axis",
+   "width": 12,
+   "height": 4,
+   "series": [
+    {
+     "name": "気温",
+     "values": [
+      1,
+      2
+     ]
+    },
+    {
+     "name": "湿度",
+     "values": [
+      3,
+      1
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────────┐\n│    2 ┤▒▒        ██├ 3    │\n│ 1.67 ┤  ▒▒▒▒████  ├ 2.33 │\n│ 1.33 ┤  ████▒▒▒▒  ├ 1.67 │\n│    1 ┤██        ▒▒├ 1    │\n│                          │\n│ left:  █ 気温            │\n│ right: ▒ 湿度            │\n└──────────────────────────┘"
+ },
+ {
+  "name": "text/threshold label emoji",
+  "spec": {
+   "chartType": "line",
+   "width": 12,
+   "height": 4,
+   "thresholds": [
+    {
+     "value": 2,
+     "label": "🎯 goal"
+    }
+   ],
+   "series": [
+    {
+     "values": [
+      1,
+      3
+     ]
+    }
+   ]
+  },
+  "out": "┌────────────────────────────────┐\n│    3 ┤          ██             │\n│ 2.33 ┤      ████               │\n│ 1.67 ┤- ████- - -   🎯 goal: 2 │\n│    1 ┤██                       │\n└────────────────────────────────┘"
+ },
+ {
+  "name": "text/colored cjk threshold",
+  "spec": {
+   "chartType": "line",
+   "useColor": "on",
+   "width": 12,
+   "height": 4,
+   "thresholds": [
+    {
+     "value": 1.5,
+     "label": "目標"
+    }
+   ],
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌────────────────────────────────┐\n│    2 ┤          \u001b[38;5;39m█\u001b[0m\u001b[38;5;39m█\u001b[0m             │\n│ 1.67 ┤      \u001b[38;5;39m█\u001b[0m\u001b[38;5;39m█\u001b[0m\u001b[38;5;39m█\u001b[0m\u001b[38;5;39m█\u001b[0m               │\n│ 1.33 ┤\u001b[38;5;244m-\u001b[0m \u001b[38;5;39m█\u001b[0m\u001b[38;5;39m█\u001b[0m\u001b[38;5;39m█\u001b[0m\u001b[38;5;39m█\u001b[0m\u001b[38;5;244m-\u001b[0m \u001b[38;5;244m-\u001b[0m \u001b[38;5;244m-\u001b[0m   \u001b[38;5;244m目標: 1.50\u001b[0m │\n│    1 ┤\u001b[38;5;39m█\u001b[0m\u001b[38;5;39m█\u001b[0m                       │\n└────────────────────────────────┘"
+ },
+ {
+  "name": "text/legend wraps",
+  "spec": {
+   "chartType": "hbar",
+   "stacked": true,
+   "width": 30,
+   "labels": [
+    "a"
+   ],
+   "series": [
+    {
+     "name": "series number 0",
+     "values": [
+      1
+     ]
+    },
+    {
+     "name": "series number 1",
+     "values": [
+      1
+     ]
+    },
+    {
+     "name": "series number 2",
+     "values": [
+      1
+     ]
+    },
+    {
+     "name": "series number 3",
+     "values": [
+      1
+     ]
+    },
+    {
+     "name": "series number 4",
+     "values": [
+      1
+     ]
+    },
+    {
+     "name": "series number 5",
+     "values": [
+      1
+     ]
+    },
+    {
+     "name": "series number 6",
+     "values": [
+      1
+     ]
+    },
+    {
+     "name": "series number 7",
+     "values": [
+      1
+     ]
+    },
+    {
+     "name": "series number 8",
+     "values": [
+      1
+     ]
+    },
+    {
+     "name": "series number 9",
+     "values": [
+      1
+     ]
+    },
+    {
+     "name": "series number 10",
+     "values": [
+      1
+     ]
+    },
+    {
+     "name": "series number 11",
+     "values": [
+      1
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────────────────────────────────────────────────────────────────────────────────┐\n│ a │ ███▓▓▓▒▒▒░░░▌▌▌▄▄▄▐▐▀▀██▓▓▒▒░░ 12                                                             │\n│                                                                                                   │\n│ █ series number 0   ▓ series number 1   ▒ series number 2   ░ series number 3   ▌ series number 4 │\n│ ▄ series number 5   ▐ series number 6   ▀ series number 7   █ series number 8   ▓ series number 9 │\n│ ▒ series number 10   ░ series number 11                                                           │\n└───────────────────────────────────────────────────────────────────────────────────────────────────┘"
+ },
+ {
+  "name": "control/newline and escape in title",
+  "spec": {
+   "chartType": "line",
+   "title": "a\nb\u001b[2J",
+   "width": 10,
+   "height": 3,
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────┐\n│     a b [2J      │\n├──────────────────┤\n│    2 ┤       ███ │\n│ 1.50 ┤   ████    │\n│    1 ┤███        │\n└──────────────────┘"
+ },
+ {
+  "name": "control/tab label and cr name",
+  "spec": {
+   "chartType": "hbar",
+   "labels": [
+    "x\ty",
+    "z"
+   ],
+   "width": 10,
+   "series": [
+    {
+     "name": "s\r",
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌────────────────────┐\n│ x y │ █████░░░░░ 1 │\n│ z   │ ██████████ 2 │\n└────────────────────┘"
+ },
+ {
+  "name": "control/c1 and del",
+  "spec": {
+   "chartType": "line",
+   "title": "abc31m",
+   "width": 10,
+   "height": 3,
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────┐\n│    a b c 31m     │\n├──────────────────┤\n│    2 ┤       ███ │\n│ 1.50 ┤   ████    │\n│    1 ┤███        │\n└──────────────────┘"
+ },
+ {
+  "name": "control/threshold label newline",
+  "spec": {
+   "chartType": "line",
+   "width": 10,
+   "height": 3,
+   "thresholds": [
+    {
+     "value": 2,
+     "label": "a\nb"
+    }
+   ],
+   "series": [
+    {
+     "values": [
+      1,
+      3
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────┐\n│ 3 ┤       ███         │\n│ 2 ┤- -████ -   a b: 2 │\n│ 1 ┤███                │\n└───────────────────────┘"
+ },
+ {
+  "name": "labels/numbers booleans null",
+  "spec": {
+   "chartType": "hbar",
+   "width": 10,
+   "labels": [
+    1,
+    2.5,
+    true,
+    null,
+    1e+16,
+    100.0,
+    -0.0
+   ],
+   "series": [
+    {
+     "values": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────┐\n│ 1     │ █░░░░░░░░░ 1 │\n│ 2.5   │ ███░░░░░░░ 2 │\n│ True  │ ████░░░░░░ 3 │\n│ None  │ ██████░░░░ 4 │\n│ 1e+16 │ ███████░░░ 5 │\n│ 100.0 │ █████████░ 6 │\n│ -0.0  │ ██████████ 7 │\n└──────────────────────┘"
+ },
+ {
+  "name": "number/max magnitude",
+  "spec": {
+   "chartType": "line",
+   "width": 10,
+   "height": 4,
+   "series": [
+    {
+     "values": [
+      1000000000000000.0,
+      -1000000000000000.0
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────────────┐\n│  1000000000000000 ┤███        │\n│              0.25 ┤   ████    │\n│ -1000000000000000 ┤       ███ │\n│ -2000000000000000 ┤           │\n└───────────────────────────────┘"
+ },
+ {
+  "name": "number/small values",
+  "spec": {
+   "chartType": "hbar",
+   "width": 10,
+   "labels": [
+    "a",
+    "b",
+    "c",
+    "d"
+   ],
+   "series": [
+    {
+     "values": [
+      0.001,
+      0.004,
+      0.5,
+      26.4
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────┐\n│ a │ █░░░░░░░░░ 0.0010 │\n│ b │ █░░░░░░░░░ 0.0040 │\n│ c │ █░░░░░░░░░ 0.50   │\n│ d │ ██████████ 26.40  │\n└───────────────────────┘"
+ },
+ {
+  "name": "number/tiny values",
+  "spec": {
+   "chartType": "hbar",
+   "width": 10,
+   "labels": [
+    "a",
+    "b"
+   ],
+   "series": [
+    {
+     "values": [
+      3e-09,
+      1.2e-07
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────────┐\n│ a │ █░░░░░░░░░ 3e-09      │\n│ b │ ██████████ 0.00000012 │\n└───────────────────────────┘"
+ },
+ {
+  "name": "number/negative zero",
+  "spec": {
+   "chartType": "hbar",
+   "width": 10,
+   "labels": [
+    "a",
+    "b"
+   ],
+   "series": [
+    {
+     "values": [
+      -0.0,
+      1
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────┐\n│ a │ ░░░░░░░░░░ 0 │\n│ b │ ██████████ 1 │\n└──────────────────┘"
+ },
+ {
+  "name": "number/large decimals",
+  "spec": {
+   "chartType": "hbar",
+   "width": 10,
+   "labels": [
+    "a"
+   ],
+   "series": [
+    {
+     "values": [
+      123456789.5
+     ]
+    }
+   ]
+  },
+  "out": "┌─────────────────────────────┐\n│ a │ ██████████ 123456789.50 │\n└─────────────────────────────┘"
+ },
+ {
+  "name": "number/axis float noise",
+  "spec": {
+   "chartType": "line",
+   "width": 12,
+   "height": 10,
+   "series": [
+    {
+     "values": [
+      -44,
+      100,
+      12,
+      -28
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────┐\n│    100 ┤   █         │\n│  83.33 ┤   ██        │\n│  66.67 ┤  █  █       │\n│     50 ┤  █  █       │\n│  33.33 ┤  █   █      │\n│  16.67 ┤ █     █     │\n│      0 ┤ █      █    │\n│ -16.67 ┤ █       ██  │\n│ -33.33 ┤█          █ │\n│    -50 ┤█            │\n└──────────────────────┘"
+ },
+ {
+  "name": "rule/flat line",
+  "spec": {
+   "chartType": "line",
+   "width": 10,
+   "height": 5,
+   "series": [
+    {
+     "values": [
+      5,
+      5,
+      5
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────┐\n│    6 ┤           │\n│ 5.50 ┤           │\n│    5 ┤██████████ │\n│ 4.50 ┤           │\n│    4 ┤           │\n└──────────────────┘"
+ },
+ {
+  "name": "rule/flat dotplot",
+  "spec": {
+   "chartType": "dotplot",
+   "width": 10,
+   "labels": [
+    "a",
+    "b"
+   ],
+   "series": [
+    {
+     "values": [
+      5,
+      5
+     ]
+    }
+   ]
+  },
+  "out": "┌────────────────────┐\n│ a │ ·····●···· 5   │\n│ b │ ·····●···· 5   │\n│ value axis: [5, 5] │\n└────────────────────┘"
+ },
+ {
+  "name": "rule/flat scatter",
+  "spec": {
+   "chartType": "scatter",
+   "width": 9,
+   "height": 3,
+   "series": [
+    {
+     "points": [
+      {
+       "x": 2,
+       "y": 3
+      }
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────┐\n│                      │\n│     ●                │\n│                      │\n│ x: [2, 2]  y: [3, 3] │\n└──────────────────────┘"
+ },
+ {
+  "name": "rule/flat sparkline",
+  "spec": {
+   "chartType": "sparkline",
+   "border": "none",
+   "series": [
+    {
+     "values": [
+      4,
+      4,
+      4
+     ]
+    }
+   ]
+  },
+  "out": "▄▄▄"
+ },
+ {
+  "name": "rule/flat heatmap",
+  "spec": {
+   "chartType": "heatmap",
+   "series": [
+    {
+     "name": "r",
+     "values": [
+      7,
+      7
+     ]
+    }
+   ]
+  },
+  "out": "┌────────────────────────────────────────────────────────────────┐\n│ r ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓  │\n└────────────────────────────────────────────────────────────────┘"
+ },
+ {
+  "name": "rule/flat boxplot",
+  "spec": {
+   "chartType": "boxplot",
+   "width": 11,
+   "series": [
+    {
+     "name": "g",
+     "values": [
+      3,
+      3,
+      3
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────────────────────────────┐\n│ g │      ║       min=3 q1=3 med=3 q3=3 max=3 │\n└──────────────────────────────────────────────┘"
+ },
+ {
+  "name": "rule/levels equal buckets",
+  "spec": {
+   "chartType": "heatmap",
+   "labels": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e"
+   ],
+   "width": 19,
+   "series": [
+    {
+     "name": "r",
+     "values": [
+      0,
+      24,
+      26,
+      76,
+      100
+     ]
+    }
+   ]
+  },
+  "out": "┌────────────────────────┐\n│    a   b   c   d   e   │\n│ r ░░░ ░░░ ▒▒▒ ███ ███  │\n└────────────────────────┘"
+ },
+ {
+  "name": "rule/sparkline top bucket",
+  "spec": {
+   "chartType": "sparkline",
+   "border": "none",
+   "series": [
+    {
+     "values": [
+      0,
+      90,
+      100
+     ]
+    }
+   ]
+  },
+  "out": "▁██"
+ },
+ {
+  "name": "rule/zero on a row line",
+  "spec": {
+   "chartType": "line",
+   "width": 20,
+   "height": 6,
+   "series": [
+    {
+     "values": [
+      -3,
+      2,
+      7,
+      -1
+     ]
+    }
+   ]
+  },
+  "out": "┌─────────────────────────────┐\n│     7 ┤           ███       │\n│  4.67 ┤        ███   ██     │\n│  2.33 ┤     ███        ██   │\n│     0 ┤  ███             ██ │\n│ -2.33 ┤██                   │\n│ -4.67 ┤                     │\n└─────────────────────────────┘"
+ },
+ {
+  "name": "rule/zero on a row area",
+  "spec": {
+   "chartType": "area",
+   "width": 24,
+   "height": 5,
+   "series": [
+    {
+     "values": [
+      3,
+      5,
+      -2,
+      -4,
+      1
+     ]
+    }
+   ]
+  },
+  "out": "┌─────────────────────────────────┐\n│     5 ┤   ████                  │\n│  2.50 ┤█████████                │\n│     0 ┤████████████████████████ │\n│ -2.50 ┤           ██████████    │\n│    -5 ┤                 █       │\n└─────────────────────────────────┘"
+ },
+ {
+  "name": "rule/zero on a row stacked area",
+  "spec": {
+   "chartType": "area",
+   "stacked": true,
+   "width": 20,
+   "height": 6,
+   "series": [
+    {
+     "values": [
+      1,
+      2,
+      3
+     ]
+    },
+    {
+     "values": [
+      -1,
+      -2,
+      -3
+     ]
+    }
+   ]
+  },
+  "out": "┌─────────────────────────────┐\n│     3 ┤               █████ │\n│  1.50 ┤     ███████████████ │\n│     0 ┤████████████████████ │\n│ -1.50 ┤▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ │\n│    -3 ┤     ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ │\n│ -4.50 ┤               ▓▓▓▓▓ │\n│                             │\n│ █ series 1   ▓ series 2     │\n└─────────────────────────────┘"
+ },
+ {
+  "name": "rule/zero on a row dual axis",
+  "spec": {
+   "chartType": "dual_axis",
+   "width": 12,
+   "height": 5,
+   "series": [
+    {
+     "values": [
+      -2,
+      3
+     ]
+    },
+    {
+     "values": [
+      1,
+      4
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────────┐\n│     3 ┤          ▒▒├ 4    │\n│  1.50 ┤      █▒▒▒  ├ 3.25 │\n│     0 ┤  ███▒▒     ├ 2.50 │\n│ -1.50 ┤██▒▒▒       ├ 1.75 │\n│    -3 ┤▒▒          ├ 1    │\n│                           │\n│ left:  █ series 1         │\n│ right: ▒ series 2         │\n└───────────────────────────┘"
+ },
+ {
+  "name": "rule/diverging vbar",
+  "spec": {
+   "chartType": "vbar",
+   "width": 11,
+   "height": 7,
+   "labels": [
+    "a",
+    "b",
+    "c"
+   ],
+   "series": [
+    {
+     "values": [
+      3,
+      0,
+      -3
+     ]
+    }
+   ]
+  },
+  "out": "┌─────────────┐\n│ ███         │\n│ ███         │\n│ ███         │\n│ ----------- │\n│         ███ │\n│         ███ │\n│         ███ │\n│  a   b   c  │\n└─────────────┘"
+ },
+ {
+  "name": "rule/diverging hbar",
+  "spec": {
+   "chartType": "hbar",
+   "width": 21,
+   "labels": [
+    "up",
+    "zero",
+    "down",
+    "tiny"
+   ],
+   "series": [
+    {
+     "values": [
+      10,
+      0,
+      -10,
+      0.1
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────────────────┐\n│ up   │           ¦██████████ 10   │\n│ zero │           ¦           0    │\n│ down │ ██████████¦           -10  │\n│ tiny │           ¦█          0.10 │\n└───────────────────────────────────┘"
+ },
+ {
+  "name": "rule/diverging hbar ascii",
+  "spec": {
+   "chartType": "hbar",
+   "style": "ascii",
+   "width": 21,
+   "labels": [
+    "a",
+    "b"
+   ],
+   "series": [
+    {
+     "values": [
+      5,
+      -15
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────────────┐\n│ a |                +##### 5   │\n│ b | ###############+      -15 │\n└───────────────────────────────┘"
+ },
+ {
+  "name": "rule/diverging grouped hbar",
+  "spec": {
+   "chartType": "hbar",
+   "width": 16,
+   "labels": [
+    "Q1",
+    "Q2"
+   ],
+   "series": [
+    {
+     "name": "x",
+     "values": [
+      30,
+      -45
+     ]
+    },
+    {
+     "name": "y",
+     "values": [
+      -5,
+      50
+     ]
+    }
+   ]
+  },
+  "out": "┌────────────────────────────┐\n│ Q1                         │\n│   x │        ¦█████    30  │\n│   y │       █¦         -5  │\n│                            │\n│ Q2                         │\n│   x │ ███████¦         -45 │\n│   y │        ¦████████ 50  │\n└────────────────────────────┘"
+ },
+ {
+  "name": "rule/threshold behind data",
+  "spec": {
+   "chartType": "line",
+   "width": 12,
+   "height": 3,
+   "threshold": 5,
+   "series": [
+    {
+     "values": [
+      5,
+      5
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────┐\n│ 6 ┤              │\n│ 5 ┤████████████  │\n│ 4 ┤              │\n│                  │\n│ - - threshold: 5 │\n└──────────────────┘"
+ },
+ {
+  "name": "rule/thresholds share a row",
+  "spec": {
+   "chartType": "line",
+   "width": 12,
+   "height": 3,
+   "thresholds": [
+    {
+     "value": 5,
+     "label": "a"
+    },
+    {
+     "value": 5.01,
+     "label": "b"
+    }
+   ],
+   "series": [
+    {
+     "values": [
+      0,
+      5
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────────────────┐\n│ 5.01 ┤- - - - -███  a: 5, b: 5.01 │\n│ 2.50 ┤   ██████                   │\n│    0 ┤███                         │\n└───────────────────────────────────┘"
+ },
+ {
+  "name": "rule/threshold and thresholds",
+  "spec": {
+   "chartType": "line",
+   "width": 12,
+   "height": 4,
+   "threshold": 1,
+   "thresholds": [
+    {
+     "value": 9,
+     "label": "cap"
+    }
+   ],
+   "series": [
+    {
+     "name": "a",
+     "values": [
+      3,
+      5
+     ]
+    },
+    {
+     "name": "b",
+     "values": [
+      4,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────────────┐\n│    9 ┤- - - - - -   cap: 9   │\n│ 6.33 ┤                       │\n│ 3.67 ┤▓▓▓▓▓▓██████           │\n│    1 ┤- - - ▓▓▓▓▓▓           │\n│                              │\n│ █ a   ▓ b   - - threshold: 1 │\n└──────────────────────────────┘"
+ },
+ {
+  "name": "rule/stacked keeps small segments",
+  "spec": {
+   "chartType": "hbar",
+   "stacked": true,
+   "width": 20,
+   "labels": [
+    "share"
+   ],
+   "series": [
+    {
+     "name": "Chrome",
+     "values": [
+      64
+     ]
+    },
+    {
+     "name": "Safari",
+     "values": [
+      19
+     ]
+    },
+    {
+     "name": "Other",
+     "values": [
+      9
+     ]
+    },
+    {
+     "name": "Edge",
+     "values": [
+      5
+     ]
+    },
+    {
+     "name": "Firefox",
+     "values": [
+      3
+     ]
+    }
+   ]
+  },
+  "out": "┌────────────────────────────────────────────────────┐\n│ share │ ████████████▓▓▓▓▒▒░▌ 100                   │\n│                                                    │\n│ █ Chrome   ▓ Safari   ▒ Other   ░ Edge   ▌ Firefox │\n└────────────────────────────────────────────────────┘"
+ },
+ {
+  "name": "rule/stacked vbar keeps small value",
+  "spec": {
+   "chartType": "vbar",
+   "stacked": true,
+   "height": 4,
+   "width": 5,
+   "labels": [
+    "a",
+    "b"
+   ],
+   "series": [
+    {
+     "values": [
+      100,
+      1
+     ]
+    },
+    {
+     "values": [
+      1,
+      0
+     ]
+    }
+   ]
+  },
+  "out": "┌─────────────────────────┐\n│ ▓▓                      │\n│ ██                      │\n│ ██                      │\n│ ██ ██                   │\n│ a  b                    │\n│                         │\n│ █ series 1   ▓ series 2 │\n└─────────────────────────┘"
+ },
+ {
+  "name": "rule/pie keeps thin slice",
+  "spec": {
+   "chartType": "pie",
+   "width": 20,
+   "series": [
+    {
+     "name": "big",
+     "values": [
+      999
+     ]
+    },
+    {
+     "name": "tiny",
+     "values": [
+      1
+     ]
+    },
+    {
+     "name": "zero",
+     "values": [
+      0
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────┐\n│       ███▓████       │\n│    ██████████████    │\n│  ██████████████████  │\n│ ████████████████████ │\n│ ████████████████████ │\n│ ████████████████████ │\n│ ████████████████████ │\n│  ██████████████████  │\n│    ██████████████    │\n│       ████████       │\n│                      │\n│ █ big: 999 (99.9%)   │\n│ ▓ tiny: 1 (0.1%)     │\n│ ▒ zero: 0 (0.0%)     │\n└──────────────────────┘"
+ },
+ {
+  "name": "rule/dotplot overlap",
+  "spec": {
+   "chartType": "dotplot",
+   "width": 10,
+   "labels": [
+    "a",
+    "b"
+   ],
+   "series": [
+    {
+     "name": "x",
+     "values": [
+      5,
+      1
+     ]
+    },
+    {
+     "name": "y",
+     "values": [
+      5,
+      9
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────┐\n│ a │ ·····*····        │\n│ b │ ●········○        │\n│ value axis: [1, 9]    │\n│ ● x   ○ y   * overlap │\n└───────────────────────┘"
+ },
+ {
+  "name": "rule/scatter overlap",
+  "spec": {
+   "chartType": "scatter",
+   "width": 9,
+   "height": 3,
+   "series": [
+    {
+     "name": "A",
+     "points": [
+      {
+       "x": 1,
+       "y": 1
+      },
+      {
+       "x": 2,
+       "y": 2
+      }
+     ]
+    },
+    {
+     "name": "B",
+     "points": [
+      {
+       "x": 2,
+       "y": 2
+      },
+      {
+       "x": 3,
+       "y": 3
+      }
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────────────┐\n│         ○             │\n│     *                 │\n│ ●                     │\n│ x: [1, 3]  y: [1, 3]  │\n│ ● A   ○ B   * overlap │\n└───────────────────────┘"
+ },
+ {
+  "name": "rule/boxplot median glyph",
+  "spec": {
+   "chartType": "boxplot",
+   "width": 24,
+   "series": [
+    {
+     "name": "A",
+     "values": [
+      55,
+      60,
+      62,
+      65,
+      70,
+      72,
+      75,
+      80,
+      85,
+      95
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────────────────────────────────────────────────────┐\n│ A │ ├───█████║█████────────┤  min=55 q1=62.75 med=71 q3=78.75 max=95 │\n└──────────────────────────────────────────────────────────────────────┘"
+ },
+ {
+  "name": "rule/ascii ramp 24 series",
+  "spec": {
+   "chartType": "hbar",
+   "style": "ascii",
+   "stacked": true,
+   "width": 48,
+   "labels": [
+    "a"
+   ],
+   "series": [
+    {
+     "name": "s0",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s1",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s2",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s3",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s4",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s5",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s6",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s7",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s8",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s9",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s10",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s11",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s12",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s13",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s14",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s15",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s16",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s17",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s18",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s19",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s20",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s21",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s22",
+     "values": [
+      2
+     ]
+    },
+    {
+     "name": "s23",
+     "values": [
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌─────────────────────────────────────────────────────────────────────────────────────────────────────┐\n│ a | ##@@%%&&$$WWMMNNHHDDGGUUOOSSZZXX==//\\\\::;;!!''## 48                                             │\n│                                                                                                     │\n│ # s0   @ s1   % s2   & s3   $ s4   W s5   M s6   N s7   H s8   D s9   G s10   U s11   O s12   S s13 │\n│ Z s14   X s15   = s16   / s17   \\ s18   : s19   ; s20   ! s21   ' s22   # s23                       │\n└─────────────────────────────────────────────────────────────────────────────────────────────────────┘"
+ },
+ {
+  "name": "rule/pointChar accent",
+  "spec": {
+   "chartType": "line",
+   "showPoints": true,
+   "pointChar": "é",
+   "width": 10,
+   "height": 3,
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────┐\n│    2 ┤       ··é │\n│ 1.50 ┤   ····    │\n│    1 ┤é··        │\n└──────────────────┘"
+ },
+ {
+  "name": "rule/pointChar long",
+  "spec": {
+   "chartType": "line",
+   "showPoints": true,
+   "pointChar": "abc",
+   "width": 10,
+   "height": 3,
+   "series": [
+    {
+     "values": [
+      1,
+      3,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌───────────────┐\n│ 3 ┤   ·a··    │\n│ 2 ┤ ··    ··a │\n│ 1 ┤a          │\n└───────────────┘"
+ },
+ {
+  "name": "rule/fine bars",
+  "spec": {
+   "chartType": "hbar",
+   "style": "fine",
+   "width": 10,
+   "labels": [
+    "a",
+    "b"
+   ],
+   "series": [
+    {
+     "values": [
+      10,
+      3.3
+     ]
+    }
+   ]
+  },
+  "out": "┌─────────────────────┐\n│ a │ ██████████ 10   │\n│ b │ ███▎░░░░░░ 3.30 │\n└─────────────────────┘"
+ },
+ {
+  "name": "rule/width 1 vbar",
+  "spec": {
+   "chartType": "vbar",
+   "width": 1,
+   "height": 3,
+   "labels": [
+    "a",
+    "b"
+   ],
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "┌─────┐\n│ ░ █ │\n│ █ █ │\n│ █ █ │\n│ a b │\n└─────┘"
+ },
+ {
+  "name": "error/spec not an object",
+  "spec": [
+   1,
+   2
+  ],
+  "err": "chart spec must be a JSON object"
+ },
+ {
+  "name": "error/series not an array",
+  "spec": {
+   "chartType": "line",
+   "series": {
+    "values": [
+     1,
+     2
+    ]
+   }
+  },
+  "err": "series must be an array"
+ },
+ {
+  "name": "error/too many series",
+  "spec": {
+   "chartType": "hbar",
+   "series": [
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    },
+    {
+     "values": [
+      1
+     ]
+    }
+   ]
+  },
+  "err": "series must have at most 100 entries, got 101"
+ },
+ {
+  "name": "error/series item not an object",
+  "spec": {
+   "chartType": "line",
+   "series": [
+    5
+   ]
+  },
+  "err": "series 0 must be an object"
+ },
+ {
+  "name": "error/values not an array",
+  "spec": {
+   "chartType": "line",
+   "series": [
+    {
+     "values": "abc"
+    }
+   ]
+  },
+  "err": "series 0: values and points must be arrays"
+ },
+ {
+  "name": "error/point not an object",
+  "spec": {
+   "chartType": "scatter",
+   "series": [
+    {
+     "points": [
+      5
+     ]
+    }
+   ]
+  },
+  "err": "series 0 points must be {x, y} objects"
+ },
+ {
+  "name": "error/point x missing",
+  "spec": {
+   "chartType": "scatter",
+   "series": [
+    {
+     "points": [
+      {
+       "y": 1
+      }
+     ]
+    }
+   ]
+  },
+  "err": "series 0 point x must be a number, got \"None\""
+ },
+ {
+  "name": "error/value as string",
+  "spec": {
+   "chartType": "line",
+   "series": [
+    {
+     "values": [
+      "1",
+      2
+     ]
+    }
+   ]
+  },
+  "err": "series 0 value must be a number, got \"1\""
+ },
+ {
+  "name": "error/value as bool",
+  "spec": {
+   "chartType": "line",
+   "series": [
+    {
+     "values": [
+      true,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "series 0 value must be a number, got \"True\""
+ },
+ {
+  "name": "error/value null",
+  "spec": {
+   "chartType": "line",
+   "series": [
+    {
+     "values": [
+      1,
+      null
+     ]
+    }
+   ]
+  },
+  "err": "series 0 value must be a number, got \"None\""
+ },
+ {
+  "name": "error/value too large",
+  "spec": {
+   "chartType": "line",
+   "series": [
+    {
+     "values": [
+      1e+308,
+      -1e+308
+     ]
+    }
+   ]
+  },
+  "err": "series 0 value must be at most 1e15 in magnitude, got 1e+308"
+ },
+ {
+  "name": "error/value just too large",
+  "spec": {
+   "chartType": "line",
+   "series": [
+    {
+     "values": [
+      1000000000000001.0,
+      0
+     ]
+    }
+   ]
+  },
+  "err": "series 0 value must be at most 1e15 in magnitude, got 1e+15"
+ },
+ {
+  "name": "error/labels not an array",
+  "spec": {
+   "chartType": "hbar",
+   "labels": "ab",
+   "series": [
+    {
+     "values": [
+      1
+     ]
+    }
+   ]
+  },
+  "err": "labels must be an array of strings"
+ },
+ {
+  "name": "error/title a number",
+  "spec": {
+   "chartType": "line",
+   "title": 5,
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "title must be a string, got \"5\""
+ },
+ {
+  "name": "error/title a list",
+  "spec": {
+   "chartType": "line",
+   "title": [
+    1,
+    "a"
+   ],
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "title must be a string, got \"[1, 'a']\""
+ },
+ {
+  "name": "error/title an object",
+  "spec": {
+   "chartType": "line",
+   "title": {
+    "a": 1
+   },
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "title must be a string, got \"{'a': 1}\""
+ },
+ {
+  "name": "error/title too long",
+  "spec": {
+   "chartType": "line",
+   "title": "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt",
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "title must be at most 200 characters, got 201"
+ },
+ {
+  "name": "error/label too long",
+  "spec": {
+   "chartType": "hbar",
+   "labels": [
+    "ok",
+    "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+   ],
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "labels 1 must be at most 200 characters, got 201"
+ },
+ {
+  "name": "error/name too long",
+  "spec": {
+   "chartType": "hbar",
+   "series": [
+    {
+     "name": "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn",
+     "values": [
+      1
+     ]
+    }
+   ]
+  },
+  "err": "name must be at most 200 characters, got 201"
+ },
+ {
+  "name": "error/width a string",
+  "spec": {
+   "chartType": "line",
+   "width": "40",
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "width must be an integer, got \"40\""
+ },
+ {
+  "name": "error/width fractional",
+  "spec": {
+   "chartType": "line",
+   "width": 2.5,
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "width must be an integer, got \"2.5\""
+ },
+ {
+  "name": "error/width too large",
+  "spec": {
+   "chartType": "line",
+   "width": 501,
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "width must be at most 500, got 501"
+ },
+ {
+  "name": "error/height too large",
+  "spec": {
+   "chartType": "line",
+   "height": 201,
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "height must be at most 200, got 201"
+ },
+ {
+  "name": "error/bins too large",
+  "spec": {
+   "chartType": "histogram",
+   "bins": 501,
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "bins must be at most 500, got 501"
+ },
+ {
+  "name": "error/border unknown",
+  "spec": {
+   "chartType": "line",
+   "border": "wavy",
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "invalid border \"wavy\" (expected one of: none, ascii, light, heavy, double, rounded)"
+ },
+ {
+  "name": "error/style unknown",
+  "spec": {
+   "chartType": "line",
+   "style": "x",
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "invalid style \"x\" (expected one of: solid, fine, halftone, ascii, dotted)"
+ },
+ {
+  "name": "error/useColor unknown",
+  "spec": {
+   "chartType": "line",
+   "useColor": "x",
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "invalid useColor \"x\" (expected one of: auto, on, off)"
+ },
+ {
+  "name": "error/chartType unknown",
+  "spec": {
+   "chartType": "donut",
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "unknown chartType \"donut\" (expected one of: sparkline, vbar, hbar, line, area, scatter, dual_axis, pie, histogram, heatmap, boxplot, dotplot)"
+ },
+ {
+  "name": "error/chartType missing",
+  "spec": {
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "unknown chartType \"\" (expected one of: sparkline, vbar, hbar, line, area, scatter, dual_axis, pie, histogram, heatmap, boxplot, dotplot)"
+ },
+ {
+  "name": "error/series missing",
+  "spec": {
+   "chartType": "line"
+  },
+  "err": "series must contain at least one entry"
+ },
+ {
+  "name": "error/thresholds not an array",
+  "spec": {
+   "chartType": "line",
+   "thresholds": 5,
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "thresholds must be an array of numbers or {value, label} objects"
+ },
+ {
+  "name": "error/thresholds too many",
+  "spec": {
+   "chartType": "line",
+   "thresholds": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20
+   ],
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "thresholds must have at most 20 entries, got 21"
+ },
+ {
+  "name": "error/thresholds label too long",
+  "spec": {
+   "chartType": "line",
+   "thresholds": [
+    {
+     "value": 1,
+     "label": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+   ],
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "thresholds 0: label must be at most 40 characters, got 41"
+ },
+ {
+  "name": "error/thresholds value missing",
+  "spec": {
+   "chartType": "line",
+   "thresholds": [
+    {
+     "label": "x"
+    }
+   ],
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "thresholds 0 value must be a number, got \"None\""
+ },
+ {
+  "name": "error/pointChar wide",
+  "spec": {
+   "chartType": "line",
+   "showPoints": true,
+   "pointChar": "🔴",
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    }
+   ]
+  },
+  "err": "pointChar must be a single-width character, got \"🔴\" (wide characters such as emoji take two columns)"
+ },
+ {
+  "name": "error/line one value",
+  "spec": {
+   "chartType": "line",
+   "series": [
+    {
+     "values": [
+      1
+     ]
+    }
+   ]
+  },
+  "err": "series 0 \"\" must contain at least two values"
+ },
+ {
+  "name": "error/dual axis three series",
+  "spec": {
+   "chartType": "dual_axis",
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    },
+    {
+     "values": [
+      3,
+      4
+     ]
+    },
+    {
+     "values": [
+      5,
+      6
+     ]
+    }
+   ]
+  },
+  "err": "dual_axis expects exactly two series, got 3"
+ },
+ {
+  "name": "error/histogram two series",
+  "spec": {
+   "chartType": "histogram",
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    },
+    {
+     "values": [
+      3,
+      4
+     ]
+    }
+   ]
+  },
+  "err": "histogram expects exactly one series, got 2"
+ },
+ {
+  "name": "error/pie negative slice",
+  "spec": {
+   "chartType": "pie",
+   "series": [
+    {
+     "name": "a",
+     "values": [
+      5
+     ]
+    },
+    {
+     "name": "b",
+     "values": [
+      -2
+     ]
+    }
+   ]
+  },
+  "err": "series 1 \"b\": pie slice values must be non-negative"
+ },
+ {
+  "name": "error/pie all zero",
+  "spec": {
+   "chartType": "pie",
+   "series": [
+    {
+     "name": "a",
+     "values": [
+      0
+     ]
+    }
+   ]
+  },
+  "err": "pie slice values must sum to more than zero"
+ },
+ {
+  "name": "error/scatter no points",
+  "spec": {
+   "chartType": "scatter",
+   "series": [
+    {
+     "name": "a"
+    }
+   ]
+  },
+  "err": "series 0 \"a\" must contain at least one point"
+ },
+ {
+  "name": "error/heatmap ragged",
+  "spec": {
+   "chartType": "heatmap",
+   "series": [
+    {
+     "name": "r1",
+     "values": [
+      1,
+      2
+     ]
+    },
+    {
+     "name": "r2",
+     "values": [
+      1
+     ]
+    }
+   ]
+  },
+  "err": "all rows must have the same number of values (row 0 has 2, row 1 has 1)"
+ },
+ {
+  "name": "error/labels length mismatch",
+  "spec": {
+   "chartType": "vbar",
+   "labels": [
+    "a"
+   ],
+   "series": [
+    {
+     "values": [
+      1,
+      2,
+      3
+     ]
+    }
+   ]
+  },
+  "err": "labels length (1) must match each series' values length (3)"
+ },
+ {
+  "name": "error/bars different lengths",
+  "spec": {
+   "chartType": "hbar",
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    },
+    {
+     "values": [
+      3
+     ]
+    }
+   ]
+  },
+  "err": "all series must have the same number of values (series 0 has 2, series 1 has 1)"
+ },
+ {
+  "name": "error/bars empty values",
+  "spec": {
+   "chartType": "hbar",
+   "series": [
+    {
+     "values": []
+    }
+   ]
+  },
+  "err": "series must contain at least one value"
+ },
+ {
+  "name": "error/area different lengths",
+  "spec": {
+   "chartType": "area",
+   "series": [
+    {
+     "values": [
+      1,
+      2
+     ]
+    },
+    {
+     "values": [
+      3,
+      4,
+      5
+     ]
+    }
+   ]
+  },
+  "err": "all series must have the same number of values (series 0 has 2, series 1 has 3)"
+ },
+ {
+  "name": "error/sparkline empty",
+  "spec": {
+   "chartType": "sparkline",
+   "series": [
+    {
+     "name": "s",
+     "values": []
+    }
+   ]
+  },
+  "err": "series 0 \"s\" must contain at least one value"
+ },
+ {
+  "name": "error/boxplot empty",
+  "spec": {
+   "chartType": "boxplot",
+   "series": [
+    {
+     "name": "g",
+     "values": []
+    }
+   ]
+  },
+  "err": "series 0 \"g\" must contain at least one value"
+ }
+]

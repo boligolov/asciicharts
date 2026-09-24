@@ -5,7 +5,7 @@ deliberate change to how charts are drawn, and only after reading what it report
     python scripts/conformance_refresh.py           # report what would change, change nothing
     python scripts/conformance_refresh.py --write   # write the new expected outputs
 
-The report counts the changed cases by chart type and style and prints the first few before/after, so a
+The report counts the changed corpus cases by chart type and style, names the changed curated cases, and prints the first few before/after, so a
 change can be checked to touch only the charts it is about. corpus.json keeps each case's spec and
 replaces its "out" (or "err"); gallery.txt is rebuilt from gallery.json. The files keep their exact
 formatting (see spec/conformance/README.md).
@@ -44,6 +44,21 @@ def main(argv):
     for i, old, new in examples:
         print(f"--- case {i} before\n{old.get('out', old.get('err'))}\n+++ after\n{new.get('out', new.get('err'))}")
 
+    curated_path = CONFORMANCE / "curated.json"
+    curated = json.loads(curated_path.read_text(encoding="utf-8"))
+    curated_changed = []
+    for case in curated:
+        try:
+            new = {"out": render_chart(case["spec"])}
+        except ChartError as e:
+            new = {"err": str(e)}
+        if {k: case[k] for k in ("out", "err") if k in case} != new:
+            curated_changed.append(case["name"])
+            case.pop("out", None)
+            case.pop("err", None)
+            case.update(new)
+    print(f"curated.json: {len(curated_changed)} of {len(curated)} cases change" + (f" {curated_changed}" if curated_changed else ""))
+
     gallery = json.loads((CONFORMANCE / "gallery.json").read_text(encoding="utf-8"))
     text = "".join(f"=== {g['name']} ===\n{render_chart(g['spec'])}\n\n" for g in gallery)
     gallery_txt = CONFORMANCE / "gallery.txt"
@@ -52,6 +67,7 @@ def main(argv):
 
     if write:
         corpus_path.write_text(json.dumps(corpus, ensure_ascii=False, separators=(",", ":")), encoding="utf-8", newline="\n")
+        curated_path.write_text(json.dumps(curated, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
         gallery_txt.write_bytes(text.encode("utf-8"))
         print("written; now also run scripts/gallery_refresh.py, scripts/site_examples.py and scripts/sync_skill.py")
     return 0

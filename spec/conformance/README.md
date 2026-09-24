@@ -8,6 +8,7 @@ draw every chart the same way.
 | file | contents |
 |---|---|
 | `corpus.json` | 317 cases, mostly randomly generated specs covering every chart type, style, border and option; each is `{"spec": {...}, "out": "..."}` or, when the spec must be rejected, `{"spec": {...}, "err": "..."}` |
+| `curated.json` | 104 named cases for what random specs barely reach — text in any script (CJK, emoji, combining marks, RTL), control characters, number formatting, each rule of v1.0, and **every validation message** (48 of the cases are errors): `[{"name": "...", "spec": ..., "out": "..."}]` or with `"err"` |
 | `gallery.json` | the 31 documented examples: `[{"name": "...", "spec": {...}}]` |
 | `gallery.txt` | their expected output, concatenated: for each example, `=== <name> ===\n<output>\n\n` |
 
@@ -23,9 +24,11 @@ draw every chart the same way.
 
 ## Running it
 
-Read `corpus.json`, render each `spec`, and compare with `out` (or check that rendering fails with exactly
-`err`); render each spec of `gallery.json` and compare the concatenation with `gallery.txt`. In Python
-this is `test_corpus_matches_golden` and `test_gallery_matches_golden` in `python/tests/test_charts.py`.
+Read `corpus.json` and `curated.json`, render each `spec`, and compare with `out` (or check that rendering
+fails with exactly `err`); render each spec of `gallery.json` and compare the concatenation with
+`gallery.txt`. In Python: `test_corpus_matches_golden`, `test_curated_matches_golden` and
+`test_gallery_matches_golden` in `python/tests/test_charts.py`; in Go: `TestCorpus`, `TestCurated` and
+`TestGallery` in `go/asciicharts/conformance_test.go`.
 
 ## Changing it
 

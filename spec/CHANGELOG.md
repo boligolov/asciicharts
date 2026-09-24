@@ -22,6 +22,6 @@ implementation and the fixes it led to (principles §11, second table):
 - When a line, area or dual_axis range crosses zero, zero falls on a labelled row.
 - Every non-zero pie slice and every non-zero segment of a stacked bar owns at least one cell.
 
-The conformance suite (317 corpus cases, 31 gallery examples) reflects exactly these rules; its first
+The conformance suite (317 corpus cases, 104 curated cases, 31 gallery examples) reflects exactly these rules; its first
 version was captured from the original Go implementation and regenerated, case by reviewed case, with
 each fix above.

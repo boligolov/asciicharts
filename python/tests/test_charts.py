@@ -33,6 +33,18 @@ def test_corpus_matches_golden(i, case):
         assert render_chart(case["spec"]) == case["out"]
 
 
+@pytest.mark.parametrize("case", load("curated.json"), ids=lambda c: c["name"])
+def test_curated_matches_golden(case):
+    """Named cases for what the random corpus barely covers: text in any script, control characters,
+    number formatting, the rules of principles v1.0, and every validation message."""
+    if "err" in case:
+        with pytest.raises(ChartError) as e:
+            render_chart(case["spec"])
+        assert str(e.value) == case["err"]
+    else:
+        assert render_chart(case["spec"]) == case["out"]
+
+
 def test_every_chart_type_is_covered_by_the_gallery():
     assert {g["spec"]["chartType"] for g in load("gallery.json")} == set(CHART_TYPES)
 
