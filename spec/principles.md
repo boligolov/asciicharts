@@ -485,7 +485,9 @@ bottom fifth of every heatmap empty, and a heatmap of equal values entirely empt
 - From 1 up, two decimals: `26.40`, `123456789.50`.
 - Below 1, **two significant digits**, so small values stay apart: `0.50`, `0.050`, `0.0010`, `0.0042`
   (digits = max(2, 1 − floor(log10 |v|))); below 1e−7, exponent form `3e-09`. Two fixed decimals would
-  print `0.001` and `0.004` both as `0.00`.
+  print `0.001` and `0.004` both as `0.00`. log10 is the correctly rounded one (C's): right under a power
+  of ten it decides the digits — log10 0.09999999999999996 is −1.0000000000000002, so a histogram edge
+  computed as that prints `-0.100`; a log10 that is off by an ulp (Go's `math.Log10`) prints `-0.10`.
 - Pie percentages: one decimal.
 - **Axis labels are the exact values of their rows**, `lo + (1 − r / (H − 1)) × (hi − lo)`, rounded to
   12 significant digits first (float noise would print `−27.999999999` as `−28.00`), right-aligned to the

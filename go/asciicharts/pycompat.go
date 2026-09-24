@@ -13,6 +13,28 @@ import (
 	"strings"
 )
 
+// floorLog10 is floor(log10(a)) for a > 0 as Python computes it, from a correctly rounded log10. Go's
+// math.Log10 is off by an ulp at times, which matters only next to a power of ten: Python's log10 of
+// 0.09999999999999996 is -1.0000000000000002 (floor -2), Go's is -1. There the logarithm is rebuilt
+// from the exact distance to the power of ten and rounded once.
+func floorLog10(a float64) int {
+	l := math.Log10(a)
+	k := math.Round(l)
+	if math.Abs(l-k) > 1e-9 || math.Abs(k) > 300 {
+		return int(math.Floor(l))
+	}
+	// log10(a) = k + log10(1+d) with d = a/10^k - 1, tiny here: log10(1+d) = d/ln10 to double precision.
+	p := new(big.Float).SetPrec(2048).SetInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(int64(math.Abs(k))), nil))
+	x := new(big.Float).SetPrec(2048).SetFloat64(a)
+	if k < 0 {
+		x.Mul(x, p)
+	} else {
+		x.Quo(x, p)
+	}
+	d, _ := x.Sub(x, big.NewFloat(1)).Float64()
+	return int(math.Floor(k + d/math.Ln10))
+}
+
 // round rounds half away from zero (not to even).
 func round(x float64) int {
 	t := math.Trunc(x)
@@ -39,7 +61,7 @@ func fmtValue(v float64) string {
 	if math.Abs(v) >= 1 {
 		return strconv.FormatFloat(v, 'f', 2, 64)
 	}
-	digits := 1 - int(math.Floor(math.Log10(math.Abs(v))))
+	digits := 1 - floorLog10(math.Abs(v))
 	if digits < 2 {
 		digits = 2
 	}

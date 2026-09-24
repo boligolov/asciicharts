@@ -4,6 +4,12 @@ Versions of the principles (`principles.md`) and of the conformance suite (`conf
 how any chart is drawn is a change to the principles: it gets an entry here and regenerated conformance
 outputs, never a silent edit.
 
+## v1.0, clarified — 2026-09-24
+
+No rule changed. §4.13 now says that floor(log10 |v|) uses a correctly rounded log10 — right under a
+power of ten an ulp decides the number of digits (the Go port found it); the curated case
+`number/next to a power of ten` pins it (105 curated cases).
+
 ## v1.0 — 2026-09-24
 
 The first published version. The rules as they stood after the analysis of the reference
