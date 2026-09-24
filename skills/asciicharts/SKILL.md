@@ -1,8 +1,8 @@
 ---
 name: asciicharts
-description: Use this skill to draw a chart out of text characters (Unicode/ASCII) in the reply — bar, line, area, sparkline, histogram, pie, heatmap, boxplot, scatter, dot plot — from numbers given inline, a CSV file, or an ExCSV file's own #chart suggestion. Trigger on any request to plot, chart, graph, visualize or draw a histogram or distribution of numbers, e.g. "quick histogram of these response times", rankings, trends over time, shares of a whole, benchmark results, "top N by X", and whenever a chart would help in a terminal, README, commit message, PR description or code comment, even if the user never says "chart". It teaches drawing such charts correctly by hand and uses an exact renderer when available (the asciicharts MCP server or the bundled Python script), so prefer it to describing numbers in prose or eyeballing ASCII bars. Not for PNG/SVG/image files, interactive dashboards, plotting-library code (matplotlib, seaborn, pandas), explanations of chart concepts, or stats calculations without a chart.
+description: Use this skill to draw a chart out of text characters (Unicode/ASCII) in the reply — bar, line, area, sparkline, histogram, pie, heatmap, boxplot, scatter, dot plot — from numbers given inline, a CSV file, or an ExCSV file's own #chart suggestion. Trigger on any request to plot, chart, graph, visualize or draw a histogram or distribution of numbers, e.g. "quick histogram of these response times", rankings, trends over time, shares of a whole, benchmark results, "top N by X", and whenever a chart would help in a terminal, README, commit message, PR description or code comment, even if the user never says "chart". It teaches drawing such charts correctly by hand and uses an exact renderer when available (MCP server, asciicharts command or bundled Python script), so prefer it to describing numbers in prose or eyeballing ASCII bars. Not for PNG/SVG/image files, interactive dashboards, plotting-library code (matplotlib, seaborn, pandas), explanations of chart concepts, or stats calculations without a chart.
 license: MIT
-compatibility: Works without any tool (the charts are drawn by hand from references/drawing.md); Python 3 (standard library only) or a connected asciicharts MCP server makes them exact.
+compatibility: Works without any tool (the charts are drawn by hand from references/drawing.md); a connected asciicharts MCP server, the asciicharts command (a single binary), or Python 3 (standard library only) makes them exact.
 ---
 
 # asciicharts
@@ -21,8 +21,11 @@ here is about not doing that.
 2. **Pick how to draw it**, first match wins:
    - an MCP server named `asciicharts` is connected → its `render_chart` tool (same fields as the JSON
      spec below; `list_charts` returns the catalogue);
+   - you can run commands and `asciicharts --version` works → the `asciicharts` command (a single
+     binary, nothing else needed): the same arguments and output as the script below — replace
+     `python scripts/asciicharts.py` with `asciicharts` — except ExCSV files, which only the script reads;
    - you can run commands and have Python 3 → `scripts/asciicharts.py` from this skill (see
-     [With the script](#with-the-script)); an `asciicharts` command on the PATH works the same way;
+     [With the script](#with-the-script));
    - otherwise → **draw it by hand** with [references/drawing.md](references/drawing.md). Its tier tells
      you what is safe to draw by hand; for tier C (pie, dual_axis, anything large) draw the simpler
      equivalent it gives and say so.
@@ -80,7 +83,8 @@ The full reasoning is in [references/principles.md](references/principles.md); t
 
 `scripts/asciicharts.py` is one file, standard library only. Run it from this skill's directory or with
 its full path (`python3` if `python` isn't found). It prints the chart to stdout; problems go to stderr
-with exit code 1 and a one-line message that says what to fix.
+with exit code 1 and a one-line message that says what to fix. The `asciicharts` command (the Go build,
+from github.com/boligolov/asciicharts releases) takes the same arguments and prints the same bytes.
 
 From data you already have, as a JSON spec on stdin (avoids shell-quoting trouble, especially on Windows):
 

@@ -34,8 +34,9 @@ a chart ("plot these numbers as a bar chart, plain text": 62, 21, 12, 5). The fo
 `name` in the frontmatter (`asciicharts`).
 
 **Requirements:** none to draw charts — without a tool the agent draws them by hand from
-`references/drawing.md`. With `python` (or `python3`) on the PATH, or the MCP server connected, they are
-rendered exactly. Nothing is installed.
+`references/drawing.md`. With the MCP server connected, the `asciicharts` command on the PATH (a single
+binary from the [releases](https://github.com/boligolov/asciicharts/releases)), or `python` (or `python3`),
+they are rendered exactly. Nothing is installed.
 
 ## Claude.ai and Claude Desktop
 
