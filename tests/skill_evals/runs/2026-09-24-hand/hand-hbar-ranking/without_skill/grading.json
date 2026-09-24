@@ -1,0 +1,32 @@
+[
+  {
+    "text": "The chart is in a fenced code block (so it stays aligned)",
+    "passed": true,
+    "evidence": "2 fenced block(s)"
+  },
+  {
+    "text": "If the chart is framed, every line has the same display width",
+    "passed": true,
+    "evidence": "not framed: n/a"
+  },
+  {
+    "text": "Only font-safe glyphs (ASCII, Latin-1, WGL4 box drawing, shades, half blocks, markers)",
+    "passed": true,
+    "evidence": "unsafe: none"
+  },
+  {
+    "text": "Every language has a bar, in ranking order",
+    "passed": true,
+    "evidence": "rows: ['Python', 'JavaScript', 'Go', 'Rust', 'Java', 'C']"
+  },
+  {
+    "text": "Bar lengths are proportional to the values (±1 cell of round(v / max × longest))",
+    "passed": true,
+    "evidence": "drawn [40, 38, 19, 14, 13, 6] for [412, 388, 197, 143, 131, 64]; all within ±1"
+  },
+  {
+    "text": "Every value is printed in the chart",
+    "passed": true,
+    "evidence": "missing: []"
+  }
+]

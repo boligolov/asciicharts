@@ -1,0 +1,27 @@
+[
+  {
+    "text": "The chart is in a fenced code block (so it stays aligned)",
+    "passed": true,
+    "evidence": "1 fenced block(s)"
+  },
+  {
+    "text": "If the chart is framed, every line has the same display width",
+    "passed": true,
+    "evidence": "not framed: n/a"
+  },
+  {
+    "text": "Only font-safe glyphs (ASCII, Latin-1, WGL4 box drawing, shades, half blocks, markers)",
+    "passed": true,
+    "evidence": "unsafe: none"
+  },
+  {
+    "text": "The value axis runs from the maximum (14) at the top to the minimum (6) at the bottom",
+    "passed": true,
+    "evidence": "axis labels: ['14', '12', '10', '8', '6']"
+  },
+  {
+    "text": "The first and last releases are labelled on the x axis",
+    "passed": true,
+    "evidence": "v1: True, v6: True"
+  }
+]

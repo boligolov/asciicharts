@@ -1,0 +1,37 @@
+[
+  {
+    "text": "The chart is in a fenced code block (so it stays aligned)",
+    "passed": true,
+    "evidence": "1 fenced block(s)"
+  },
+  {
+    "text": "If the chart is framed, every line has the same display width",
+    "passed": true,
+    "evidence": "not framed: n/a"
+  },
+  {
+    "text": "Only font-safe glyphs (ASCII, Latin-1, WGL4 box drawing, shades, half blocks, markers)",
+    "passed": true,
+    "evidence": "unsafe: none"
+  },
+  {
+    "text": "Every team has a bar for each year",
+    "passed": true,
+    "evidence": "rows per year: {'2025': 4, '2026': 3}"
+  },
+  {
+    "text": "The two years can be told apart: every bar row names its year, or the years use different glyphs",
+    "passed": true,
+    "evidence": "glyphs: {'2025': '░', '2026': '█'}"
+  },
+  {
+    "text": "Bar lengths are proportional to the values (±1 cell of round(v / max × longest))",
+    "passed": true,
+    "evidence": "drawn [42, 57, 35, 31, 18, 29] for [42, 57, 35, 31, 18, 29]; all within ±1"
+  },
+  {
+    "text": "Every value is printed in the chart",
+    "passed": true,
+    "evidence": "missing: []"
+  }
+]

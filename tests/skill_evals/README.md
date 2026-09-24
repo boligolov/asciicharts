@@ -64,6 +64,8 @@ What this run showed:
 - **A contradiction in the skill**, found by a skilled agent: "one glyph per series" versus the grouped
   example drawing both years with `█`. The rule now says what it means: series must be told apart without
   color — by glyph and legend, or by naming the series on every row.
+- The 14 raw replies and their gradings are kept in `runs/2026-09-24-hand/` — also as a catalogue of
+  the layouts agents invent on their own.
 - Still open: whether the principles help **weaker models** and **harder charts** (more bars, stacked with
   negatives, frames, CJK labels) — where counting errors are likely. That is the next test (roadmap 1.6).
 

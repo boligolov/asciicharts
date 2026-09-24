@@ -1,0 +1,27 @@
+[
+  {
+    "text": "The chart is in a fenced code block (so it stays aligned)",
+    "passed": true,
+    "evidence": "1 fenced block(s)"
+  },
+  {
+    "text": "If the chart is framed, every line has the same display width",
+    "passed": true,
+    "evidence": "not framed: n/a"
+  },
+  {
+    "text": "Only font-safe glyphs (ASCII, Latin-1, WGL4 box drawing, shades, half blocks, markers)",
+    "passed": true,
+    "evidence": "unsafe: none"
+  },
+  {
+    "text": "Each share is given as a correct percentage (±0.6 points)",
+    "passed": true,
+    "evidence": "wrong or missing: []"
+  },
+  {
+    "text": "The shares are drawn in proportion: a 100% stacked bar with segments ±1 cell, or a pie of 6+ rows",
+    "passed": true,
+    "evidence": "bar segments [16, 5, 2, 1, 1]; rows with fills: 1"
+  }
+]
