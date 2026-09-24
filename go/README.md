@@ -39,6 +39,9 @@ fmt.Println(out)
 
 ## Command line
 
+Download a static binary for Linux, macOS or Windows (amd64/arm64) from the
+[releases](https://github.com/boligolov/asciicharts/releases) (tags `go/v…`), or build it:
+
 ```sh
 go install github.com/boligolov/asciicharts/go/cmd/asciicharts@latest
 
@@ -61,6 +64,12 @@ python ../scripts/differential.py 10000                # compare with the Python
 python ../scripts/differential_csv.py 10000            # … on random CSV files
 python ../scripts/cli_parity.py                        # both command lines: stdout, stderr, exit code
 ```
+
+## Releasing
+
+Set `Version` in `asciicharts/render.go`, then push a tag `go/vX.Y.Z` with the same version:
+`.github/workflows/release-go.yml` tests, checks the tag against `asciicharts --version`, builds the six
+binaries and publishes them with `checksums.txt` as a GitHub release.
 
 ## Generated files
 
