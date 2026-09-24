@@ -992,6 +992,87 @@
   "out": "┌────────────────────────────┐\n│ Q1                         │\n│   x │        ¦█████    30  │\n│   y │       █¦         -5  │\n│                            │\n│ Q2                         │\n│   x │ ███████¦         -45 │\n│   y │        ¦████████ 50  │\n└────────────────────────────┘"
  },
  {
+  "name": "rule/diverging stacked hbar",
+  "spec": {
+   "chartType": "hbar",
+   "stacked": true,
+   "width": 30,
+   "labels": [
+    "Jan",
+    "Feb",
+    "Mar"
+   ],
+   "series": [
+    {
+     "name": "subscriptions",
+     "values": [
+      40,
+      46,
+      52
+     ]
+    },
+    {
+     "name": "services",
+     "values": [
+      15,
+      12,
+      18
+     ]
+    },
+    {
+     "name": "refunds",
+     "values": [
+      -8,
+      -5,
+      -14
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────────────────────────┐\n│ Jan │   ▒▒▒¦██████████████▓▓▓▓▓      47  │\n│ Feb │    ▒▒¦████████████████▓▓▓▓     53  │\n│ Mar │ ▒▒▒▒▒¦██████████████████▓▓▓▓▓▓ 56  │\n│                                          │\n│ █ subscriptions   ▓ services   ▒ refunds │\n└──────────────────────────────────────────┘"
+ },
+ {
+  "name": "rule/diverging stacked vbar",
+  "spec": {
+   "chartType": "vbar",
+   "stacked": true,
+   "height": 8,
+   "width": 30,
+   "labels": [
+    "Jan",
+    "Feb",
+    "Mar"
+   ],
+   "series": [
+    {
+     "name": "subscriptions",
+     "values": [
+      40,
+      46,
+      52
+     ]
+    },
+    {
+     "name": "services",
+     "values": [
+      15,
+      12,
+      18
+     ]
+    },
+    {
+     "name": "refunds",
+     "values": [
+      -8,
+      -5,
+      -14
+     ]
+    }
+   ]
+  },
+  "out": "┌──────────────────────────────────────────┐\n│                     ▓▓▓▓▓▓▓▓▓            │\n│ ▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓ ▓▓▓▓▓▓▓▓▓            │\n│ █████████ █████████ █████████            │\n│ █████████ █████████ █████████            │\n│ █████████ █████████ █████████            │\n│ █████████ █████████ █████████            │\n│ -----------------------------            │\n│ ▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒ ▒▒▒▒▒▒▒▒▒            │\n│    Jan       Feb       Mar               │\n│                                          │\n│ █ subscriptions   ▓ services   ▒ refunds │\n└──────────────────────────────────────────┘"
+ },
+ {
   "name": "rule/threshold behind data",
   "spec": {
    "chartType": "line",

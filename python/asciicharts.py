@@ -908,26 +908,31 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
                         cgrid[row][col_start + w] = color_of(s)
                 cursor += seg_rows
     elif stacked:
-        # Some value is negative: positives stack up from a shared zero
-        # baseline, negatives stack down from it.
-        up_cap = _split_rows(max_pos, max_neg, height)
+        # Some value is negative: positives stack up from a zero baseline, negatives stack down
+        # from it. The baseline is a row of its own, owned by no bar (when there are 3+ rows).
+        axis = height >= 3
+        plot = height - 1 if axis else height
+        up_cap = _split_rows(max_pos, max_neg, plot)
+        below = up_cap + 1 if axis else up_cap
         seg_ramp = ramp or FILLS
         for c in range(num_cat):
             col_start = c * (group_w + gap) + bars_offset
             values = [matrix[s][c] for s in range(num_series)]
-            up, down = _split_stack(values, max_pos, max_neg, up_cap, height - up_cap, keep_nonzero=True)
+            up, down = _split_stack(values, max_pos, max_neg, up_cap, plot - up_cap, keep_nonzero=True)
             for side, rows_by_series in enumerate((up, down)):
                 cursor = 0
                 for s, seg_rows in enumerate(rows_by_series):
                     ch = seg_ramp[s % len(seg_ramp)]
                     for r in range(seg_rows):
-                        row = up_cap + cursor + r if side else up_cap - 1 - cursor - r
+                        row = below + cursor + r if side else up_cap - 1 - cursor - r
                         if row < 0 or row >= height:
                             continue
                         for w in range(bar_width):
                             grid[row][col_start + w] = ch
                             cgrid[row][col_start + w] = color_of(s)
                     cursor += seg_rows
+        if axis:
+            grid[up_cap] = ["-"] * total_w
     else:
         min_val = max_val = 0.0
         for s in range(num_series):
@@ -1115,8 +1120,11 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=Fals
 
 
 def _render_hbar_stacked_diverging(labels, names, matrix, width, color_on, ramp, max_pos, max_neg):
-    pos_cols = _split_rows(max_pos, max_neg, width)
-    neg_cols = width - pos_cols
+    # the zero axis is a column of its own, owned by no bar (when there are 3+ columns)
+    axis = _axis_glyph(ramp) if width >= 3 else ""
+    cols = width - len(axis)
+    pos_cols = _split_rows(max_pos, max_neg, cols)
+    neg_cols = cols - pos_cols
     seg_ramp = ramp or FILLS
     max_label_w = max(_width(l) for l in labels)
 
@@ -1132,6 +1140,7 @@ def _render_hbar_stacked_diverging(labels, names, matrix, width, color_on, ramp,
         bar = " " * (neg_cols - sum(down))
         for s in range(len(down) - 1, -1, -1):
             bar += seg(s, down[s])
+        bar += axis
         for s, w in enumerate(up):
             bar += seg(s, w)
         bar += " " * (pos_cols - sum(up))

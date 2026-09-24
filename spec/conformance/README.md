@@ -1,4 +1,4 @@
-# Conformance suite — asciicharts principles v1.0
+# Conformance suite — asciicharts principles v1.1
 
 Specs with their exact expected output. An implementation of the principles — in any language — conforms
 when it produces these outputs **byte for byte**, including the text of every error message. The suite is
@@ -8,7 +8,7 @@ draw every chart the same way.
 | file | contents |
 |---|---|
 | `corpus.json` | 317 cases, mostly randomly generated specs covering every chart type, style, border and option; each is `{"spec": {...}, "out": "..."}` or, when the spec must be rejected, `{"spec": {...}, "err": "..."}` |
-| `curated.json` | 105 named cases for what random specs barely reach — text in any script (CJK, emoji, combining marks, RTL), control characters, number formatting, each rule of v1.0, and **every validation message** (48 of the cases are errors): `[{"name": "...", "spec": ..., "out": "..."}]` or with `"err"` |
+| `curated.json` | 107 named cases for what random specs barely reach — text in any script (CJK, emoji, combining marks, RTL), control characters, number formatting, each rule of v1.0, and **every validation message** (48 of the cases are errors): `[{"name": "...", "spec": ..., "out": "..."}]` or with `"err"` |
 | `gallery.json` | the 31 documented examples: `[{"name": "...", "spec": {...}}]` |
 | `gallery.txt` | their expected output, concatenated: for each example, `=== <name> ===\n<output>\n\n` |
 

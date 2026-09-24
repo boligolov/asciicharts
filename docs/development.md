@@ -7,7 +7,7 @@ python/                 the Python implementation: asciicharts.py (the renderer 
                         only, also shipped inside the skill), pyproject.toml, tests/
 skills/asciicharts/     the skill: SKILL.md, scripts/, references/ — see docs/skill.md
 deploy/                 Dockerfile, docker-compose (dev and prod), Caddyfile, .env.example
-spec/                   the principles (principles.md, v1.0), CHANGELOG.md, LICENSE (CC BY 4.0), conformance/ — the
+spec/                   the principles (principles.md, v1.1), CHANGELOG.md, LICENSE (CC BY 4.0), conformance/ — the
                         language-neutral suite every implementation must pass byte for byte
 python/tests/           pytest suite (runs spec/conformance/); tests/golden/excsv_fixtures/
 go/                     the Go implementation: package asciicharts, cmd/asciicharts (CLI), cmd/asciicharts-mcp (the MCP

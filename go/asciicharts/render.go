@@ -1,5 +1,5 @@
 // Package asciicharts renders numbers as text charts: the Go reference implementation of
-// asciicharts principles v1.0 (spec/principles.md in https://github.com/boligolov/asciicharts).
+// asciicharts principles v1.1 (spec/principles.md in https://github.com/boligolov/asciicharts).
 //
 // A spec is the JSON object of the principles (§9.1). The output is deterministic and matches the
 // conformance suite (spec/conformance/) byte for byte, error messages included.
@@ -20,7 +20,7 @@ import (
 const Version = "1.0.0"
 
 // PrinciplesVersion is the version of the principles this implementation conforms to.
-const PrinciplesVersion = "1.0"
+const PrinciplesVersion = "1.1"
 
 // RenderJSON renders a chart from a JSON spec.
 func RenderJSON(data []byte) (string, error) {

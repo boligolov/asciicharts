@@ -4,6 +4,17 @@ Versions of the principles (`principles.md`) and of the conformance suite (`conf
 how any chart is drawn is a change to the principles: it gets an entry here and regenerated conformance
 outputs, never a silent edit.
 
+## v1.1 — 2026-09-24
+
+- **Stacked bars with negatives draw their zero axis** (§4.6): `¦` (`+` in the ascii style) in hbar, a
+  row of `-` in vbar, owned by no bar, as for diverging bars (§4.5). In v1.0 a stack's zero was only
+  where one glyph met another — against R6 ("grow both ways from a marked zero axis") and invisible in a
+  row without negatives. Hand-drawn evals found it: agents asked for a zero line had to add one the
+  renderer did not draw. One cell (row) of the plot is now the axis, so each side has `N − 1` to share.
+- Conformance: 6 corpus cases change (stacked hbar and vbar with negatives), the gallery's stacked
+  diverging example, and two curated cases pin the rule (`rule/diverging stacked hbar`,
+  `rule/diverging stacked vbar`; 107 curated cases).
+
 ## v1.0, clarified — 2026-09-24
 
 No rule changed. §4.13 now says that floor(log10 |v|) uses a correctly rounded log10 — right under a

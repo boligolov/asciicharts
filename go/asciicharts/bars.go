@@ -259,14 +259,25 @@ func renderVbar(labels, names []string, matrix [][]float64, w, height int, stack
 			}
 		}
 	case stacked:
-		upCap := splitRows(maxPos, maxNeg, height)
+		// positives stack up from a zero baseline, negatives down from it; the baseline is a row of
+		// its own, owned by no bar (when there are 3+ rows)
+		axis := height >= 3
+		plot := height
+		if axis {
+			plot = height - 1
+		}
+		upCap := splitRows(maxPos, maxNeg, plot)
+		below := upCap
+		if axis {
+			below = upCap + 1
+		}
 		segRamp := r
 		if segRamp == nil {
 			segRamp = fills
 		}
 		for c := 0; c < numCat; c++ {
 			colStart := c*(groupW+gap) + barsOffset
-			up, down := splitStack(column(c), maxPos, maxNeg, upCap, height-upCap, true)
+			up, down := splitStack(column(c), maxPos, maxNeg, upCap, plot-upCap, true)
 			for side, rowsBySeries := range [][]int{up, down} {
 				cursor := 0
 				for s, segRows := range rowsBySeries {
@@ -274,7 +285,7 @@ func renderVbar(labels, names []string, matrix [][]float64, w, height int, stack
 					for rr := 0; rr < segRows; rr++ {
 						row := upCap - 1 - cursor - rr
 						if side == 1 {
-							row = upCap + cursor + rr
+							row = below + cursor + rr
 						}
 						if row < 0 || row >= height {
 							continue
@@ -286,6 +297,11 @@ func renderVbar(labels, names []string, matrix [][]float64, w, height int, stack
 					}
 					cursor += segRows
 				}
+			}
+		}
+		if axis {
+			for x := 0; x < totalW; x++ {
+				g.ch[upCap][x] = "-"
 			}
 		}
 	default:
@@ -563,8 +579,14 @@ func renderHbarGrouped(labels, names []string, matrix [][]float64, w int, colorO
 
 func renderHbarStackedDiverging(labels, names []string, matrix [][]float64, w int, colorOn bool, r ramp,
 	maxPos, maxNeg float64) string {
-	posCols := splitRows(maxPos, maxNeg, w)
-	negCols := w - posCols
+	// the zero axis is a column of its own, owned by no bar (when there are 3+ columns)
+	axis := ""
+	if w >= 3 {
+		axis = axisGlyph(r)
+	}
+	cols := w - len([]rune(axis))
+	posCols := splitRows(maxPos, maxNeg, cols)
+	negCols := cols - posCols
 	segRamp := r
 	if segRamp == nil {
 		segRamp = fills
@@ -589,6 +611,7 @@ func renderHbarStackedDiverging(labels, names []string, matrix [][]float64, w in
 		for s := len(down) - 1; s >= 0; s-- {
 			b.WriteString(seg(s, down[s]))
 		}
+		b.WriteString(axis)
 		for s, n := range up {
 			b.WriteString(seg(s, n))
 		}

@@ -1,4 +1,4 @@
-# asciicharts principles v1.0
+# asciicharts principles v1.1
 
 *The principles of text charts* — version 1.0, 2026-09-24. Licensed under CC BY 4.0.
 
@@ -23,13 +23,13 @@ errors · 10 Other media · 11 Mistakes we made · 12 Limitations and choices ·
 
 ## 0. Status and conformance
 
-**Version.** asciicharts principles **v1.0**, published 2026-09-24. Every change to how a chart is drawn is
+**Version.** asciicharts principles **v1.1**, published 2026-09-24. Every change to how a chart is drawn is
 a new version, recorded in `spec/CHANGELOG.md` of the asciicharts repository
 (https://github.com/boligolov/asciicharts), together with regenerated conformance outputs.
 
 **Licence.** The principles and the conformance suite are licensed under the Creative Commons Attribution
 4.0 International License (CC BY 4.0, https://creativecommons.org/licenses/by/4.0/): copy, adapt and build
-on them, commercially too, with credit — *"asciicharts principles v1.0" by asciicharts contributors*. The
+on them, commercially too, with credit — *"asciicharts principles v1.1" by asciicharts contributors*. The
 reference implementations are MIT-licensed code.
 
 **Key words.** "MUST", "MUST NOT", "SHOULD", "SHOULD NOT" and "MAY" in section 15 are to be interpreted as
@@ -38,7 +38,7 @@ informative: they explain, derive and illustrate; section 15 and the conformance
 
 **Two kinds of conformance.**
 
-1. **A renderer** conforms to v1.0 when it reproduces the conformance suite — `spec/conformance/` in the
+1. **A renderer** conforms to v1.1 when it reproduces the conformance suite — `spec/conformance/` in the
    repository: 317 specs with their exact output or error message, and the 31 documented examples —
    **byte for byte**. Sections 4–9 describe the arithmetic and layout the suite pins down; where prose
    and suite disagree, the suite wins and the prose is a bug.
@@ -155,8 +155,8 @@ A reader decodes a chart by glyph. If one glyph means two things, the chart lies
 | dotted line | `+` on every other cell | | |
 | point marker, series *i* | `●○▲■□▼♦◊►◄` | `o x * + ^ v @ % & $` | |
 | threshold / reference line | `-` on even columns | `-` | |
-| zero baseline (diverging vbar) | `-` across the whole row | `-` | owned by no bar |
-| zero axis (diverging hbar) | `¦` | `+` | owned by no bar; not the separator |
+| zero baseline (diverging vbar, stacked too) | `-` across the whole row | `-` | owned by no bar |
+| zero axis (diverging hbar, stacked too) | `¦` | `+` | owned by no bar; not the separator |
 | label / plot separator | `│` | `\|` | |
 | y-axis tick | `┤` (left), `├` (right axis) | `+` | |
 | dotplot background | `·` | | |
@@ -367,21 +367,24 @@ empty takes one cell from the largest segment, and a stack that rounds to nothin
 don't do this: their values are interpolated per column, and a thin band would be inflated everywhere.
 
 **Stacked with negatives** (diverging stacks): positive values stack up (right) from the zero line,
-negative values stack down (left), series 0 nearest zero on both sides.
+negative values stack down (left), series 0 nearest zero on both sides. The zero line is an axis owned
+by no bar, as in 4.5 — `¦` (`+` in the ascii style) in hbar, a row of `-` in vbar — so it is visible on
+every row, and a row with no negative value still shows where zero is. Of the `N` cells (`W` columns or
+`H` rows), one is the axis and `N − 1` are shared:
 
 ```
-pos_cells  = clamp(round(max_pos / (max_pos + max_neg) × H), 1, H − 1)   # H rows or W columns
-neg_cells  = H − pos_cells
+pos_cells  = clamp(round(max_pos / (max_pos + max_neg) × (N − 1)), 1, N − 2)
+neg_cells  = N − 1 − pos_cells
 each side: total = round(side_sum / side_max × side_cells), split by largest remainder
 ```
 
 `max_pos` and `max_neg` are the largest positive and negative column totals. Each side gets at least
-one cell when it has data. For stacked hbar the number printed at the end of the row is the **net**
-total:
+one cell when it has data. (A plot of fewer than 3 cells has no room for an axis: the two sides share
+all `N`.) For stacked hbar the number printed at the end of the row is the **net** total:
 
 ```
-EMEA │   ▓▓▓▓▓▓████████████████ 25
-APAC │ ▓▓▓▓▓▓▓▓██████████       5
+EMEA │   ▓▓▓▓¦███████████████████ 25
+APAC │ ▓▓▓▓▓▓¦█████████           5
 
 █ Product   ▓ Refunds
 ```
@@ -1154,7 +1157,7 @@ handful of glyphs); build rows as arrays and join once.
 
 ## 15. The requirements
 
-Normative for v1.0 (section 0). Each requirement names the section that explains it.
+Normative for v1.1 (section 0). Each requirement names the section that explains it.
 
 **Any chart** — rendered or hand-drawn:
 

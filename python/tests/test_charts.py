@@ -36,7 +36,7 @@ def test_corpus_matches_golden(i, case):
 @pytest.mark.parametrize("case", load("curated.json"), ids=lambda c: c["name"])
 def test_curated_matches_golden(case):
     """Named cases for what the random corpus barely covers: text in any script, control characters,
-    number formatting, the rules of principles v1.0, and every validation message."""
+    number formatting, the rules of the principles, and every validation message."""
     if "err" in case:
         with pytest.raises(ChartError) as e:
             render_chart(case["spec"])
@@ -80,8 +80,9 @@ def test_stacked_vbar_with_negatives_grows_both_ways():
     out = render_chart({"chartType": "vbar", "width": 1, "stacked": True, "height": 8, "border": "none", "labels": ["a", "b"],
                         "series": [{"name": "up", "values": [10, 10]}, {"name": "down", "values": [-10, -5]}]})
     grid = rows(out)[:8]
-    # first series stays above the baseline, second below it, in every column
-    assert all("█" in r for r in grid[:4]) and all("▓" in r for r in grid[4:])
+    # first series above the zero baseline, second below it, in every column; the baseline is a row
+    # of its own (principles v1.1, §4.6)
+    assert all("█" in r for r in grid[:4]) and grid[4].strip() == "---" and all("▓" in r for r in grid[5:])
     assert rows(out)[8].strip() == "a b"
 
 
