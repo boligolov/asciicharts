@@ -1,0 +1,130 @@
+---
+// Installing the skill, right in the hero: the main product, three ways in.
+const ways = [
+  {
+    title: "Claude Code",
+    note: "a plugin, from the repository's own marketplace",
+    lines: ["/plugin marketplace add boligolov/asciicharts", "/plugin install asciicharts@asciicharts"],
+  },
+  {
+    title: "Claude.ai · Claude Desktop",
+    note: "upload under Settings → Capabilities → Skills",
+    download: { href: "/asciicharts.skill", label: "DOWNLOAD asciicharts.skill" },
+  },
+  {
+    title: "Any agent that reads skill folders",
+    note: "copy the folder",
+    lines: ["git clone https://github.com/boligolov/asciicharts", "cp -r asciicharts/skills/asciicharts ~/.claude/skills/"],
+  },
+];
+---
+<div class="install" id="install">
+  {
+    ways.map((w) => (
+      <div class="install-way">
+        <div class="install-head">
+          <span class="install-title">{w.title}</span>
+          <span class="install-note">{w.note}</span>
+        </div>
+        {w.lines && (
+          <div class="install-code">
+            <pre>{w.lines.join("\n")}</pre>
+            <button class="install-copy" type="button" data-copy={w.lines.join("\n")} aria-label={`Copy the ${w.title} commands`}>
+              COPY
+            </button>
+          </div>
+        )}
+        {w.download && (
+          <div class="install-code install-download">
+            <a class="btn btn-primary pixel-corners" href={w.download.href} download>
+              {w.download.label} ▾
+            </a>
+          </div>
+        )}
+      </div>
+    ))
+  }
+  <p class="install-after">
+    Then just ask for a chart. <a href="https://github.com/boligolov/asciicharts/blob/master/docs/skill.md">More on installing</a>
+  </p>
+</div>
+
+<script>
+  for (const button of document.querySelectorAll<HTMLButtonElement>(".install-copy")) {
+    button.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.copy ?? "");
+        button.textContent = "COPIED";
+      } catch {
+        button.textContent = "SELECT ▸";
+      }
+      setTimeout(() => (button.textContent = "COPY"), 1500);
+    });
+  }
+</script>
+
+<style>
+  .install {
+    max-width: 760px;
+    margin: 32px auto 0;
+    text-align: left;
+    border: 1px solid var(--border);
+    background: var(--bg-inset);
+  }
+  .install-way + .install-way {
+    border-top: 1px solid var(--border);
+  }
+  .install-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    align-items: baseline;
+    padding: 12px 16px 0;
+  }
+  .install-title {
+    font-weight: 700;
+    color: var(--fg);
+  }
+  .install-note {
+    color: var(--fg-muted);
+    font-size: 12.5px;
+  }
+  .install-code {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 8px 16px 14px;
+  }
+  .install-code pre {
+    flex: 1;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--accent-2);
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .install-copy {
+    font: inherit;
+    font-size: 11px;
+    padding: 4px 10px;
+    color: var(--fg-muted);
+    background: transparent;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+  .install-copy:hover {
+    color: var(--fg);
+    border-color: var(--fg-muted);
+  }
+  .install-download {
+    padding-top: 12px;
+  }
+  .install-after {
+    margin: 0;
+    padding: 10px 16px 14px;
+    border-top: 1px solid var(--border);
+    color: var(--fg-muted);
+    font-size: 13px;
+  }
+</style>

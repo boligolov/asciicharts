@@ -1,10 +1,35 @@
 # asciicharts
 
-**[Read the principles →](spec/principles.md)** · **[See the gallery →](docs/gallery.md)** every chart type and style, rendered — real output.
+**[asciicharts.online](https://asciicharts.online)** · [the gallery](docs/gallery.md) · [the principles](spec/principles.md)
 
-**How to build charts out of text characters — right.** Bars, lines, areas, pies, heatmaps and box plots
-drawn with nothing but characters, for the places images can't go: PR descriptions, incident channels, CI
-logs, commit messages, terminals — and the replies of AI agents.
+**An agent skill for charts made of text characters — drawn right.** Ask Claude for a chart in a reply, a PR
+description, a commit message or a terminal, and you get bars, lines, sparklines, histograms, pies or heatmaps
+with lengths that match the values, frames that stay straight in any font, and series you can tell apart
+without color.
+
+## Install
+
+**Claude Code** — from this repository, which is a plugin marketplace:
+
+```
+/plugin marketplace add boligolov/asciicharts
+/plugin install asciicharts@asciicharts
+```
+
+**Claude.ai and Claude Desktop** — download **[asciicharts.skill](https://asciicharts.online/asciicharts.skill)**
+and upload it under *Settings → Capabilities → Skills* (skills need code execution enabled).
+
+**Any other agent that reads skill folders** — copy the folder:
+
+```sh
+git clone https://github.com/boligolov/asciicharts
+cp -r asciicharts/skills/asciicharts ~/.claude/skills/
+```
+
+Then just ask — *"chart the p99 of these services"*, *"sparkline of the last 14 days"* — or give it a CSV
+file. Scopes, the API, updating: [docs/skill.md](docs/skill.md).
+
+## What it does
 
 ```
 ┌───────────────────────────────────────────────────────────┐
@@ -16,21 +41,20 @@ logs, commit messages, terminals — and the replies of AI agents.
 └───────────────────────────────────────────────────────────┘
 ```
 
-A text chart goes wrong in predictable ways: lengths are eyeballed instead of counted, a glyph missing from
-the reader's font breaks the alignment, series differ only by a color the text doesn't have, a negative
-value has nowhere to go. This repository is, first of all, the knowledge of how not to:
+The skill picks the chart for the question, then uses an exact renderer if one is at hand — the
+`asciicharts` command, the bundled Python script or the MCP server — and otherwise **draws by hand** from a
+recipe per chart type: compute the lengths first, build each row from counted runs of glyphs, then check.
+It needs nothing installed.
 
-| | what | licence |
-|---|---|---|
-| **[The principles](spec/principles.md)** | *asciicharts principles v1.1*: the cell model, the font-safe glyph alphabet, the arithmetic, layout, text, the twelve chart types — and the mistakes behind each rule. Normative requirements in §15 | CC BY 4.0 |
-| **[The conformance suite](spec/conformance/)** | 317 random specs, 107 curated cases and 31 documented examples with their exact expected output, byte for byte, language-neutral | CC BY 4.0 |
-| **[The agent skill](docs/skill.md)** | teaches an agent to draw a correct text chart by hand, and to use a renderer when one is available | MIT |
-| **Two reference implementations** | [Go](go/) — a single-binary command line, a library and an MCP server; [Python](python/) — one stdlib-only file, library and command line. Both pass the suite and agree byte for byte on random input | MIT |
+It is measured, not assumed ([`skills/evals`](skills/evals/)): drawing by hand with no code allowed, a
+small model went from 68% to 89% of the checks with the skill — code blocks, bar lengths, axes that come
+from the data, pies turned into proportional bars; a strong model was right with or without it, and with it
+drew smaller charts and showed its working.
 
-## The principles
+## The principles behind it
 
-[`spec/principles.md`](spec/principles.md) is written so that anyone — a person, an agent, a port to another
-language — can build text charts that are right:
+What the skill knows is written down in [`spec/principles.md`](spec/principles.md) — *asciicharts
+principles v1.1*, for a person, an agent, or a port to another language:
 
 - **The medium** (§1–3): a grid of equal cells; which glyphs survive every font (WGL4, not "Unicode");
   ink density; how series stay distinct without color.
@@ -42,26 +66,15 @@ language — can build text charts that are right:
   (§13), a **porting checklist** (§14) and **the requirements** (§15, MUST/SHOULD).
 
 A chart conforms when it meets §15; a renderer conforms when it reproduces the
-[conformance suite](spec/conformance/) byte for byte. Changes are versioned in
-[`spec/CHANGELOG.md`](spec/CHANGELOG.md). The principles and the suite are CC BY 4.0: use them, adapt them,
-build on them — with credit.
+[conformance suite](spec/conformance/) — 317 random specs, 107 curated cases, 31 documented examples —
+byte for byte. Changes are versioned in [`spec/CHANGELOG.md`](spec/CHANGELOG.md). The principles and the
+suite are CC BY 4.0: use them, adapt them, build on them — with credit.
 
-## The skill: an agent that draws charts right
+## The renderers
 
-A skill folder ([`skills/asciicharts`](skills/asciicharts/)) that an agent reads on demand. It picks the chart
-for the question, uses a renderer if one is there (MCP server, `asciicharts` binary or the bundled Python
-script) and otherwise **draws by hand** from a recipe per chart type: compute the lengths first, build rows
-from counted runs of glyphs, then check.
+Two reference implementations of the principles, byte for byte the same; the skill uses whichever is there,
+and they work on their own too.
 
-```sh
-cp -r skills/asciicharts ~/.claude/skills/          # Claude Code; Claude.ai and the API: docs/skill.md
-```
-
-It is measured, not assumed ([`skills/evals`](skills/evals/)): drawing by hand with no code allowed, a small
-model went from 68% to 89% of the checks with the skill — code blocks, lengths, axes from the data; a strong
-model was right with or without it, and with it drew smaller charts and showed its working.
-
-## The implementations
 
 **The `asciicharts` command** — one static binary for Linux, macOS and Windows
 ([releases](https://github.com/boligolov/asciicharts/releases), or

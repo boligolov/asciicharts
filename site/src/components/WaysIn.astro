@@ -4,7 +4,10 @@ const ways = [
     title: "Agent skill",
     for_: "Claude Code and other agents",
     body: "Teaches an agent to draw a correct text chart by hand — lengths computed, rows counted, then checked — and to use a renderer when there is one.",
-    code: [['<span class="tok-kw">$</span> cp -r skills/asciicharts ~/.claude/skills/']],
+    code: [
+      ['/plugin marketplace add boligolov/asciicharts'],
+      ['/plugin install asciicharts@asciicharts'],
+    ],
   },
   {
     title: "Command line",

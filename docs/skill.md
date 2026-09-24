@@ -5,13 +5,24 @@ a hand-drawing guide and a glyph cheat sheet — and the one-file renderer in `s
 self-contained — copy the folder and you are done. It teaches the agent to draw text charts itself and to
 use an exact renderer (the MCP server, or the script) when one is available.
 
-**There is no registry to register it with.** Agents find skills by looking in known folders (or in an
-uploaded package), read each skill's `name` and `description` from the `SKILL.md` frontmatter, and load the
-rest only when a task matches. Installing a skill means putting the folder where the agent looks.
+Agents find skills in known folders or in an uploaded package: they read each skill's `name` and
+`description` from the `SKILL.md` frontmatter, and load the rest only when a task matches. For Claude Code
+the repository is also a **plugin marketplace** (`.claude-plugin/marketplace.json`) with one plugin: this
+skill.
 
 ## Claude Code
 
-Pick one:
+**As a plugin** (recommended — updates arrive with `/plugin marketplace update`):
+
+```
+/plugin marketplace add boligolov/asciicharts
+/plugin install asciicharts@asciicharts
+```
+
+The same from a shell: `claude plugin marketplace add boligolov/asciicharts`, then
+`claude plugin install asciicharts@asciicharts`. Remove it with `/plugin uninstall asciicharts@asciicharts`.
+
+**As a folder**, if you prefer to manage the files yourself — pick one:
 
 | scope | folder | when to use |
 |---|---|---|
@@ -40,16 +51,14 @@ they are rendered exactly. Nothing is installed.
 
 ## Claude.ai and Claude Desktop
 
-Build the upload package, then add it in the app's skills settings (the section is usually under
-*Settings → Capabilities → Skills*; it needs a plan that includes skills and code execution enabled, and
-the wording may differ between versions):
+Download **[asciicharts.skill](https://asciicharts.online/asciicharts.skill)** and upload it under
+*Settings → Capabilities → Skills* (it needs a plan that includes skills and code execution enabled; the
+wording may differ between versions). A `.skill` file is a zip archive: the folder `asciicharts/` with
+`SKILL.md` directly inside.
 
-```sh
-python scripts/package_skill.py          # writes dist/asciicharts.skill  (a zip: asciicharts/SKILL.md, ...)
-```
-
-Upload `dist/asciicharts.skill` (a `.skill` file is a zip archive, so renaming it to `.zip` also works).
-The package must contain the folder `asciicharts/` with `SKILL.md` directly inside — the script guarantees that.
+To build it from a checkout instead: `python scripts/package_skill.py` writes `dist/asciicharts.skill`. The
+build is deterministic, and a test checks that the copy the site serves (`site/public/asciicharts.skill`) is
+the current skill.
 
 ## Claude API and other agents
 
@@ -59,8 +68,9 @@ they scan; anything without skill support can use the [MCP server](../go/cmd/asc
 
 ## Updating, removing
 
-- **Update:** replace the folder with the new version (delete the old one first so no stale files remain).
-- **Remove:** delete the folder.
+- **Update:** as a plugin, `/plugin marketplace update asciicharts`; as a folder, replace it with the new
+  version (delete the old one first so no stale files remain); on Claude.ai, upload the new `.skill`.
+- **Remove:** `/plugin uninstall asciicharts@asciicharts`, or delete the folder.
 - **Working on the skill itself:** the script inside the skill is a copy of the repository's `asciicharts.py`;
   after editing the original run `python scripts/sync_skill.py` (a test fails if the copy is stale).
 
@@ -74,3 +84,14 @@ they scan; anything without skill support can use the [MCP server](../go/cmd/asc
 
 They render identically and work best side by side: the skill knows how to choose and read a chart, and
 uses the server as its renderer when it is connected.
+
+## Listing it in Claude's plugin directories
+
+Anthropic runs two public marketplaces: `claude-plugins-official` (curated by Anthropic, no application) and
+`claude-community` (third-party plugins, after review). To submit this plugin to the community one, the
+repository must be public on GitHub and pass `claude plugin validate .` (a test runs it); then submit the
+repository link through the Console form, [platform.claude.com/plugins/submit](https://platform.claude.com/plugins/submit)
+(or, for a Team or Enterprise organization, the claude.ai directory form). Once approved it is pinned to a
+commit in [anthropics/claude-plugins-community](https://github.com/anthropics/claude-plugins-community) and
+follows new commits automatically; users then install it with
+`/plugin install asciicharts@claude-community`.

@@ -1,6 +1,7 @@
 """The skill folder is self-contained, in sync with the repository, and its documented commands work."""
 
 import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -73,7 +74,7 @@ def test_references_do_not_link_outside_the_skill():
 
 def test_skill_folder_has_only_expected_parts():
     names = {p.name for p in SKILL.iterdir()}
-    assert names == {"SKILL.md", "LICENSE", "scripts", "references"}, names
+    assert names == {"SKILL.md", "LICENSE", "scripts", "references", ".claude-plugin"}, names
     assert {p.name for p in (SKILL / "scripts").iterdir()} == {"asciicharts.py"}
 
 
@@ -138,4 +139,34 @@ def test_glyph_cheat_sheet_matches_the_renderer():
                    asciicharts.ASCII_MARKERS, asciicharts.SPARK_TICKS, asciicharts.SHADES[1:]):
         assert "`" + " ".join(glyphs) + "`" in sheet, glyphs
     assert f"`{asciicharts.ASCII_TRACK_FILL}`" in sheet and f"`{asciicharts.OVERLAP_MARKER}`" in sheet
+
+
+# --- distribution: the Claude Code plugin marketplace and the download on the site ---
+
+def test_plugin_and_marketplace_describe_this_skill():
+    """The repository is a Claude Code plugin marketplace (/plugin marketplace add boligolov/asciicharts)
+    with one plugin: this skill folder."""
+    import json
+    plugin = json.loads((SKILL / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    market = json.loads((ROOT / ".claude-plugin" / "marketplace.json").read_text(encoding="utf-8"))
+    assert plugin["name"] == frontmatter_and_body()[0]["name"] == "asciicharts"
+    [entry] = market["plugins"]
+    assert entry["name"] == plugin["name"] and entry["source"] == "./skills/asciicharts"
+    assert (ROOT / entry["source"] / "SKILL.md").is_file()
+    assert entry["description"] == plugin["description"] and plugin["license"] == "MIT"
+
+
+@pytest.mark.skipif(shutil.which("claude") is None, reason="the claude CLI is not installed")
+@pytest.mark.parametrize("target", [".", "skills/asciicharts"])
+def test_claude_plugin_validate_passes(target):
+    r = subprocess.run(["claude", "plugin", "validate", target], cwd=ROOT, capture_output=True, encoding="utf-8")
+    assert r.returncode == 0 and "Validation passed" in r.stdout, r.stdout + r.stderr
+
+
+def test_the_sites_download_is_the_current_skill():
+    """asciicharts.online/asciicharts.skill is what claude.ai users upload; the packager is deterministic,
+    so the committed copy must equal a fresh build (python scripts/package_skill.py --out site/public/asciicharts.skill)."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import package_skill
+    assert (ROOT / "site" / "public" / "asciicharts.skill").read_bytes() == package_skill.build(), "the site's asciicharts.skill is stale"
 

@@ -7,8 +7,15 @@
 The archive holds one top-level folder, asciicharts/, with SKILL.md directly inside,
 which is the layout skill uploaders expect. It refuses to build if the copies of the
 shared files inside the skill are out of date (see scripts/sync_skill.py).
+
+The same files always give the same bytes (fixed timestamps and permissions, sorted
+entries), so the copy the site offers for download, site/public/asciicharts.skill, can
+be checked against a fresh build:
+
+    python scripts/package_skill.py --out site/public/asciicharts.skill
 """
 import argparse
+import io
 import sys
 import zipfile
 from pathlib import Path
@@ -16,14 +23,27 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from sync_skill import ROOT, SKILL, stale  # noqa: E402
 
-SKIP_DIRS = {"__pycache__"}
+SKIP_DIRS = {"__pycache__", ".claude-plugin"}  # the plugin manifest is for Claude Code, not for uploads
 SKIP_SUFFIXES = {".pyc", ".pyo"}
+CRLF, LF = bytes([13, 10]), bytes([10])
 
 
 def files():
     for path in sorted(SKILL.rglob("*")):
         if path.is_file() and not (SKIP_DIRS & set(path.relative_to(SKILL).parts)) and path.suffix not in SKIP_SUFFIXES:
             yield path
+
+
+def build() -> bytes:
+    """The archive, deterministic: sorted entries, a fixed date, fixed permissions."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as z:
+        for path in files():
+            info = zipfile.ZipInfo(f"{SKILL.name}/{path.relative_to(SKILL).as_posix()}", date_time=(2026, 1, 1, 0, 0, 0))
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            z.writestr(info, path.read_bytes().replace(CRLF, LF))  # the same bytes on every OS
+    return buf.getvalue()
 
 
 def main(argv):
@@ -40,9 +60,7 @@ def main(argv):
 
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as z:
-        for path in files():
-            z.write(path, f"{SKILL.name}/{path.relative_to(SKILL).as_posix()}")
+    out.write_bytes(build())
     print(f"{out}  ({out.stat().st_size} bytes, {sum(1 for _ in files())} files)")
     return 0
 

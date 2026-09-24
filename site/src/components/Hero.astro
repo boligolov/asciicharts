@@ -1,25 +1,29 @@
 ---
 import Chart from "./Chart.astro";
+import Install from "./Install.astro";
 ---
 
 <section class="hero" id="top">
   <div class="wrap">
     <h1 class="hero-title pixel-heading">ASCIICHARTS</h1>
     <p class="hero-tagline pixel-heading" style="font-size: 14px; color: var(--fg);">
-      How to build charts out of text characters — right
+      An agent skill for charts made of text — drawn right
     </p>
     <p class="hero-pitch">
-      For the places images can't go: PR descriptions, incident channels, CI logs, commit messages,
-      terminals — and the replies of AI agents. <strong>The principles</strong> say how to get every
-      cell right; <strong>a skill</strong> teaches agents to draw by them; <strong>two reference
-      implementations</strong>, Go and Python, render them byte for byte.
+      Ask Claude for a chart in a reply, a PR, a commit message or a terminal: bars, lines, sparklines,
+      histograms, pies, heatmaps — <strong>lengths that match the values, frames that stay straight in any
+      font, series you can tell apart without color.</strong> It draws them by hand from the principles, or
+      renders them exactly when a renderer is at hand.
     </p>
+
+    <Install />
+
     <div class="hero-ctas">
-      <a class="btn btn-primary pixel-corners" href="#principles">
-        THE PRINCIPLES ▸
+      <a class="btn btn-secondary pixel-corners" href="#principles">
+        THE PRINCIPLES BEHIND IT ▸
       </a>
-      <a class="btn btn-secondary pixel-corners" href="#ways-in">
-        GET STARTED
+      <a class="btn btn-secondary pixel-corners" href="https://github.com/boligolov/asciicharts">
+        GITHUB
       </a>
     </div>
 

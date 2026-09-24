@@ -1,0 +1,12 @@
+{
+  "name": "asciicharts",
+  "description": "Draw charts out of text characters in replies, terminals, PRs and commit messages — bars, lines, sparklines, histograms, pies, heatmaps — with lengths that match the values and frames that stay straight in any font. Draws by hand from the asciicharts principles, or renders exactly when the asciicharts command, Python or MCP server is available.",
+  "author": {
+    "name": "asciicharts contributors",
+    "url": "https://github.com/boligolov/asciicharts"
+  },
+  "homepage": "https://asciicharts.online",
+  "repository": "https://github.com/boligolov/asciicharts",
+  "license": "MIT",
+  "keywords": ["charts", "ascii", "unicode", "text", "visualization", "terminal", "csv"]
+}
