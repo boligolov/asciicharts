@@ -331,6 +331,11 @@ give one extra cell to the `rest` segments with the largest fractional parts
 
 Series 0 sits at the base, the next on top of it, in order.
 
+**A stacked bar keeps every non-zero segment**: the largest-remainder split can leave a small value with
+no cell (3% of 20 cells is 0.6, and the spare cells go to larger fractions), so any non-zero segment left
+empty takes one cell from the largest segment, and a stack that rounds to nothing gets one cell. Areas
+don't do this: their values are interpolated per column, and a thin band would be inflated everywhere.
+
 **Stacked with negatives** (diverging stacks): positive values stack up (right) from the zero line,
 negative values stack down (left), series 0 nearest zero on both sides.
 

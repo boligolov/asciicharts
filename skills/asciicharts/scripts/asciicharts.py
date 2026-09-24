@@ -755,10 +755,16 @@ def _bar_fill_ramp(style: str):
     return {"halftone": HALFTONE_FILLS, "ascii": ASCII_FILLS}.get(style)
 
 
-def _allocate_proportional(values, total_sum: float, total: int):
-    """Largest-remainder split of `total` units proportionally to values."""
+def _allocate_proportional(values, total_sum: float, total: int, keep_nonzero: bool = False):
+    """Largest-remainder split of `total` units proportionally to values.
+
+    keep_nonzero (stacked bars): every non-zero value keeps at least one unit — a stack of 1 unit
+    if the whole stack would round to nothing, and a unit moved from the largest segment to any
+    segment the split left empty, while there is one to spare."""
     n = len(values)
     result = [0] * n
+    if keep_nonzero and total_sum > 0:
+        total = max(total, 1)
     if total_sum <= 0 or total <= 0:
         return result
     fracs = [0.0] * n
@@ -772,6 +778,14 @@ def _allocate_proportional(values, total_sum: float, total: int):
     order = sorted(range(n), key=lambda i: -fracs[i])
     for i in range(min(remainder, n)):
         result[order[i]] += 1
+    if keep_nonzero:
+        for i, v in enumerate(values):
+            if v > 0 and result[i] == 0:
+                donor = max(range(n), key=lambda j: result[j])  # the first of the largest
+                if result[donor] <= 1:
+                    break
+                result[donor] -= 1
+                result[i] = 1
     return result
 
 
@@ -801,7 +815,7 @@ def _split_rows(max_pos, max_neg, total):
     return _clamp(_round(max_pos / (max_pos + max_neg) * total), 1, total - 1)
 
 
-def _split_stack(values, max_pos, max_neg, up_cap, down_cap):
+def _split_stack(values, max_pos, max_neg, up_cap, down_cap, keep_nonzero=False):
     """Whole rows per series on each side of the baseline for one stacked column."""
     pos = [v if v > 0 else 0.0 for v in values]
     neg = [-v if v < 0 else 0.0 for v in values]
@@ -814,9 +828,9 @@ def _split_stack(values, max_pos, max_neg, up_cap, down_cap):
     up = [0] * len(values)
     down = [0] * len(values)
     if max_pos > 0:
-        up = _allocate_proportional(pos, pos_sum, _round(pos_sum / max_pos * up_cap))
+        up = _allocate_proportional(pos, pos_sum, _round(pos_sum / max_pos * up_cap), keep_nonzero)
     if max_neg > 0:
-        down = _allocate_proportional(neg, neg_sum, _round(neg_sum / max_neg * down_cap))
+        down = _allocate_proportional(neg, neg_sum, _round(neg_sum / max_neg * down_cap), keep_nonzero)
     return up, down
 
 
@@ -883,7 +897,7 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
             col_sum = _sum(values)
             total_rows = _round(col_sum / max_sum * height)
             cursor = 0
-            for s, seg_rows in enumerate(_allocate_proportional(values, col_sum, total_rows)):
+            for s, seg_rows in enumerate(_allocate_proportional(values, col_sum, total_rows, keep_nonzero=True)):
                 ch = seg_ramp[s % len(seg_ramp)]
                 for r in range(seg_rows):
                     row = height - 1 - cursor - r
@@ -901,7 +915,7 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
         for c in range(num_cat):
             col_start = c * (group_w + gap) + bars_offset
             values = [matrix[s][c] for s in range(num_series)]
-            up, down = _split_stack(values, max_pos, max_neg, up_cap, height - up_cap)
+            up, down = _split_stack(values, max_pos, max_neg, up_cap, height - up_cap, keep_nonzero=True)
             for side, rows_by_series in enumerate((up, down)):
                 cursor = 0
                 for s, seg_rows in enumerate(rows_by_series):
@@ -1114,7 +1128,7 @@ def _render_hbar_stacked_diverging(labels, names, matrix, width, color_on, ramp,
     for c, lbl in enumerate(labels):
         values = [matrix[s][c] for s in range(len(names))]
         net = _sum(values)
-        up, down = _split_stack(values, max_pos, max_neg, pos_cols, neg_cols)
+        up, down = _split_stack(values, max_pos, max_neg, pos_cols, neg_cols, keep_nonzero=True)
         bar = " " * (neg_cols - sum(down))
         for s in range(len(down) - 1, -1, -1):
             bar += seg(s, down[s])
@@ -1145,7 +1159,7 @@ def _render_hbar_stacked(labels, names, matrix, width, color_on, ramp):
         col_sum = _sum(values)
         total_width = _round(col_sum / max_sum * width)
         bar, used = "", 0
-        for s, w in enumerate(_allocate_proportional(values, col_sum, total_width)):
+        for s, w in enumerate(_allocate_proportional(values, col_sum, total_width, keep_nonzero=True)):
             color = _series_color(s) if color_on else -1
             bar += _colorize(seg_ramp[s % len(seg_ramp)] * w, color, color_on)
             used += w

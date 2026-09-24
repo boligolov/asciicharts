@@ -301,6 +301,16 @@ def test_every_non_zero_pie_slice_owns_at_least_one_cell():
     assert disc.count("▓") == 1 and "▒" not in disc  # tiny: one cell; zero: none
 
 
+def test_every_non_zero_segment_of_a_stacked_bar_keeps_a_cell():
+    shares = [("Chrome", 64), ("Safari", 19), ("Other", 9), ("Edge", 5), ("Firefox", 3)]
+    out = render_chart({"chartType": "hbar", "stacked": True, "border": "none", "width": 20, "labels": ["share"],
+                        "series": [{"name": n, "values": [v]} for n, v in shares]})
+    assert rows(out)[0] == "share │ ████████████▓▓▓▓▒▒░▌ 100"  # Firefox (3%) keeps its ▌, taken from Chrome
+    tiny = render_chart({"chartType": "vbar", "stacked": True, "border": "none", "height": 4, "width": 5,
+                         "labels": ["a", "b"], "series": [{"values": [100, 1]}, {"values": [1, 0]}]})
+    assert [r[3] for r in rows(tiny)[:4]] == [" ", " ", " ", "█"]  # 1 next to 101 still gets a row
+
+
 def test_float_rounding_is_half_away_from_zero_like_go():
     # Python's round(2.5) == 2; Go's math.Round(2.5) == 3. Column 0.5 of 5 rows must round up.
     out = render_chart({"chartType": "vbar", "height": 5, "border": "none", "labels": ["a", "b"],

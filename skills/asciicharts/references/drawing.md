@@ -126,6 +126,7 @@ with the largest-remainder method:
 total cells = round(row_sum / max_row_sum × W)
 exact_i     = v_i / row_sum × total
 cells_i     = floor(exact_i); give the cells still missing, one each, to the largest fractional parts
+a non-zero segment left with 0 cells takes one from the largest segment
 row         = label │ segments, then spaces up to W, then the row sum; legend below
 ```
 
