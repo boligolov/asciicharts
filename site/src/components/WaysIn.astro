@@ -1,19 +1,28 @@
 ---
 const ways = [
   {
-    title: "CLI / library",
-    for_: "scripts, CI, notebooks",
-    body: "Copy asciicharts.py — nothing else needed. Reads a JSON spec or a CSV file, writes a chart to stdout.",
+    title: "Agent skill",
+    for_: "Claude Code and other agents",
+    body: "Teaches an agent to draw a correct text chart by hand — lengths computed, rows counted, then checked — and to use a renderer when there is one.",
+    code: [['<span class="tok-kw">$</span> cp -r skills/asciicharts ~/.claude/skills/']],
+  },
+  {
+    title: "Command line",
+    for_: "scripts, CI, terminals",
+    body: "One static binary (Go), or one Python file. A JSON spec or a CSV file in, a chart out.",
     code: [
-      ['<span class="tok-kw">$</span> python asciicharts.py --csv latency.csv \\'],
+      ['<span class="tok-kw">$</span> asciicharts --csv latency.csv \\'],
       ["    --chart hbar --sort -p99 --limit 3"],
     ],
   },
   {
-    title: "Agent skill",
-    for_: "Claude Code and other agents with a shell",
-    body: "A self-contained folder — SKILL.md, the script, references — that an agent finds by scanning a directory. No registry.",
-    code: [['<span class="tok-kw">$</span> cp -r skills/asciicharts ~/.claude/skills/']],
+    title: "Library",
+    for_: "Go and Python programs",
+    body: "The same renderer in your code: a pure function from a spec to a string, standard library only.",
+    code: [
+      ['<span class="tok-kw">&gt;&gt;&gt;</span> from asciicharts import render_chart'],
+      ['<span class="tok-kw">$</span> go get github.com/boligolov/asciicharts/go'],
+    ],
   },
   {
     title: "MCP server",
@@ -29,7 +38,7 @@ const ways = [
 
 <section class="section" id="ways-in">
   <div class="wrap">
-    <p class="section-kicker">// three ways in</p>
+    <p class="section-kicker">// four ways in</p>
     <h2 class="section-title pixel-heading" style="font-size:20px;">Pick the one that fits</h2>
     <div class="ways">
       {

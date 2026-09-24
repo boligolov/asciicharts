@@ -1,46 +1,29 @@
 # Drawing text charts by hand
 
-How to produce a correct text chart **without running any code**: which numbers to compute, how to turn
-them into rows of characters, and how to check the result before you answer. Every example below is real
-output of the reference renderer for the spec printed above it, and every number in the working is one
-you can recompute.
-
-If a tool is available — the `asciicharts` MCP server, the `asciicharts` binary, or
-`python scripts/asciicharts.py` — use it: it is exact. Draw by hand when there is no tool, or when the
-chart is small enough that a tool is overkill.
-
-## Which charts to draw by hand
-
-Language models miscount characters. A bar of 17 `█` next to one of 6, a right border at column 44 — that
-is where hand-drawn charts go wrong. So the method below never eyeballs: compute every length first,
-then build each row by repeating a glyph a known number of times, then count again.
+How to draw a correct text chart **without running code**: the numbers to compute, how to turn them into
+rows of characters, and how to check the result. Every example is real output of the reference renderer
+for the spec above it; every number in the working can be recomputed. With a tool available, use it.
 
 | tier | charts | what to do |
 |---|---|---|
 | **A — reliable** | sparkline, hbar (up to ~10 bars), small vbar, dotplot | draw it |
-| **B — careful** | line and area on a small grid, histogram, boxplot, small heatmap, scatter with a few points | draw it small (plot ≤ 20 × 6), compute everything, self-check |
-| **C — use a tool** | pie, dual_axis, anything large | use a tool; without one, draw the simpler equivalent given in its section and say so |
+| **B — careful** | line and area on a small grid, histogram, boxplot, small heatmap, scatter with a few points | plot ≤ 20 × 6, compute everything, self-check |
+| **C — use a tool** | pie, dual_axis, anything large | without one, draw the simpler equivalent in its section and say so |
 
-## The protocol (every chart)
+## The protocol
 
-1. **Pick small sizes.** Bars 10–20 cells long; plots at most 20 columns × 6 rows. Small is what you
-   can count.
-2. **Compute a table first**, before drawing a single glyph: for each value, its cell count (or row,
-   column). Write it down.
-3. **Round half away from zero**: `2.5 → 3`, `7.5 → 8`, `−2.5 → −3`; otherwise to the nearest integer.
-4. **A non-zero value never gets 0 cells** — make it 1. Zero gets 0.
-5. **Build each row as counted runs**: `█ × 7 + ░ × 13`, never "about this long".
-6. **Pad labels** with spaces to the longest label, so every bar starts in the same column.
-7. **Print the values** next to bars: integers as they are, others with two decimals (`26.40`); below 1,
-   two significant digits (`0.0042`).
-8. **Prefer no frame.** Put the title on its own line above the chart. A frame's right border is the
-   first thing that shows a miscount; add one only when asked (see *Frames* below).
-9. **Answer in a fenced code block** (```` ``` ````), or alignment is lost.
-10. **Run the self-check** at the end of this document.
+1. **Small**: bars of 10–20 cells, plots of at most 20 columns × 6 rows — what you can count.
+2. **Compute a table first** — every value's cells (or row, column) — before drawing a glyph.
+3. **Round half away from zero** (`2.5 → 3`, `−2.5 → −3`). A non-zero value gets at least 1 cell; zero, 0.
+4. **Build rows as counted runs**: `█ × 7 + ░ × 13`, never "about this long".
+5. **Pad labels** to the longest, so every bar starts in the same column.
+6. **Print values**: integers as they are, others with two decimals (`26.40`), below 1 two significant
+   digits (`0.0042`).
+7. **No frame unless asked**; the title goes on its own line above. See *Frames*.
+8. **Fenced code block**, then the **self-check** at the end.
 
-**Glyphs.** Series 1–8: `█ ▓ ▒ ░ ▌ ▄ ▐ ▀`. The empty rest of a bar (the *track*): `░` (use `▒` if the bar
-itself is `░`). Separator between labels and bars: `│`. For output that must be pure ASCII: series
-`# @ % & $ W M N H`, track `,`, separator `|`.
+**Glyphs**: series `█ ▓ ▒ ░ ▌ ▄ ▐ ▀`; track (the empty rest of a bar) `░`, or `▒` when the bar is `░`;
+label separator `│`. Pure ASCII: series `# @ % & $ W M N H`, track `,`, separator `|`.
 
 ---
 
@@ -98,9 +81,9 @@ Check: `cells + track = 20` on every row; the longest bar is exactly `W`; every 
 
 ### hbar — several series (grouped)
 
-Each category on its own line, then one indented row per series; a blank line between categories. The
-series names are in the rows, so every bar can be `█` and no legend is needed (one glyph per series
-with a legend is fine too — the point is that series can be told apart without color). Scale everything to the **overall** maximum.
+Each category on its own line, then one indented row per series, a blank line between categories. The
+rows name their series, so every bar can be `█` with no legend (or one glyph per series plus a legend).
+Scale everything to the **overall** maximum.
 
 ```json
 { "chartType": "hbar", "border": "none", "width": 12, "labels": ["Q1", "Q2"], "series": [{ "name": "2025", "values": [30, 45] }, { "name": "2026", "values": [36, 48] }] }
@@ -148,6 +131,25 @@ APAC │ █████████▓▓▓         35
 | APAC | 35 | round(11.67) = 12 | 8.57, 3.43 | 8, 3 | Product (.57) | 9 + 3 |
 
 Check: segments + padding = W on every row; the legend glyphs are the segment glyphs, in order.
+
+**With negative values**, one column is the zero axis `¦` (owned by no bar); the other `W − 1` are split
+between the sides — `pos = round(max_pos / (max_pos + max_neg) × (W − 1))`, at least 1 each, where
+`max_pos`/`max_neg` are the largest positive and negative row sums. Each side is a stack scaled to its own
+maximum; negatives grow left from the axis, series 1 nearest to it; the number at the end is the net sum.
+
+```json
+{ "chartType": "hbar", "stacked": true, "border": "none", "width": 21, "labels": ["Jan", "Feb"], "series": [{ "name": "Sales", "values": [40, 30] }, { "name": "Refunds", "values": [-10, -5] }] }
+```
+
+```
+Jan │ ▓▓▓▓¦████████████████ 30
+Feb │   ▓▓¦████████████     25
+
+█ Sales   ▓ Refunds
+```
+
+Working: W − 1 = 20 shared; max_pos = 40, max_neg = 10 → 16 cells right, 4 left. Jan: 40 → 16, −10 → 4;
+Feb: 30 / 40 × 16 = 12, −5 / 10 × 4 = 2. Check: the `¦` is in the same column on every row.
 
 ### hbar — negative values (diverging)
 
@@ -436,46 +438,11 @@ share │ ████████████▓▓▓▓▓▒▒▒ 100
 Working: 60 %, 25 %, 15 % of 20 cells = 12, 5, 3 (the largest-remainder rule when they don't divide
 evenly). Add the percentages to the legend if they matter: `█ Chrome 60%`.
 
-For reference, the pie the renderer draws for the same data (16 columns):
-
-```json
-{ "chartType": "pie", "border": "none", "width": 16, "series": [{ "name": "Chrome", "values": [60] }, { "name": "Safari", "values": [25] }, { "name": "Other", "values": [15] }] }
-```
-
-```
-    ▒▒▒▒████    
-  ▒▒▒▒▒▒██████  
- ▓▓▓▒▒▒▒███████ 
-▓▓▓▓▓▓▓▒████████
-▓▓▓▓▓▓▓█████████
- ▓▓▓▓▓█████████ 
-  ▓▓██████████  
-    ████████    
-
-█ Chrome: 60 (60.0%)
-▓ Safari: 25 (25.0%)
-▒ Other: 15 (15.0%)
-```
-
 ### dual_axis
 
 Two lines on independent scales share one grid — two sets of row labels, two interpolations, crossings.
 **Without a tool, draw two small line charts one above the other**, each with its own axis, same width
-and the same x labels. For reference, the renderer's version:
-
-```json
-{ "chartType": "dual_axis", "border": "none", "height": 4, "width": 13, "series": [{ "name": "Temp", "values": [10, 16, 14] }, { "name": "Humidity", "values": [80, 60, 70] }] }
-```
-
-```
-16 ┤▒    ████    ├ 80   
-14 ┤ ▒▒██    ████├ 73.33
-12 ┤ ██▒▒    ▒▒▒▒├ 66.67
-10 ┤█    ▒▒▒▒    ├ 60   
-
-left:  █ Temp
-right: ▒ Humidity
-```
+and the same x labels.
 
 ### Anything large
 
@@ -517,16 +484,13 @@ from common fonts.
 
 ## Self-check before you answer
 
-- [ ] Every length was computed from a formula above, and the table of numbers matches the drawing.
-- [ ] On every bar row, filled cells + track (or padding) = the bar length.
-- [ ] The longest bar is exactly the full length; the maximum of a sparkline is `█`.
-- [ ] Every line of the chart has the same width (count them; with a frame, the right border is straight).
-- [ ] Labels are padded so all `│` separators line up.
-- [ ] Bars start at zero, or grow both ways from a marked axis.
-- [ ] With negative values, the zero axis is in the same column on every row: count what is left of it
-      (label, separator, negative bar, padding) on each row — the counts must be equal.
-- [ ] CJK characters and most emoji counted as two columns, when padding labels and sizing the frame.
-- [ ] Each series has its own glyph; the legend shows the same glyphs in the same order.
-- [ ] The values are printed where the drawing is approximate.
-- [ ] The chart is in a fenced code block.
-- [ ] Tier C without a tool: you drew the simpler equivalent and said so.
+- [ ] Every length comes from a formula above, and your table of numbers matches the drawing.
+- [ ] Each bar row: filled cells + track (or padding) = the bar length; the longest bar is exactly full;
+      a sparkline's maximum is `█`.
+- [ ] Every line has the same display width (CJK and most emoji count 2): the `│` separators line up and
+      a frame's right border is straight.
+- [ ] Bars start at zero or grow both ways from a marked axis — and that axis is in the same column on
+      every row (count what is left of it on each row: the counts must be equal).
+- [ ] One glyph per series, the legend showing the same glyphs in the same order; values printed where
+      the drawing is approximate.
+- [ ] Fenced code block. Tier C without a tool: the simpler equivalent, and you said so.

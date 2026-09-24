@@ -5,7 +5,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "asciicharts"
 version = "1.0.0"
-description = "ASCII/Unicode text charts: the Python reference implementation of the asciicharts principles, one stdlib-only file."
+description = "Charts made of text characters, done right: the Python reference implementation of the asciicharts principles, in one standard-library file."
+keywords = ["ascii", "unicode", "text", "chart", "plot", "terminal", "cli", "sparkline", "bar chart", "agents"]
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
@@ -14,6 +15,8 @@ dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/boligolov/asciicharts"
+Principles = "https://github.com/boligolov/asciicharts/blob/master/spec/principles.md"
+Gallery = "https://github.com/boligolov/asciicharts/blob/master/docs/gallery.md"
 Issues = "https://github.com/boligolov/asciicharts/issues"
 
 [project.optional-dependencies]

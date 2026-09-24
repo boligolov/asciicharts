@@ -1,0 +1,56 @@
+---
+const principles = [
+  {
+    title: "A grid of equal cells",
+    body: "A text chart is a rectangle of cells, one glyph each. Lengths are counted in cells — never eyeballed — and every line has the same display width: CJK counts two columns, a combining accent none.",
+  },
+  {
+    title: "Glyphs every font has",
+    body: "A glyph missing from the reader's font is borrowed from another one and breaks the alignment. The safe alphabet is WGL4 — whole █ blocks, light box lines, four shades — plus a pure-ASCII mode for anywhere.",
+  },
+  {
+    title: "Arithmetic, written down",
+    body: "cells = round(v / max × W), half away from zero. A non-zero value never disappears. Stacks split by the largest remainder, so equal totals get equal lengths.",
+  },
+  {
+    title: "Zero is an axis",
+    body: "Negative values grow the other way from a zero line that belongs to no bar — stacked bars too — so +3 and −3 are the same length and zero draws nothing.",
+  },
+  {
+    title: "Identity without color",
+    body: "Text often has no color. Every series gets its own glyph, densest first, and a legend with the same glyph; numbers are printed wherever the grid is only approximate.",
+  },
+  {
+    title: "Every rule has a reason",
+    body: "Each rule is tied to the mistake that made it: a pie slice that vanished, a label that read −28.00 for −28, a boxplot median missing from Consolas. Normative requirements, MUST and SHOULD, in §15.",
+  },
+];
+---
+<section class="section" id="principles">
+  <div class="wrap">
+    <p class="section-kicker">// knowledge first</p>
+    <h2 class="section-title pixel-heading" style="font-size:20px;">The principles</h2>
+    <p class="lede" style="max-width: 80ch; margin: 0 0 28px;">
+      <strong>asciicharts principles v1.1</strong> — how to build charts out of text characters right,
+      for a person, an agent, or a port to another language. A chart conforms when it meets the
+      requirements; a renderer conforms when it reproduces the
+      <a href="https://github.com/boligolov/asciicharts/tree/master/spec/conformance">conformance suite</a>
+      byte for byte. Licensed CC BY 4.0: use them, adapt them, build on them — with credit.
+    </p>
+    <div class="grid">
+      {
+        principles.map((p) => (
+          <div class="grid-item">
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </div>
+        ))
+      }
+    </div>
+    <p style="margin-top: 20px;">
+      <a class="btn btn-secondary pixel-corners" href="https://github.com/boligolov/asciicharts/blob/master/spec/principles.md">
+        READ THE PRINCIPLES ▸
+      </a>
+    </p>
+  </div>
+</section>

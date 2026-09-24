@@ -1,20 +1,10 @@
 # asciicharts
 
-**[See the gallery →](docs/gallery.md)** every chart type and style, rendered: bars (grouped, stacked, diverging), lines, areas, pies, heatmaps, box plots, Unicode and pure-ASCII looks. All real output.
+**[Read the principles →](spec/principles.md)** · **[See the gallery →](docs/gallery.md)** every chart type and style, rendered — real output.
 
-**Charts for the places images can't go.** PR descriptions, incident channels, CI logs, commit messages, ssh sessions — and the replies of LLM agents. Numbers in, a monospace string out. One file, standard library only, nothing to install.
-
-```sh
-$ cat latency.csv
-endpoint,p50,p99,errors
-/login,120,480,3
-/search,340,1900,12
-/checkout,210,950,7
-/health,5,9,0
-/upload,800,4200,21
-
-$ python asciicharts.py --csv latency.csv --chart hbar --values p99 --sort -p99 --limit 3 --set title="Slowest endpoints, p99 ms"
-```
+**How to build charts out of text characters — right.** Bars, lines, areas, pies, heatmaps and box plots
+drawn with nothing but characters, for the places images can't go: PR descriptions, incident channels, CI
+logs, commit messages, terminals — and the replies of AI agents.
 
 ```
 ┌───────────────────────────────────────────────────────────┐
@@ -26,42 +16,123 @@ $ python asciicharts.py --csv latency.csv --chart hbar --values p99 --sort -p99 
 └───────────────────────────────────────────────────────────┘
 ```
 
-The light `░` track behind each bar is the rest of the axis — `/checkout` is visibly a fifth of `/upload`, not just "some blank space that might mean anything." Paste that into a pull request, a Slack thread or a commit body and it lines up — it is just text.
+A text chart goes wrong in predictable ways: lengths are eyeballed instead of counted, a glyph missing from
+the reader's font breaks the alignment, series differ only by a color the text doesn't have, a negative
+value has nowhere to go. This repository is, first of all, the knowledge of how not to:
 
-## Why it earns a place in your toolbox
+| | what | licence |
+|---|---|---|
+| **[The principles](spec/principles.md)** | *asciicharts principles v1.1*: the cell model, the font-safe glyph alphabet, the arithmetic, layout, text, the twelve chart types — and the mistakes behind each rule. Normative requirements in §15 | CC BY 4.0 |
+| **[The conformance suite](spec/conformance/)** | 317 random specs, 107 curated cases and 31 documented examples with their exact expected output, byte for byte, language-neutral | CC BY 4.0 |
+| **[The agent skill](docs/skill.md)** | teaches an agent to draw a correct text chart by hand, and to use a renderer when one is available | MIT |
+| **Two reference implementations** | [Go](go/) — a single-binary command line, a library and an MCP server; [Python](python/) — one stdlib-only file, library and command line. Both pass the suite and agree byte for byte on random input | MIT |
 
-- **No dependencies, no install.** [`python/asciicharts.py`](python/asciicharts.py) is one ~2,000-line file of standard-library Python (3.10+, developed on 3.12). Copy it into a repo, a CI step or a gist. Only the optional MCP server needs a package (`mcp`); the renderer never does.
-- **Deterministic.** A pure function of the spec: no clock, no randomness, no locale, no terminal probing. Same input, same bytes — safe to snapshot, diff and commit. 500+ tests pin the output byte-for-byte, including a corpus of 300+ generated specs.
-- **Built to be called by machines.** Input is validated and bounded (width ≤ 500, height ≤ 200, 50,000 values, finite numbers only) and every error is one line that says what to fix — `error: row 3, column "v" is not a number: "n/a"` — so a script or an agent can correct itself. The skill was tuned against real agent runs ([`skills/evals`](skills/evals)).
-- **Gets the cases hand-drawn charts get wrong.** Negative values grow both ways from a zero line, stacked ones too. Dirty CSV numbers (`$1,200`, `12%`, `1,234.5`, decimal commas) are parsed, and bad cells are reported by row and column instead of silently dropped. Many series stay tellable apart: 8 Unicode fills, 23 glyphs in pure ASCII.
-- **Looks right where you paste it.** Font-safe defaults (whole `█` blocks, glyphs that even Consolas has), a pure-ASCII mode for terminals and mail, no ANSI escapes unless you ask.
-- **No side effects.** The renderer writes nothing and opens no sockets. The server is stateless and records nothing.
+## The principles
 
-Two of the hard cases, straight from the CLI:
+[`spec/principles.md`](spec/principles.md) is written so that anyone — a person, an agent, a port to another
+language — can build text charts that are right:
+
+- **The medium** (§1–3): a grid of equal cells; which glyphs survive every font (WGL4, not "Unicode");
+  ink density; how series stay distinct without color.
+- **The arithmetic** (§4): `cells = round(v / max × W)`, half away from zero; a non-zero value never
+  disappears; stacks split by the largest remainder; the zero line is an axis owned by no bar.
+- **Layout and text** (§5–6): frames, legends, axis labels that are the rows' real values; display width
+  (CJK counts two columns, combining marks none).
+- **Each chart type, style and limit** (§7–9), **the mistakes that made the rules** (§11), **drawing by hand**
+  (§13), a **porting checklist** (§14) and **the requirements** (§15, MUST/SHOULD).
+
+A chart conforms when it meets §15; a renderer conforms when it reproduces the
+[conformance suite](spec/conformance/) byte for byte. Changes are versioned in
+[`spec/CHANGELOG.md`](spec/CHANGELOG.md). The principles and the suite are CC BY 4.0: use them, adapt them,
+build on them — with credit.
+
+## The skill: an agent that draws charts right
+
+A skill folder ([`skills/asciicharts`](skills/asciicharts/)) that an agent reads on demand. It picks the chart
+for the question, uses a renderer if one is there (MCP server, `asciicharts` binary or the bundled Python
+script) and otherwise **draws by hand** from a recipe per chart type: compute the lengths first, build rows
+from counted runs of glyphs, then check.
 
 ```sh
-python asciicharts.py --json '{"chartType":"hbar","stacked":true,"width":40,"title":"Revenue vs refunds",
-  "labels":["EMEA","APAC","Americas"],"series":[{"name":"Product","values":[40,25,55]},{"name":"Refunds","values":[-15,-20,-8]}]}'
+cp -r skills/asciicharts ~/.claude/skills/          # Claude Code; Claude.ai and the API: docs/skill.md
 ```
+
+It is measured, not assumed ([`skills/evals`](skills/evals/)): drawing by hand with no code allowed, a small
+model went from 68% to 89% of the checks with the skill — code blocks, lengths, axes from the data; a strong
+model was right with or without it, and with it drew smaller charts and showed its working.
+
+## The implementations
+
+**The `asciicharts` command** — one static binary for Linux, macOS and Windows
+([releases](https://github.com/boligolov/asciicharts/releases), or
+`go install github.com/boligolov/asciicharts/go/cmd/asciicharts@latest`):
+
+```sh
+asciicharts spec.json                             # a JSON spec from a file, - for stdin, or --json '{...}'
+asciicharts --csv latency.csv --chart hbar --values p99 --sort -p99 --limit 3 --set title="Slowest endpoints, p99 ms"
+asciicharts --list                                # every chart type, how to fill it, an example
+```
+
+`--csv` reads a header row, detects `,` `;` tab or `|`, parses dirty numbers (`$1,200`, `12%`, decimal commas)
+and reports a bad cell by row and column instead of dropping it. Negative values grow both ways from a
+zero axis, stacked ones too:
 
 ```
 ┌────────────────────────────────────────────────────────┐
 │                   Revenue vs refunds                   │
 ├────────────────────────────────────────────────────────┤
-│ EMEA     │    ▓▓▓▓▓▓▓▓█████████████████████         25 │
-│ APAC     │ ▓▓▓▓▓▓▓▓▓▓▓█████████████                 5  │
-│ Americas │        ▓▓▓▓█████████████████████████████ 47 │
+│ EMEA     │   ▓▓▓▓▓▓▓▓¦█████████████████████         25 │
+│ APAC     │ ▓▓▓▓▓▓▓▓▓▓¦█████████████                 5  │
+│ Americas │       ▓▓▓▓¦█████████████████████████████ 47 │
 │                                                        │
 │ █ Product   ▓ Refunds                                  │
 └────────────────────────────────────────────────────────┘
 ```
 
-Refunds hang left of the shared zero column, products stack right, and the number at the end is the net. And for anything that isn't a UTF-8 terminal, `"style": "ascii", "border": "ascii"` gives you nothing but plain characters:
+**Python** — [`python/asciicharts.py`](python/asciicharts.py), one file of standard-library Python (3.10+):
+copy it anywhere. The same command line (`python asciicharts.py …`, plus
+[ExCSV](https://github.com/boligolov/excsv) files with their own `#chart` suggestions), and a library:
+
+```python
+from asciicharts import render_chart            # raises ChartError, a ValueError, with a one-line message
+print(render_chart({"chartType": "sparkline", "series": [{"values": [4, 6, 5, 9, 3]}]}))
+```
+
+**Go library** — `github.com/boligolov/asciicharts/go/asciicharts`, standard library only:
+`asciicharts.RenderJSON(spec)`. See [go/README.md](go/README.md).
+
+**MCP server** — two tools, `list_charts` (the catalogue, with an example call per chart) and
+`render_chart`, over stdio or stateless streamable HTTP; one static binary or a `FROM scratch` image:
 
 ```sh
-python asciicharts.py --json '{"chartType":"hbar","style":"ascii","border":"ascii","title":"Tests by suite",
-  "labels":["unit","integration","e2e"],"series":[{"values":[480,120,30]}]}'
+go install github.com/boligolov/asciicharts/go/cmd/asciicharts-mcp@latest
+claude mcp add asciicharts -- asciicharts-mcp
 ```
+
+Client setup, HTTP, Docker and production (Caddy, HTTPS):
+[go/cmd/asciicharts-mcp/README.md](go/cmd/asciicharts-mcp/README.md).
+
+All of them are deterministic — a pure function of the spec: same input, same bytes, safe to snapshot and
+diff — validate and bound their input (width ≤ 500, height ≤ 200, 50,000 values), and answer bad input
+with one line that says what to fix.
+
+## Charts
+
+| `chartType` | use it for |
+|---|---|
+| `sparkline` | a trend inside a sentence or a log line |
+| `hbar`, `vbar` | rankings and comparisons: single, grouped, stacked, diverging |
+| `line`, `area` | time series, labelled thresholds, filled volume, stacked bands |
+| `scatter`, `dotplot` | two numbers against each other; close values on an axis that needn't start at 0 |
+| `dual_axis` | two series on different scales |
+| `histogram`, `boxplot` | distributions from raw samples — bins and quartiles computed for you |
+| `pie` | shares of a whole |
+| `heatmap` | a matrix, e.g. hour × weekday |
+
+Styles `solid`, `halftone`, `ascii`, `dotted` (line) and `fine`; six borders; an optional title; ANSI
+colour on request. **[The gallery](docs/gallery.md)** shows every one — real output — and
+**[the reference](skills/asciicharts/references/reference.md)** lists every option. Where the text may land
+anywhere, `"style": "ascii", "border": "ascii"` uses nothing but plain characters:
 
 ```
 +------------------------------------------------------------+
@@ -73,98 +144,14 @@ python asciicharts.py --json '{"chartType":"hbar","style":"ascii","border":"asci
 +------------------------------------------------------------+
 ```
 
-## Where it fits
-
-- **Pull requests and commit messages.** Before/after benchmarks, test time by suite, bundle size by package.
-- **Incident channels and on-call handoffs.** Top-N slow endpoints or error counts from a Grafana or SQL export: one command, pasted in.
-- **CI logs and job summaries.** Deterministic text you can diff between runs or assert on in a test.
-- **READMEs and docs without image files.** Charts that live in the repo, review in diffs and never go stale as binaries.
-- **Terminals and ssh sessions.** No display, no browser, no X forwarding.
-- **LLM agents.** Give the model a tool (MCP) or a skill and it stops hand-drawing misaligned bars.
-
-## Charts
-
-| `chartType` | use it for |
-|---|---|
-| `sparkline` | a trend inside a sentence or a log line |
-| `hbar`, `vbar` | rankings and comparisons: single, grouped, stacked, diverging |
-| `line`, `area` | time series, a dashed threshold, filled volume, stacked bands |
-| `scatter`, `dotplot` | relationships between two numbers; values against each other on an axis that needn't start at 0 |
-| `dual_axis` | two series on different scales |
-| `histogram`, `boxplot` | distributions from raw samples — bins and quartiles are computed for you |
-| `pie` | shares of a whole |
-| `heatmap` | a matrix, e.g. hour × weekday |
-
-Styles: `solid` (default), `halftone`, `ascii`, `dotted` (line), `fine` (eighth-block bar ends, needs a capable font). Six borders (`none`, `ascii`, `light`, `heavy`, `double`, `rounded`), a centred title, optional ANSI 256-colour. **[The gallery](docs/gallery.md)** shows every one; **[the reference](skills/asciicharts/references/reference.md)** lists every option. **[The principles](spec/principles.md)** — *asciicharts principles v1.1*, with a [conformance suite](spec/conformance/) — explain how it all works — the glyphs, the arithmetic, the layout rules and the mistakes behind them — enough to draw a chart by hand or to port the renderer to another language.
-
-## Three ways in
-
-| | for | get started |
-|---|---|---|
-| **CLI / library** | scripts, CI, notebooks | copy [`python/asciicharts.py`](python/asciicharts.py), or the single [`asciicharts` binary](go/README.md#command-line) — nothing else needed |
-| **[Agent skill](docs/skill.md)** | Claude Code and other agents with a shell | `cp -r skills/asciicharts ~/.claude/skills/` |
-| **[MCP server](go/cmd/asciicharts-mcp/README.md)** | any MCP client; one shared always-on deployment | `go install github.com/boligolov/asciicharts/go/cmd/asciicharts-mcp@latest` |
-
-### CLI and library
-
-```sh
-python asciicharts.py spec.json                               # a JSON spec from a file ...
-echo '{"chartType":"hbar", ...}' | python asciicharts.py -    # ... or from stdin
-python asciicharts.py --csv data.csv --chart hbar --sort -latency --limit 10 --set title="Slowest"
-python asciicharts.py --list                                  # every chart type, how to fill it, an example
-```
-
-The Go build of the same command line, `asciicharts` (one static binary, [releases](https://github.com/boligolov/asciicharts/releases)), takes the same arguments and prints the same bytes; only ExCSV is Python-only for now.
-
-`--csv` reads a header row, sniffs `,` `;` tab or `|`, and takes `--label`, `--values`, `--sort`, `--limit`, `--set key=value` and `--print-spec` (see the [skill docs](skills/asciicharts/SKILL.md#from-a-csv)). It also auto-detects [ExCSV](https://github.com/boligolov/excsv) — CSV with a `#!excsv` header and its own `#chart type=bar x=category y=amount ...` suggestions — and renders one of those directly with `--chart-name` (`--list-charts` to see what's on offer); see [From an ExCSV file](skills/asciicharts/SKILL.md#from-an-excsv-file). From Python:
-
-```python
-from asciicharts import render_chart, ChartError
-
-print(render_chart({
-    "chartType": "hbar",
-    "title": "Build time by stage (s)",
-    "labels": ["Compile", "Test", "Lint", "Package"],
-    "series": [{"values": [64, 32, 16, 8]}],
-}))                     # raises ChartError (a ValueError) with a one-line message on bad input
-```
-
-### Agent skill
-
-A self-contained folder — `SKILL.md`, the one-file script, and references — that an agent finds by scanning a directory; there is no registry. It tells the agent which chart fits the question, how to feed it a CSV, and how to make the result read well. Install for Claude Code, Claude.ai or the API: **[docs/skill.md](docs/skill.md)**. To upload it: `python scripts/package_skill.py` → `dist/asciicharts.skill`.
-
-### MCP server
-
-Two tools: **`list_charts`** (the catalogue: every chart type, how to fill `series`, which options apply, an example call) and **`render_chart`**. stdio or stateless streamable HTTP. One static Go binary.
-
-```sh
-go install github.com/boligolov/asciicharts/go/cmd/asciicharts-mcp@latest
-claude mcp add asciicharts -- asciicharts-mcp     # e.g. register it with Claude Code
-PORT=8080 asciicharts-mcp                         # or serve HTTP: /mcp and /healthz
-```
-
-Arguments, transports, configuration, client setup: **[go/cmd/asciicharts-mcp/README.md](go/cmd/asciicharts-mcp/README.md)**.
-
-## Deploy
-
-```sh
-docker build -f deploy/Dockerfile -t asciicharts .
-docker run -i --rm asciicharts                                 # stdio
-docker run --rm -e PORT=8080 -p 8080:8080 asciicharts          # HTTP → http://localhost:8080/mcp
-```
-
-Production is one command — Caddy in front (automatic HTTPS for your domain), a hardened container (read-only filesystem, all capabilities dropped, non-root), and nothing but ports 80/443 exposed:
-
-```sh
-cp deploy/.env.example deploy/.env        # set DOMAIN
-docker compose -f deploy/docker-compose.prod.yml up -d --build      # → https://<DOMAIN>/mcp
-```
-
-The server has no authentication by design (it is a stateless utility bounded by the limits above); put access control in front if you need it. Details: **[docs/development.md](docs/development.md#production-deployment)**.
-
 ## Fonts
 
-Default output is built to survive any font: bars end on whole `█` blocks, frames use light box-drawing lines, series use glyphs found in Consolas and Courier New, and `"style": "ascii"` / `"border": "ascii"` use nothing but plain characters. Two things need a font that has more: the eighth blocks of `"style": "fine"` (`▏▎▍▋▊▉`) and of sparklines (`▁▂▃▅▆▇`) are missing from Consolas, Courier New and Lucida Console, the default monospace fonts of many Windows editors, which then substitute another font for just those characters and make the right border of an otherwise rectangular chart look crooked. Every line really has the same number of characters (the tests check it) — a ragged wall means the font, not the generator. GitHub and most terminals (iTerm2, Windows Terminal, Ghostty, …) are fine; otherwise use Cascadia Code, JetBrains Mono, Noto Sans Mono or DejaVu Sans Mono, or stay with the defaults.
+Default output survives any font: whole `█` blocks, light box lines, glyphs that Consolas and Courier New
+have. Two things need a fuller font — the eighth blocks of `"style": "fine"` and of sparklines — and fonts
+without them (Consolas, Courier New, Lucida Console) borrow those glyphs from another font, which makes an
+otherwise straight right border look crooked. Every line really has the same width; a ragged wall means the
+font. GitHub and most terminals are fine; otherwise Cascadia Code, JetBrains Mono, Noto Sans Mono or DejaVu
+Sans Mono.
 
 ## Development
 
@@ -173,13 +160,18 @@ pip install -e "./python[dev]" && pytest python/tests
 cd go && go test ./...
 ```
 
-The renderer is pinned byte-for-byte by the conformance suite of the principles ([spec/conformance/](spec/conformance/); see also [docs/development.md](docs/development.md#tests)). After editing `python/asciicharts.py` run `python scripts/sync_skill.py` to refresh the copy inside the skill folder (a test fails if you forget). The Go implementation ([go/](go/): library, command line, MCP server) is held to the same suite and compared with Python on random specs and CSV files.
+Both implementations are pinned by the conformance suite and compared with each other on random specs, CSV
+files and command lines; a change to how anything is drawn is a new version of the principles. How it all
+fits together: [docs/development.md](docs/development.md); the plan: [ROADMAP.md](ROADMAP.md).
 
 ## License
 
-The code is [MIT](LICENSE). The principles and the conformance suite in [`spec/`](spec/) are
-[CC BY 4.0](spec/LICENSE): use and adapt them freely, with credit.
+The principles and the conformance suite in [`spec/`](spec/) are [CC BY 4.0](spec/LICENSE): use and adapt
+them freely, with credit. The code — the skill, both implementations, the tools — is [MIT](LICENSE).
 
 ## Credits
 
-The `halftone`/`ascii` bar styles and the `dotted` line style were reverse-engineered from Bloomberg Businessweek's [**The Year Ahead 2016: 50 Companies to Watch**](https://www.bloomberg.com/graphics/year-ahead-2016/) — a scrollytelling piece that renders all of its charts as styled ASCII/Unicode art. If you're looking for inspiration for what a text chart can look like, start there.
+The `halftone`/`ascii` bar styles and the `dotted` line style were reverse-engineered from Bloomberg
+Businessweek's [**The Year Ahead 2016: 50 Companies to Watch**](https://www.bloomberg.com/graphics/year-ahead-2016/),
+a scrollytelling piece that renders all of its charts as styled ASCII/Unicode art. For what a text chart
+can look like, start there.
