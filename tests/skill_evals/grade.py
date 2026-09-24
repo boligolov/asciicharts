@@ -10,6 +10,7 @@ import csv
 import json
 import re
 import sys
+import unicodedata
 from collections import Counter
 from pathlib import Path
 
@@ -36,7 +37,9 @@ def framed_and_rectangular(block):
     lines = [l for l in block.splitlines() if l.strip()]
     if not lines or lines[0][0] not in "┌╭╔┏+":
         return True, "not framed: n/a"
-    widths = {len(l) for l in lines}
+    # display width, as a terminal counts it: CJK and most emoji take 2 columns, combining marks 0
+    widths = {sum(0 if unicodedata.combining(c) or unicodedata.category(c) in ("Mn", "Me", "Cf")
+                  else 2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in l) for l in lines}
     return len(widths) == 1, f"line widths: {sorted(widths)}"
 
 

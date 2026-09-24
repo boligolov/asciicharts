@@ -1,0 +1,56 @@
+{
+  "skill_name": "asciicharts",
+  "mode": "hand-drawn: the agent may not run code, scripts or tools",
+  "note": "Each prompt is followed at run time by: 'You cannot run any code, scripts or tools for this; write the chart yourself. Save your final reply to me, exactly as you'd send it, to the file {OUT}/reply.md.' Grade with tests/skill_evals/hand_grade.py <run_dir> <eval_name>.",
+  "evals": [
+    {
+      "id": 0,
+      "eval_name": "hand-hbar-ranking",
+      "tier": "A",
+      "prompt": "Number of public repositories by language in our org: Python 412, JavaScript 388, Go 197, Rust 143, Java 131, C 64. Make a text bar chart of this ranking for our wiki page.",
+      "data": {"labels": ["Python", "JavaScript", "Go", "Rust", "Java", "C"], "values": [412, 388, 197, 143, 131, 64]}
+    },
+    {
+      "id": 1,
+      "eval_name": "hand-hbar-grouped",
+      "tier": "A",
+      "prompt": "Deploys per team, 2025 vs 2026: Payments 42 and 57, Search 35 and 31, Mobile 18 and 29. A plain-text chart comparing the two years for each team, please.",
+      "data": {"labels": ["Payments", "Search", "Mobile"], "series": {"2025": [42, 35, 18], "2026": [57, 31, 29]}}
+    },
+    {
+      "id": 2,
+      "eval_name": "hand-sparkline",
+      "tier": "A",
+      "prompt": "Weekly signups for the last 8 weeks: 5, 8, 6, 12, 9, 15, 14, 20. Give me a one-line sparkline I can drop into a status sentence.",
+      "data": {"values": [5, 8, 6, 12, 9, 15, 14, 20]}
+    },
+    {
+      "id": 3,
+      "eval_name": "hand-vbar",
+      "tier": "A",
+      "prompt": "Quarterly revenue in $M: Q1 18, Q2 27, Q3 24, Q4 36. Draw it as a vertical bar chart in plain text for a slide note.",
+      "data": {"labels": ["Q1", "Q2", "Q3", "Q4"], "values": [18, 27, 24, 36]}
+    },
+    {
+      "id": 4,
+      "eval_name": "hand-diverging",
+      "tier": "A",
+      "prompt": "Profit change by region this quarter, in $k: North +12, South -5, East +8, West -9. Chart it as text so that losses grow to the left and gains to the right of a zero line.",
+      "data": {"labels": ["North", "South", "East", "West"], "values": [12, -5, 8, -9]}
+    },
+    {
+      "id": 5,
+      "eval_name": "hand-line",
+      "tier": "B",
+      "prompt": "Median build time in minutes over six releases: v1 14, v2 11, v3 12, v4 8, v5 9, v6 6. A small plain-text line chart for the release notes.",
+      "data": {"labels": ["v1", "v2", "v3", "v4", "v5", "v6"], "values": [14, 11, 12, 8, 9, 6]}
+    },
+    {
+      "id": 6,
+      "eval_name": "hand-pie",
+      "tier": "C",
+      "prompt": "Browser share of our visitors: Chrome 64, Safari 19, Other 9, Edge 5, Firefox 3. Make a pie chart of it in plain text for a Slack post, with the percentages.",
+      "data": {"labels": ["Chrome", "Safari", "Other", "Edge", "Firefox"], "values": [64, 19, 9, 5, 3]}
+    }
+  ]
+}

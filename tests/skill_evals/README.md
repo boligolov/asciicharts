@@ -14,6 +14,25 @@ Prompts: top-8 slowest endpoints from a CSV for a PR; a 12-month trend for a REA
 comparison for a plain-text email; stacked inflows with refunds hanging below zero for a commit message; a pie
 chart from the dirty CSV for Slack.
 
+## Hand-drawn evals (no script)
+
+The skill's main path is drawing a chart **by hand** from `references/drawing.md`, so this second set
+forbids running anything: each prompt in `hand_evals.json` is followed at run time by *"You cannot run
+any code, scripts or tools for this; write the chart yourself. Save your final reply … to {OUT}/reply.md."*
+
+| file | what |
+|---|---|
+| `hand_evals.json` | seven prompts with the data inline, tagged with their hand-drawability tier (A: hbar ranking, grouped hbar, sparkline, vbar, diverging hbar; B: line; C: pie) |
+| `hand_grade.py` | `python hand_grade.py <run_dir> <eval_name>` → `grading.json`, same format as `grade.py` |
+
+What it checks — the ways hand-drawn charts go wrong: bar lengths and column heights within one cell of
+`round(v / max × longest)`; a framed chart rectangular **in display columns**; only font-safe glyphs
+(ASCII, Latin-1, WGL4 box drawing, shades, half blocks, markers); series that can be told apart; the
+diverging bars sharing one zero line; sparkline ticks in value order with the extremes at `▁` and `█`;
+the line chart's axis from the maximum to the minimum; correct percentages, and a pie (or its 100% stacked
+bar substitute) in proportion. `tests/test_hand_grader.py` checks the grader itself: the renderer's own
+chart for each prompt passes everything, and each typical mistake fails the check meant to catch it.
+
 ## Results (one run per configuration, so read the numbers as indicative)
 
 | | pass rate, with skill | pass rate, without | tokens (with / without) | time (with / without) |

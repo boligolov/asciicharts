@@ -91,7 +91,7 @@ Steps:
       `asciicharts` → `asciicharts` binary → `python asciicharts.py`)? → otherwise follow `drawing.md`
       → self-check → answer in a fenced block. Stay under 500 lines; principles/drawing/glyphs are
       references, loaded on demand.
-- [ ] **1.4** No-script evals in `tests/skill_evals/`: prompts that forbid running code; a programmatic
+- [x] **1.4** No-script evals in `tests/skill_evals/`: prompts that forbid running code; a programmatic
       grader that checks a rectangular frame **by display width** (the current `grade.py` uses `len()` —
       the same bug we fixed in the renderer), bar lengths within ±1 cell of `round(v / max × W)`, glyph
       safety, legend-glyph agreement, value labels.
@@ -179,3 +179,4 @@ Done when: 100% of `spec/conformance/` passes in Go.
 | 2026-09-24 | 1.1 | `drawing.md`: protocol, recipes for all 12 types by tier (A/B/C), worked arithmetic, frames, self-check; its 17 examples are checked against the renderer by `gallery_refresh.py --check` |
 | 2026-09-24 | 1.2 | `glyphs.md`: safe alphabet by tier (WGL4), density ramp, series glyphs, roles, frames, widths; a test pins its glyph sets to the renderer's constants |
 | 2026-09-24 | 1.3 | `SKILL.md` rewritten around the flow (pick → tool if available → else draw by hand → self-check → code block); chart table with hand-drawability tiers; the core rules; the script, CSV and ExCSV sections kept; `docs/skill.md` updated (no requirement to draw) |
+| 2026-09-24 | 1.4 | `hand_evals.json` (7 prompts, tiers A/B/C) + `hand_grade.py` (lengths ±1, display-width frames, safe glyphs, series identity, shared zero line, sparkline order, percentages); `test_hand_grader.py` proves the grader on perfect and broken replies — it found a renderer bug (stacked bars dropped small segments, fixed in its own commit); `grade.py` measures display width too |
