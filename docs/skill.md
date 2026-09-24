@@ -1,7 +1,9 @@
 # Installing the skill
 
-The skill is the folder [`skills/asciicharts/`](../skills/asciicharts/): `SKILL.md`, the one-file renderer in
-`scripts/asciicharts.py`, and `references/`. It is self-contained — copy the folder and you are done.
+The skill is the folder [`skills/asciicharts/`](../skills/asciicharts/): `SKILL.md`, `references/` — the principles,
+a hand-drawing guide and a glyph cheat sheet — and the one-file renderer in `scripts/asciicharts.py`. It is
+self-contained — copy the folder and you are done. It teaches the agent to draw text charts itself and to
+use an exact renderer (the MCP server, or the script) when one is available.
 
 **There is no registry to register it with.** Agents find skills by looking in known folders (or in an
 uploaded package), read each skill's `name` and `description` from the `SKILL.md` frontmatter, and load the
@@ -31,7 +33,9 @@ Start a new session so the skill is discovered. To check, ask the agent which sk
 a chart ("plot these numbers as a bar chart, plain text": 62, 21, 12, 5). The folder name must match the
 `name` in the frontmatter (`asciicharts`).
 
-**Requirement:** `python` (or `python3`) on the PATH where the agent runs commands. Nothing else is installed.
+**Requirements:** none to draw charts — without a tool the agent draws them by hand from
+`references/drawing.md`. With `python` (or `python3`) on the PATH, or the MCP server connected, they are
+rendered exactly. Nothing is installed.
 
 ## Claude.ai and Claude Desktop
 
@@ -63,8 +67,9 @@ they scan; anything without skill support can use the [MCP server](../server/REA
 
 | | skill | MCP server |
 |---|---|---|
-| needs | a shell and Python on the agent's side | an MCP client |
+| needs | nothing (draws by hand); a shell and Python for exact rendering | an MCP client |
 | input | JSON spec, or a CSV file straight from disk | JSON tool arguments |
 | good for | Claude Code and other agents that run commands | any MCP client, or one shared always-on deployment |
 
-They render identically and can be installed side by side.
+They render identically and work best side by side: the skill knows how to choose and read a chart, and
+uses the server as its renderer when it is connected.

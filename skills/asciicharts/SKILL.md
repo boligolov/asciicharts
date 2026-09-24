@@ -1,21 +1,85 @@
 ---
 name: asciicharts
-description: Use this skill to turn a handful of numbers, a CSV file, or an ExCSV file's own #chart suggestion, into a plain-text chart (Unicode/ASCII) pasted right into the reply — bar, line, area, sparkline, histogram, pie, heatmap, boxplot, scatter, dot plot. Trigger on any request to plot, chart, graph, visualize or draw a histogram or distribution of numbers the user gives inline or in a file, e.g. "quick histogram of these response times", rankings, trends over time, shares of a whole, benchmark results, "top N by X", and whenever a chart would help in a terminal, README, commit message, PR description or code comment, even if the user never says "chart". A dependency-free Python script renders it, so prefer it to describing numbers in prose or hand-drawing ASCII bars. Not for PNG/SVG/image files, interactive dashboards, or plotting-library code (matplotlib, seaborn, pandas), explanations of chart concepts, or stats calculations without a chart. Also use when an `asciicharts` MCP server is connected.
+description: Use this skill to draw a chart out of text characters (Unicode/ASCII) in the reply — bar, line, area, sparkline, histogram, pie, heatmap, boxplot, scatter, dot plot — from numbers given inline, a CSV file, or an ExCSV file's own #chart suggestion. Trigger on any request to plot, chart, graph, visualize or draw a histogram or distribution of numbers, e.g. "quick histogram of these response times", rankings, trends over time, shares of a whole, benchmark results, "top N by X", and whenever a chart would help in a terminal, README, commit message, PR description or code comment, even if the user never says "chart". It teaches drawing such charts correctly by hand and uses an exact renderer when available (the asciicharts MCP server or the bundled Python script), so prefer it to describing numbers in prose or eyeballing ASCII bars. Not for PNG/SVG/image files, interactive dashboards, plotting-library code (matplotlib, seaborn, pandas), explanations of chart concepts, or stats calculations without a chart.
 license: MIT
-compatibility: Needs Python 3 on PATH (standard library only, nothing to install).
+compatibility: Works without any tool (the charts are drawn by hand from references/drawing.md); Python 3 (standard library only) or a connected asciicharts MCP server makes them exact.
 ---
 
 # asciicharts
 
-`scripts/asciicharts.py` turns numbers into a text chart you paste into your reply inside a fenced
-code block. It exists because hand-drawn charts are almost always misaligned or wrong, and a table
-of numbers hides the shape that a bar or a trend line shows at a glance.
+A chart made of text characters shows the shape of numbers where images can't go: chat replies, terminals,
+commit messages, PR descriptions, code comments, logs. This skill is the know-how to draw one **right** —
+lengths that match the values, frames that stay straight in any font, series you can tell apart without
+color — either by hand or with an exact renderer.
 
-Run it from this skill's directory, or with the full path (`python3` if `python` isn't found).
-Everything below prints the chart to stdout; problems go to stderr with exit code 1 and a
-one-line message that says what to fix.
+Hand-drawn text charts usually go wrong in one way: characters are eyeballed, not counted. Everything
+here is about not doing that.
 
-## Quick start
+## Workflow
+
+1. **Pick the chart** for the question (table below).
+2. **Pick how to draw it**, first match wins:
+   - an MCP server named `asciicharts` is connected → its `render_chart` tool (same fields as the JSON
+     spec below; `list_charts` returns the catalogue);
+   - you can run commands and have Python 3 → `scripts/asciicharts.py` from this skill (see
+     [With the script](#with-the-script)); an `asciicharts` command on the PATH works the same way;
+   - otherwise → **draw it by hand** with [references/drawing.md](references/drawing.md). Its tier tells
+     you what is safe to draw by hand; for tier C (pie, dual_axis, anything large) draw the simpler
+     equivalent it gives and say so.
+3. **Draw or render it.** By hand: compute the table of lengths first, then build each row from counted
+   runs of glyphs. With a tool: if it reports an error, the one-line message says what to fix.
+4. **Check it** against the data: the self-check at the end of `drawing.md` for a hand-drawn chart;
+   printed values and bar lengths against the numbers you were given for a rendered one.
+5. **Answer with the chart in a fenced code block** and a sentence on what it shows. Outside a code block
+   the alignment is lost.
+
+## Pick the chart
+
+| the question | chart | by hand |
+|---|---|---|
+| how does one metric trend, inline in a sentence | `sparkline` | A |
+| which is biggest / a ranking / one value per category | `hbar` (long names) or `vbar` | A |
+| several measures per category, or parts of a whole | grouped `hbar`/`vbar`, or `"stacked": true` | A |
+| close values where zero doesn't matter; values against each other | `dotplot` | A |
+| how does it change over time | `line` (precise) or `area` (volume) | B |
+| how are raw values distributed | `histogram` (`bins`) or `boxplot` per group | B |
+| a grid of values (hour × weekday) | `heatmap` | B |
+| relationship between two numbers | `scatter` (`points`: `{x, y}`) | B, a few points |
+| shares of a whole | `pie` — or a 100% stacked `hbar`, easier to compare | C (use the stacked bar) |
+| two series on different scales | `dual_axis` | C (two small line charts) |
+| values against a target | `line` + `thresholds` (labelled reference lines) | B |
+
+**By hand**: A — draw it; B — draw it small (plot ≤ 20 × 6) and check every number; C — use a tool, or
+draw the equivalent in brackets.
+
+Pass raw samples to `histogram` and `boxplot` (the tool computes bins and quartiles; by hand, compute them
+first as `drawing.md` shows). Negative values work everywhere: bars and areas grow both ways from a zero
+line.
+
+## The rules that make a text chart right
+
+The full reasoning is in [references/principles.md](references/principles.md); the glyphs in
+[references/glyphs.md](references/glyphs.md). The ones you apply every time:
+
+- **Compute lengths, don't eyeball them**: `cells = round(v / max × W)`, rounding half away from zero.
+  A non-zero value gets at least one cell; zero gets none.
+- **Bars start at zero** (or grow both ways from a marked zero axis). Lines and dot plots may zoom in —
+  then print the range.
+- **Only font-safe glyphs**: `█ ▓ ▒ ░ ▌ ▄ ▐ ▀`, light box lines `─ │ ┌ ┐ └ ┘ ├ ┤`, markers `● ○ ▲ ■`.
+  A glyph the reader's font lacks is drawn from another font and breaks the alignment. When you don't
+  know where the text will be shown, use plain ASCII.
+- **One glyph per series**, the densest first; the legend shows the exact glyph (`█ 2025   ▓ 2026`).
+  Color is never the only difference.
+- **Print the numbers** where the grid is approximate: after each bar, in the legend, as axis labels.
+- **Keep it small**: 60–80 columns in total; by hand, bars of 10–20 cells.
+- **Every line the same width.** Pad labels to the longest one; count CJK characters and most emoji as
+  two columns. A frame is optional — its right border is the first place a miscount shows.
+
+## With the script
+
+`scripts/asciicharts.py` is one file, standard library only. Run it from this skill's directory or with
+its full path (`python3` if `python` isn't found). It prints the chart to stdout; problems go to stderr
+with exit code 1 and a one-line message that says what to fix.
 
 From data you already have, as a JSON spec on stdin (avoids shell-quoting trouble, especially on Windows):
 
@@ -39,35 +103,18 @@ python scripts/asciicharts.py --csv latency.csv --chart hbar --values p99 --sort
 └───────────────────────────────────────────────────────────┘
 ```
 
-As a library: `from asciicharts import render_chart` (raises `ChartError`, a `ValueError`, on bad input).
-If an MCP server named `asciicharts` is connected, its `render_chart` tool takes the same fields and
-its `list_charts` tool returns the catalogue below.
+Not sure how to shape `series`? `python scripts/asciicharts.py --list` prints every chart with what it
+draws, how to fill `series`, its options and a working example. As a library:
+`from asciicharts import render_chart` (raises `ChartError`, a `ValueError`, on bad input).
 
-## Workflow
+## The spec
 
-1. **Pick the chart** for the question being asked (table below).
-2. **Build the input** — a CSV command if the data is in a file, otherwise a JSON spec. Not sure how to shape `series`? `python scripts/asciicharts.py --list` prints every chart with what it draws, how to fill `series`, its options and a working example.
-3. **Run it.** If it errors, read the message and fix the input; the messages name the column, row or field at fault.
-4. **Paste the chart in a code block** and add a sentence on what it shows. The chart is monospaced art and only lines up in a monospaced font.
-5. **Check it against the data**: bar lengths and printed numbers should match what you were given.
-
-## Pick the chart
-
-| the question | chart | how the data goes in |
-|---|---|---|
-| how does one metric trend, inline in a sentence | `sparkline` | one series of values |
-| which is biggest / a ranking / one value per category | `hbar` (long names) or `vbar` | one series + `labels` |
-| several measures per category, or parts of a whole | grouped `hbar`/`vbar`, or `"stacked": true` | one series per measure + `labels` |
-| how does it change over time | `line` (precise) or `area` (volume) | series of values, `labels` = x axis |
-| two series on different scales | `dual_axis` | exactly two series |
-| relationship between two numbers | `scatter` | `points`: `{x, y}` |
-| shares of a whole | `pie`, or a stacked `hbar` (easier to compare) | one series per slice |
-| how are raw values distributed | `histogram` (`bins`) or `boxplot` per group | raw samples, not pre-bucketed |
-| a grid of values | `heatmap` | one series per row, `labels` = columns |
-| values against a target or each other, axis not starting at 0 | `dotplot`, or `line` + `threshold` | like `hbar` |
-
-Pass raw samples to `histogram` and `boxplot` — they compute the bins and quartiles themselves.
-Negative values work everywhere: bars and areas grow both ways from a zero line, stacked ones too.
+Required: `chartType`, `series` (each `{name, values}` or `{name, points}`). Optional, the ones you'll
+use most: `title`, `labels`, `border` (`none` is the most compact), `width`/`height` (max 500/200),
+`stacked`, `style`, `threshold` / `thresholds` (labelled, e.g. a target and an SLA), `showPoints`, `bins`.
+Every option, the limits and the error messages are in [references/reference.md](references/reference.md);
+every chart rendered, with the spec that made it, is in [references/gallery.md](references/gallery.md) —
+look there to choose a style.
 
 ## From a CSV
 
@@ -83,19 +130,19 @@ Negative values work everywhere: bars and areas grow both ways from a zero line,
 | `--set KEY=VALUE` | any chart option: `title=…`, `border=none`, `width=60`, `stacked=true` (repeatable) |
 | `--print-spec` | print the JSON spec instead of the chart, to tweak and rerun |
 
-Columns can be given by name (case-insensitive), by a unique prefix (`p99` finds `p99_ms`) or as 1-based numbers. How rows become chart parts depends
-on the chart: bars, lines and areas make each value column a series with the label column as categories;
+Columns can be given by name (case-insensitive), by a unique prefix (`p99` finds `p99_ms`) or as 1-based
+numbers. Bars, lines and areas make each value column a series with the label column as categories;
 `pie` makes one slice per row; `heatmap` makes one matrix row per CSV row; `scatter` plots each value
 column against the label (x) column. Rows that don't parse (`n/a`, empty cells) are reported by row and
 column instead of being dropped silently — clean or filter the file first, or pick other `--values`.
 
+Without a way to run the script, read the CSV yourself, sort and trim it, and draw by hand as above.
+
 ## From an ExCSV file
 
-[ExCSV](https://github.com/boligolov/excsv) is CSV that describes itself: a `#!excsv` first line,
-then `#`-prefixed lines above the ordinary CSV rows — column types/roles (`#column`) and, since
-v0.5, chart suggestions (`#chart type=bar x=category y=amount ...`). `--csv` detects this
-automatically (no separate flag) and, when the file has its own `#chart` line(s), renders one of
-those directly instead of you re-specifying `--label`/`--values` yourself:
+[ExCSV](https://github.com/boligolov/excsv) is CSV that describes itself: a `#!excsv` first line, then
+`#`-prefixed lines above the rows — column types and roles (`#column`) and chart suggestions
+(`#chart type=bar x=category y=amount ...`). `--csv` detects it and renders a suggestion directly:
 
 ```sh
 python scripts/asciicharts.py --csv sales.excsv --chart-name top_categories   # by name
@@ -103,42 +150,27 @@ python scripts/asciicharts.py --csv sales.excsv                              # a
 python scripts/asciicharts.py --csv sales.excsv --list-charts                # see what's available: name, type, title
 ```
 
-If the file suggests more than one chart and neither `--chart-name` nor an auto-pick applies, the
-error names every choice — pass one of them. `sort=`/`limit=`/`aggregate=`/`color=`/`stack=`
-on the `#chart` line are honored (a `color=` channel becomes grouped or, with `stack=1`, stacked
-series); `#chart type=bar bin=N x=amount y=count()` becomes a `histogram`. A suggestion this
-renderer has no equivalent for (`tick`/`text`, or `#chart-vega`) fails with a clear message —
-pick a different suggestion, or fall back to `--chart TYPE` (below) to build your own from the
-same file's data.
-
-**`--chart TYPE` still works on an ExCSV file** — it ignores any `#chart` suggestions and reads
-just the data rows as plain CSV, the same as a `.csv` file, except `--label`/`--values` default to
-the file's own declared `#column role=dimension`/`role=measure` columns instead of guessing from
-the data when you don't set them yourself.
-
-## The spec
-
-Required: `chartType`, `series` (each `{name, values}` or `{name, points}`). Optional, the ones you'll
-use most: `title`, `labels`, `border` (`none` is the most compact), `width`/`height` (max 500/200),
-`stacked`, `style`, `threshold` / `thresholds` (labelled, e.g. a target and an SLA), `showPoints`, `bins`. Every option, the limits and the error
-messages are in [references/reference.md](references/reference.md); every chart rendered, with the
-spec that made it, is in [references/gallery.md](references/gallery.md) — look there to choose a style.
-
-**No way to run the script** (no shell, or the output must be hand-tuned)? [references/principles.md](references/principles.md)
-explains how these charts are built — glyphs, scales, rounding, layout — and section 13 is a step-by-step
-recipe with a self-check for drawing an hbar, vbar, sparkline or line chart by hand.
+With several suggestions and no `--chart-name`, the error names every choice. `sort=`, `limit=`,
+`aggregate=`, `color=` and `stack=` are honored; `type=bar bin=N x=amount y=count()` becomes a histogram.
+A suggestion with no text equivalent (`tick`/`text`, `#chart-vega`) fails with a clear message.
+`--chart TYPE` still works on an ExCSV file: it reads just the data rows, with `--label`/`--values`
+defaulting to the file's declared `role=dimension`/`role=measure` columns.
 
 ## Making it read well
 
-- **Use `"style": "ascii"` when you don't know where the text will be shown.** Default bars use only whole `█` blocks and series use glyphs that even Consolas has, so charts are safe in nearly every font; only `"style": "fine"` bars and sparklines use eighth blocks that some default editor fonts lack, which then substitute them and make the right edge look ragged. The `ascii` style (bars, histogram, area and line charts) draws with a single density-ordered ramp of 23 distinct plain-ASCII characters (`#`, `@`, `%`, `&`, `$`, `W`, `M`, `N`, `H`, `D`, `G`, `U`, `O`, `S`, `Z`, `X`, `=`, `/`, `\`, `:`, `;`, `!`, `'`), so even a dozen series stay distinguishable, with `|` separators and `+` axis ticks; add `"border": "ascii"` and the whole chart, frame included, is pure ASCII.
-- **Keep it around 60–80 columns** for chat, commit messages and PR text; the default widths already fit.
-- **The light background behind a bar is normal — it's the rest of the axis, not noise.** hbar/vbar in the default `solid`/`fine`/`ascii` styles shade the unused part of each bar up to the chart's own 0..max scale, like a progress-bar track (`░` for Unicode styles, `,` for `ascii`), so a short bar's real size reads at a glance. It's automatic — nothing to set — and absent from stacked/diverging bars, `halftone` and histograms.
-- **Sort and trim before plotting.** A ranking of 40 bars is unreadable; `--sort -x --limit 10` (or sort in your own code) says more than all of them.
-- **Label things.** A `title` and named series cost nothing and remove the guessing; legends appear automatically for several series.
-- **Whole numbers print without decimals, others with two.** Round or scale (thousands, ms→s) yourself if the raw values are noisy.
+- **Use `"style": "ascii"` (and `"border": "ascii"`) when you don't know where the text will be shown**:
+  a density-ordered ramp of 23 plain-ASCII series glyphs (`#`, `@`, `%`, `&`, `$`, `W`, `M`, `N`, `H`, `D`, `G`, `U`, `O`, `S`, `Z`, `X`, `=`, `/`, `\`, `:`, `;`, `!`, `'`),
+  `|` separators, `+` axis ticks, `,` as the bar track — pure ASCII, frame included.
+- **The light background behind a bar is the rest of the axis**, like a progress-bar track (`░`, or `,` in
+  ASCII): a short bar's real size reads at a glance. Stacked and diverging bars, `halftone` and histograms
+  have none.
+- **Sort and trim before plotting.** A ranking of 40 bars is unreadable; the top 10 says more.
+- **Label things.** A title and named series remove the guessing; several series get a legend.
+- **Round or scale the raw values** (thousands, ms → s) if they are noisy; whole numbers print without
+  decimals, others with two (below 1, two significant digits).
 
 ## Not the right tool
 
-The user needs an image file (PNG/SVG/PDF), an interactive or zoomable chart, or thousands of points
-where the fine detail matters — use a plotting library for those. For a long series that only needs
-its shape, aggregate first (per hour, per day) or use a `sparkline`.
+The user needs an image file (PNG/SVG/PDF), an interactive or zoomable chart, or thousands of points where
+the fine detail matters — use a plotting library for those. For a long series that only needs its shape,
+aggregate first (per hour, per day) or use a `sparkline`.

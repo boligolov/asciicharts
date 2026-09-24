@@ -53,7 +53,8 @@ def test_body_is_lean():
 def test_every_relative_link_stays_inside_the_skill_and_exists():
     _, body = frontmatter_and_body()
     links = re.findall(r"\]\(([^)#]+)(?:#[^)]*)?\)", body)
-    assert {"references/reference.md", "references/gallery.md", "references/principles.md"} <= set(links)
+    assert {"references/reference.md", "references/gallery.md", "references/principles.md",
+            "references/drawing.md", "references/glyphs.md"} <= set(links)
     for link in links:
         if re.match(r"^[a-z]+://", link):
             continue

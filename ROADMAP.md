@@ -87,7 +87,7 @@ Steps:
       build, a worked example with real renderer output, and the specific self-check.
 - [x] **1.2** `skills/asciicharts/references/glyphs.md` — a one-screen cheat sheet: safe alphabet (tiers,
       WGL4 box drawing), density ramp, series glyphs, glyph roles, borders, the ASCII style.
-- [ ] **1.3** Rewrite `SKILL.md` around the flow: choose the chart → is a tool available (MCP
+- [x] **1.3** Rewrite `SKILL.md` around the flow: choose the chart → is a tool available (MCP
       `asciicharts` → `asciicharts` binary → `python asciicharts.py`)? → otherwise follow `drawing.md`
       → self-check → answer in a fenced block. Stay under 500 lines; principles/drawing/glyphs are
       references, loaded on demand.
@@ -178,3 +178,4 @@ Done when: 100% of `spec/conformance/` passes in Go.
 | 2026-09-24 | plan | this roadmap written; decisions 1–5 recorded |
 | 2026-09-24 | 1.1 | `drawing.md`: protocol, recipes for all 12 types by tier (A/B/C), worked arithmetic, frames, self-check; its 17 examples are checked against the renderer by `gallery_refresh.py --check` |
 | 2026-09-24 | 1.2 | `glyphs.md`: safe alphabet by tier (WGL4), density ramp, series glyphs, roles, frames, widths; a test pins its glyph sets to the renderer's constants |
+| 2026-09-24 | 1.3 | `SKILL.md` rewritten around the flow (pick → tool if available → else draw by hand → self-check → code block); chart table with hand-drawability tiers; the core rules; the script, CSV and ExCSV sections kept; `docs/skill.md` updated (no requirement to draw) |
