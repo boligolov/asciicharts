@@ -106,7 +106,7 @@ def test_list_flag_and_error_convention():
     assert r.returncode == 1 and r.stdout == "" and r.stderr.startswith("error: ")
 
 
-@pytest.mark.parametrize("ref", ["reference.md", "gallery.md", "principles.md", "drawing.md"])
+@pytest.mark.parametrize("ref", ["reference.md", "gallery.md", "principles.md", "drawing.md", "glyphs.md"])
 def test_references_exist_and_are_not_empty(ref):
     assert len((SKILL / "references" / ref).read_text(encoding="utf-8")) > 1000
 
@@ -127,3 +127,14 @@ def test_package_skill_builds_an_uploadable_zip(tmp_path):
         assert "asciicharts/scripts/asciicharts.py" in names and "asciicharts/LICENSE" in names
         assert not [n for n in names if "__pycache__" in n or n.endswith(".pyc")]
         assert z.read("asciicharts/SKILL.md") == (SKILL / "SKILL.md").read_bytes()
+
+
+def test_glyph_cheat_sheet_matches_the_renderer():
+    """The glyph sets in references/glyphs.md are the renderer's own, in its order."""
+    import asciicharts
+    sheet = (SKILL / "references" / "glyphs.md").read_text(encoding="utf-8")
+    for glyphs in (asciicharts.FILLS, asciicharts.HALFTONE_FILLS, asciicharts.ASCII_FILLS, asciicharts.MARKERS,
+                   asciicharts.ASCII_MARKERS, asciicharts.SPARK_TICKS, asciicharts.SHADES[1:]):
+        assert "`" + " ".join(glyphs) + "`" in sheet, glyphs
+    assert f"`{asciicharts.ASCII_TRACK_FILL}`" in sheet and f"`{asciicharts.OVERLAP_MARKER}`" in sheet
+
