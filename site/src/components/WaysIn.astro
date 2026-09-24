@@ -18,9 +18,9 @@ const ways = [
   {
     title: "MCP server",
     for_: "any MCP client, one shared deployment",
-    body: "Two tools: list_charts (the catalogue) and render_chart. stdio or stateless streamable HTTP.",
+    body: "Two tools: list_charts (the catalogue) and render_chart. stdio or stateless streamable HTTP. One static Go binary.",
     code: [
-      ['<span class="tok-kw">$</span> pip install ./python'],
+      ['<span class="tok-kw">$</span> go install github.com/boligolov/asciicharts/go/cmd/asciicharts-mcp@latest'],
       ['<span class="tok-kw">$</span> claude mcp add asciicharts -- asciicharts-mcp'],
     ],
   },

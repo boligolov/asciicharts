@@ -35,7 +35,7 @@ The light `░` track behind each bar is the rest of the axis — `/checkout` is
 - **Built to be called by machines.** Input is validated and bounded (width ≤ 500, height ≤ 200, 50,000 values, finite numbers only) and every error is one line that says what to fix — `error: row 3, column "v" is not a number: "n/a"` — so a script or an agent can correct itself. The skill was tuned against real agent runs ([`skills/evals`](skills/evals)).
 - **Gets the cases hand-drawn charts get wrong.** Negative values grow both ways from a zero line, stacked ones too. Dirty CSV numbers (`$1,200`, `12%`, `1,234.5`, decimal commas) are parsed, and bad cells are reported by row and column instead of silently dropped. Many series stay tellable apart: 8 Unicode fills, 23 glyphs in pure ASCII.
 - **Looks right where you paste it.** Font-safe defaults (whole `█` blocks, glyphs that even Consolas has), a pure-ASCII mode for terminals and mail, no ANSI escapes unless you ask.
-- **No side effects.** The renderer writes nothing and opens no sockets. The server is stateless; usage statistics are off by default and never contain what you chart.
+- **No side effects.** The renderer writes nothing and opens no sockets. The server is stateless and records nothing.
 
 Two of the hard cases, straight from the CLI:
 
@@ -101,9 +101,9 @@ Styles: `solid` (default), `halftone`, `ascii`, `dotted` (line), `fine` (eighth-
 
 | | for | get started |
 |---|---|---|
-| **CLI / library** | scripts, CI, notebooks | copy [`python/asciicharts.py`](python/asciicharts.py) — nothing else needed |
+| **CLI / library** | scripts, CI, notebooks | copy [`python/asciicharts.py`](python/asciicharts.py), or the single [`asciicharts` binary](go/README.md#command-line) — nothing else needed |
 | **[Agent skill](docs/skill.md)** | Claude Code and other agents with a shell | `cp -r skills/asciicharts ~/.claude/skills/` |
-| **[MCP server](python/server/README.md)** | any MCP client; one shared always-on deployment | `pip install ./python` then `asciicharts-mcp` |
+| **[MCP server](go/cmd/asciicharts-mcp/README.md)** | any MCP client; one shared always-on deployment | `go install github.com/boligolov/asciicharts/go/cmd/asciicharts-mcp@latest` |
 
 ### CLI and library
 
@@ -113,6 +113,8 @@ echo '{"chartType":"hbar", ...}' | python asciicharts.py -    # ... or from stdi
 python asciicharts.py --csv data.csv --chart hbar --sort -latency --limit 10 --set title="Slowest"
 python asciicharts.py --list                                  # every chart type, how to fill it, an example
 ```
+
+The Go build of the same command line, `asciicharts` (one static binary, [releases](https://github.com/boligolov/asciicharts/releases)), takes the same arguments and prints the same bytes; only ExCSV is Python-only for now.
 
 `--csv` reads a header row, sniffs `,` `;` tab or `|`, and takes `--label`, `--values`, `--sort`, `--limit`, `--set key=value` and `--print-spec` (see the [skill docs](skills/asciicharts/SKILL.md#from-a-csv)). It also auto-detects [ExCSV](https://github.com/boligolov/excsv) — CSV with a `#!excsv` header and its own `#chart type=bar x=category y=amount ...` suggestions — and renders one of those directly with `--chart-name` (`--list-charts` to see what's on offer); see [From an ExCSV file](skills/asciicharts/SKILL.md#from-an-excsv-file). From Python:
 
@@ -133,15 +135,15 @@ A self-contained folder — `SKILL.md`, the one-file script, and references — 
 
 ### MCP server
 
-Two tools: **`list_charts`** (the catalogue: every chart type, how to fill `series`, which options apply, an example call) and **`render_chart`**. stdio or stateless streamable HTTP.
+Two tools: **`list_charts`** (the catalogue: every chart type, how to fill `series`, which options apply, an example call) and **`render_chart`**. stdio or stateless streamable HTTP. One static Go binary.
 
 ```sh
-pip install ./python                              # or "./python[stats]" for optional Postgres statistics
+go install github.com/boligolov/asciicharts/go/cmd/asciicharts-mcp@latest
 claude mcp add asciicharts -- asciicharts-mcp     # e.g. register it with Claude Code
 PORT=8080 asciicharts-mcp                         # or serve HTTP: /mcp and /healthz
 ```
 
-Arguments, transports, configuration, client setup: **[python/server/README.md](python/server/README.md)**.
+Arguments, transports, configuration, client setup: **[go/cmd/asciicharts-mcp/README.md](go/cmd/asciicharts-mcp/README.md)**.
 
 ## Deploy
 
@@ -158,7 +160,7 @@ cp deploy/.env.example deploy/.env        # set DOMAIN
 docker compose -f deploy/docker-compose.prod.yml up -d --build      # → https://<DOMAIN>/mcp
 ```
 
-The server has no authentication by design (it is a stateless utility bounded by the limits above); put access control in front if you need it. Anonymous usage statistics — chart type, style, size buckets, success/failure, never your data — are **off by default**; set `ASCIICHARTS_STATS=on` and `DATABASE_URL` to record them in Postgres. Details: **[docs/development.md](docs/development.md#production-deployment)**.
+The server has no authentication by design (it is a stateless utility bounded by the limits above); put access control in front if you need it. Details: **[docs/development.md](docs/development.md#production-deployment)**.
 
 ## Fonts
 
@@ -167,10 +169,11 @@ Default output is built to survive any font: bars end on whole `█` blocks, fra
 ## Development
 
 ```sh
-pip install -e "./python[stats,dev]" && pytest python/tests
+pip install -e "./python[dev]" && pytest python/tests
+cd go && go test ./...
 ```
 
-The renderer is pinned byte-for-byte by the conformance suite of the principles ([spec/conformance/](spec/conformance/); see also [docs/development.md](docs/development.md#tests)). After editing `python/asciicharts.py` run `python scripts/sync_skill.py` to refresh the copy inside the skill folder (a test fails if you forget). The project began as a Go MCP server and was ported to Python; the Go source lives in this repository's git history.
+The renderer is pinned byte-for-byte by the conformance suite of the principles ([spec/conformance/](spec/conformance/); see also [docs/development.md](docs/development.md#tests)). After editing `python/asciicharts.py` run `python scripts/sync_skill.py` to refresh the copy inside the skill folder (a test fails if you forget). The Go implementation ([go/](go/): library, command line, MCP server) is held to the same suite and compared with Python on random specs and CSV files.
 
 ## License
 

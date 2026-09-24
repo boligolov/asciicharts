@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]  # the repository
 # (Verified against those fonts' character maps.) The gallery is exempt: its job is to show every glyph.
 NOT_IN_COMMON_FONTS = "▁▂▃▅▆▇▉▊▋▍▎▏"
 
-LANDING_PAGES = ["README.md", "python/server/README.md", "docs/development.md", "docs/skill.md",
+LANDING_PAGES = ["README.md", "docs/development.md", "docs/skill.md",
                  "skills/asciicharts/SKILL.md", "skills/asciicharts/references/reference.md"]
 
 
@@ -88,9 +88,9 @@ def test_site_examples_are_current():
     assert r.returncode == 0, r.stderr
 
 
-@pytest.mark.parametrize("script", ["gen_go_unicode.py", "gen_go_catalog.py", "gen_go_mcp_tools.py"])
+@pytest.mark.parametrize("script", ["gen_go_unicode.py", "gen_go_catalog.py"])
 def test_the_go_implementations_generated_files_are_current(script):
-    """The Go implementation's Unicode tables, chart catalogue and MCP tool definitions are generated from this one."""
+    """The Go implementation's Unicode tables and chart catalogue are generated from this one."""
     import subprocess
     import sys
     r = subprocess.run([sys.executable, str(ROOT / "scripts" / script), "--check"], capture_output=True, encoding="utf-8")

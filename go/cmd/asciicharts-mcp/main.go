@@ -6,12 +6,13 @@
 //	PORT=8080 asciicharts-mcp        # HTTP
 //	asciicharts-mcp healthcheck      # exit 0/1 by probing its own /healthz
 //
-// The tools, their descriptions and schemas are the Python server's (tools_data.go is generated from
-// it), and so are the answers: the same chart text, the same error texts.
+// The tools, their descriptions and JSON schemas are in tools.json, served as they are; the answers
+// are pinned by testdata/ (recorded from the Python server this one replaced).
 package main
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -30,6 +31,9 @@ import (
 
 const defaultPort = "8080"
 
+//go:embed tools.json
+var toolsJSON []byte
+
 type toolDef struct {
 	Name         string          `json:"name"`
 	Description  string          `json:"description"`
@@ -44,9 +48,6 @@ func main() {
 	// stdio owns stdout for the protocol: logs go to stderr
 	log.SetOutput(os.Stderr)
 	log.SetFlags(0)
-	if v := strings.ToLower(strings.TrimSpace(os.Getenv("ASCIICHARTS_STATS"))); v == "1" || v == "true" || v == "yes" || v == "on" {
-		log.Print("WARNING usage statistics are not recorded by this server; ASCIICHARTS_STATS is ignored")
-	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	server := newServer()
@@ -104,8 +105,8 @@ func healthcheck() int {
 
 func newServer() *mcp.Server {
 	var defs []toolDef
-	if err := json.Unmarshal([]byte(toolsJSON), &defs); err != nil {
-		panic("asciicharts-mcp: bad generated tool definitions: " + err.Error())
+	if err := json.Unmarshal(toolsJSON, &defs); err != nil {
+		panic("asciicharts-mcp: bad tools.json: " + err.Error())
 	}
 	server := mcp.NewServer(&mcp.Implementation{Name: "asciicharts", Version: asciicharts.Version}, nil)
 	for _, d := range defs {
@@ -145,7 +146,7 @@ func newServer() *mcp.Server {
 	return server
 }
 
-// toolError is what the Python server answers when a tool fails.
+// toolError is the answer when a tool fails (the Python server's wording, kept).
 func toolError(tool, msg string) *mcp.CallToolResult {
 	return &mcp.CallToolResult{IsError: true,
 		Content: []mcp.Content{&mcp.TextContent{Text: "Error executing tool " + tool + ": " + msg}}}
@@ -165,7 +166,7 @@ func listCharts(*asciicharts.Object) *mcp.CallToolResult {
 	return result
 }
 
-// renderChart builds the spec the way the Python server's typed arguments do: only the known fields,
+// renderChart builds the spec the way the Python server's typed arguments did: only the known fields,
 // nulls dropped, numbers typed (values and thresholds are floats, width/height/bins integers written
 // as integers), then renders it.
 func renderChart(args *asciicharts.Object) *mcp.CallToolResult {

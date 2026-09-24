@@ -39,12 +39,12 @@ spec/                     CC BY 4.0
   LICENSE                 CC BY 4.0
   conformance/            corpus.json, gallery.json, gallery.txt + README (format)
 python/                   MIT — asciicharts.py, pyproject.toml, tests/
-go/                       MIT — go.mod, package asciicharts, cmd/asciicharts (CLI), MCP server
+go/                       MIT — go.mod, package asciicharts, cmd/asciicharts (CLI), cmd/asciicharts-mcp (MCP server)
 skills/asciicharts/       the skill (draw first, tool when available)
 site/                     the landing page
 scripts/                  repository tooling (gallery, site examples, skill sync/package, og image)
 docs/                     gallery.md, development.md, skill.md
-deploy/                   Docker/compose (switches to the Go server in phase 6)
+deploy/                   Docker/compose of the Go MCP server (FROM scratch), Caddy for production
 ```
 
 ## Working rules (apply to every step)
@@ -166,8 +166,8 @@ Done when: 100% of `spec/conformance/` passes in Go.
 - [x] **6.1** Go MCP server with the official Go SDK: tools `list_charts` and `render_chart`, the same
       schema (strict types, limits), stdio and stateless streamable HTTP, `/healthz`.
 - [x] **6.2** Parity with the Python server's tests (in-process, stdio, HTTP) and the MCP stress test.
-- [ ] **6.3** Optional anonymous usage statistics (Postgres) — port or drop; decide in this step.
-- [ ] **6.4** `deploy/` switches to the Go image; the Python server is retired (removed from `python/`).
+- [x] **6.3** Optional anonymous usage statistics (Postgres) — port or drop; decide in this step. (Dropped.)
+- [x] **6.4** `deploy/` switches to the Go image; the Python server is retired (removed from `python/`).
 
 ## Phase 7 — Positioning
 
@@ -196,3 +196,4 @@ Done when: 100% of `spec/conformance/` passes in Go.
 | 2026-09-24 | 5.2 | `.github/workflows/release-go.yml`: on a `go/v*` tag — `go test`, tag = `asciicharts --version`, six static binaries (CGO off, `-trimpath -s -w`, ~3.3 MB) as tar.gz/zip with README + LICENSE, `checksums.txt`, `gh release create`. Not goreleaser: its free version can't read the `go/`-prefixed tags a Go module in a subdirectory needs. Verified locally: the build script (all six targets, archives, checksums) and `go test` on Go 1.22 (the workflow's toolchain, from go.mod). **Not verified: the workflow on GitHub** (needs a tag push) |
 | 2026-09-24 | 5.3 | `SKILL.md`: the `asciicharts` command is its own step of the flow (after MCP, before Python: `asciicharts --version` works → same arguments and bytes as the script, ExCSV only in the script); frontmatter `compatibility`/`description` and `docs/skill.md` name it. 782/782 Python tests, skill package rebuilt |
 | 2026-09-24 | 6.1–6.2 | `go/cmd/asciicharts-mcp` on the official Go SDK (v1.8.0): stdio, stateless streamable HTTP at `/mcp`, `/healthz`, `healthcheck` subcommand. Tool definitions generated from the Python server (`scripts/gen_go_mcp_tools.py`, staleness checked by a test) and served verbatim; arguments validated against that schema (jsonschema-go) plus pydantic's strictness (`40.0` is not an integer), then shaped as the Python server does (known fields only, nulls dropped, values as floats). `python/tests/test_go_server.py`: the Python server's own `check_tools` over Go stdio and HTTP; identical `tools/list` and `list_charts`; 750 random `render_chart` calls (498 charts and 115 chart errors byte for byte, 137 invalid calls rejected by both) plus 4 edge cases (float width, extra fields, nulls). The module now needs Go 1.25 (the SDK); the library package still imports only the standard library. Stats: the Go server ignores `ASCIICHARTS_STATS` with a warning until 6.3 is decided |
+| 2026-09-24 | 6.3–6.4 | Decided by the owner: statistics dropped, the Python server retired (no production existed). Before deleting it, its answers were recorded as the Go server's tests: `go/cmd/asciicharts-mcp/testdata/` (754 `render_chart` calls, `list_charts`); the tool definitions became `tools.json` (embedded, edited by hand from now on); stdio, HTTP and `healthcheck` are tested in Go (the test binary re-runs itself as the server). Removed: `python/server/`, its tests and the stats store, `mcp`/`asyncpg` dependencies (the Python package now depends on nothing), `gen_go_mcp_tools.py`, Postgres from `deploy/`. `deploy/Dockerfile` builds the Go server into a `FROM scratch` image; release archives carry both binaries. New `go/cmd/asciicharts-mcp/README.md` (the old server guide, for Go); README, docs, site updated. Checked: `go test ./...`, 746 Python tests, site build. **Not verified: `docker build`** (Docker daemon not running) |

@@ -5,8 +5,6 @@ text chart out. It passes the [conformance suite](../spec/conformance/) byte for
 
 - **`asciicharts.py`** — the renderer and CLI: one file, standard library only (Python 3.10+). Copy it
   anywhere; nothing to install.
-- **`server/`** — the MCP server (package `asciicharts_server`, command `asciicharts-mcp`), until the Go
-  server replaces it.
 - **`tests/`** — the test suite, including the conformance suite.
 
 ```sh
@@ -14,7 +12,7 @@ python asciicharts.py --json '{"chartType":"hbar","labels":["a","b"],"series":[{
 python asciicharts.py --csv data.csv --chart hbar --sort -latency --limit 10
 python asciicharts.py --list
 
-pip install -e ".[stats,dev]" && pytest      # from this directory
+pip install -e ".[dev]" && pytest            # from this directory
 ```
 
 ```python
@@ -22,5 +20,6 @@ from asciicharts import render_chart
 print(render_chart({"chartType": "sparkline", "series": [{"values": [4, 6, 5, 9, 3]}]}))
 ```
 
-The project, the skill and the documentation: [the repository README](https://github.com/boligolov/asciicharts).
+The MCP server and a single-binary command line are in [Go](../go/). The project, the skill and the
+documentation: [the repository README](https://github.com/boligolov/asciicharts).
 License: MIT.

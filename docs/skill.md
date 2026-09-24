@@ -55,7 +55,7 @@ The package must contain the folder `asciicharts/` with `SKILL.md` directly insi
 
 The same folder or zip can be uploaded through the API's skills endpoint (see Anthropic's documentation for
 the current request format). Agents that follow the open skill convention only need the folder in the place
-they scan; anything without skill support can use the [MCP server](../python/server/README.md) instead.
+they scan; anything without skill support can use the [MCP server](../go/cmd/asciicharts-mcp/README.md) instead.
 
 ## Updating, removing
 

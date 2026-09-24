@@ -1,0 +1,425 @@
+[
+ {
+  "name": "list_charts",
+  "description": "List every chart type this server can draw: what it draws, how to fill `series` for it, which options apply, and a minimal example call for render_chart. Call this first when you are unsure which chart fits the data or how to shape `series`.",
+  "inputSchema": {
+   "type": "object",
+   "properties": {},
+   "title": "list_chartsArguments"
+  },
+  "outputSchema": {
+   "$defs": {
+    "ChartInfo": {
+     "properties": {
+      "type": {
+       "description": "the chartType value to pass to render_chart",
+       "title": "Type",
+       "type": "string"
+      },
+      "summary": {
+       "description": "what the chart draws and when to use it",
+       "title": "Summary",
+       "type": "string"
+      },
+      "series": {
+       "description": "how to fill `series` for this chart type",
+       "title": "Series",
+       "type": "string"
+      },
+      "options": {
+       "description": "render_chart options that affect this chart, beyond title/border/useColor which every chart accepts",
+       "items": {
+        "type": "string"
+       },
+       "title": "Options",
+       "type": "array"
+      },
+      "example": {
+       "additionalProperties": true,
+       "description": "a minimal valid render_chart call",
+       "title": "Example",
+       "type": "object"
+      }
+     },
+     "required": [
+      "type",
+      "summary",
+      "series",
+      "options",
+      "example"
+     ],
+     "title": "ChartInfo",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "result": {
+     "items": {
+      "$ref": "#/$defs/ChartInfo"
+     },
+     "title": "Result",
+     "type": "array"
+    }
+   },
+   "required": [
+    "result"
+   ],
+   "title": "list_chartsOutput",
+   "type": "object"
+  }
+ },
+ {
+  "name": "render_chart",
+  "description": "Render numeric data as an ASCII/Unicode text chart. Supports sparkline, vbar, hbar, line, area, scatter, dual_axis, pie, histogram, heatmap, boxplot and dotplot, with an optional title, border frame (none/ascii/light/heavy/double/rounded), bar/area fill style (solid/halftone/ascii) and line style (solid/dotted), dashed reference lines (a threshold, or several labelled thresholds such as a target and an SLA) and configurable per-point markers for line charts, a target chart width (vbar/hbar scale to fill it), automatic diverging bars for negative values (including stacked), and optional ANSI 256-color output. Returns the chart as plain text — put it in a code block so it stays aligned. Use list_charts to see how `series` is filled for each chartType.",
+  "inputSchema": {
+   "type": "object",
+   "$defs": {
+    "Point": {
+     "properties": {
+      "x": {
+       "title": "X",
+       "type": "number"
+      },
+      "y": {
+       "title": "Y",
+       "type": "number"
+      }
+     },
+     "required": [
+      "x",
+      "y"
+     ],
+     "title": "Point",
+     "type": "object"
+    },
+    "Series": {
+     "properties": {
+      "name": {
+       "anyOf": [
+        {
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "description": "optional series/category/row name, used in legends and axis labels",
+       "title": "Name"
+      },
+      "values": {
+       "anyOf": [
+        {
+         "items": {
+          "type": "number"
+         },
+         "type": "array"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "description": "numeric values; meaning depends on chartType, see list_charts",
+       "title": "Values"
+      },
+      "points": {
+       "anyOf": [
+        {
+         "items": {
+          "$ref": "#/$defs/Point"
+         },
+         "type": "array"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "description": "(x, y) samples, used only by scatter charts",
+       "title": "Points"
+      }
+     },
+     "title": "Series",
+     "type": "object"
+    },
+    "Threshold": {
+     "properties": {
+      "value": {
+       "title": "Value",
+       "type": "number"
+      },
+      "label": {
+       "anyOf": [
+        {
+         "maxLength": 40,
+         "type": "string"
+        },
+        {
+         "type": "null"
+        }
+       ],
+       "default": null,
+       "description": "shown right of the plot next to the value, e.g. \"target\" or \"SLA\"",
+       "title": "Label"
+      }
+     },
+     "required": [
+      "value"
+     ],
+     "title": "Threshold",
+     "type": "object"
+    }
+   },
+   "properties": {
+    "chartType": {
+     "description": "chart type; see list_charts",
+     "enum": [
+      "sparkline",
+      "vbar",
+      "hbar",
+      "line",
+      "area",
+      "scatter",
+      "dual_axis",
+      "pie",
+      "histogram",
+      "heatmap",
+      "boxplot",
+      "dotplot"
+     ],
+     "title": "Charttype",
+     "type": "string"
+    },
+    "series": {
+     "description": "one or more data series/rows/slices to plot; see list_charts for how each chartType reads them",
+     "items": {
+      "$ref": "#/$defs/Series"
+     },
+     "title": "Series",
+     "type": "array"
+    },
+    "labels": {
+     "anyOf": [
+      {
+       "items": {
+        "type": "string"
+       },
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "category labels for vbar/hbar/histogram/dotplot bars, x-axis labels for line/area, or column headers for a heatmap",
+     "title": "Labels"
+    },
+    "title": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "optional title shown above the chart",
+     "title": "Title"
+    },
+    "width": {
+     "anyOf": [
+      {
+       "maximum": 500,
+       "minimum": 0,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "chart width in characters (default depends on chart type)",
+     "title": "Width"
+    },
+    "height": {
+     "anyOf": [
+      {
+       "maximum": 200,
+       "minimum": 0,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "chart height in rows (default depends on chart type)",
+     "title": "Height"
+    },
+    "border": {
+     "anyOf": [
+      {
+       "enum": [
+        "none",
+        "ascii",
+        "light",
+        "heavy",
+        "double",
+        "rounded"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "border style (default: light)",
+     "title": "Border"
+    },
+    "style": {
+     "anyOf": [
+      {
+       "enum": [
+        "solid",
+        "fine",
+        "halftone",
+        "ascii",
+        "dotted"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "visual style. vbar/hbar/histogram/area: solid (default; flat blocks, bars end on whole character cells), fine (bars end on eighth-block glyphs for sub-cell precision; needs a font that has them, which Consolas does not), halftone (lighter stippled Unicode shades per series) or ascii (plain-ASCII characters per series — #, X, H, W, =, :, |, . then @ % & $ M N D O U S G Z / \\ ! — that render identically in any monospace font). line: solid (default) or dotted (sparse plotted-dot trend line)",
+     "title": "Style"
+    },
+    "stacked": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "for vbar/hbar/area with multiple series, stack them (cumulative from zero; negative values stack the other way) instead of grouping/overlaying",
+     "title": "Stacked"
+    },
+    "bins": {
+     "anyOf": [
+      {
+       "maximum": 500,
+       "minimum": 0,
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "number of buckets for histogram charts (default: 10)",
+     "title": "Bins"
+    },
+    "useColor": {
+     "anyOf": [
+      {
+       "enum": [
+        "auto",
+        "on",
+        "off"
+       ],
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "ANSI 256-color output (default: auto, which is equivalent to off since tool output is plain text for an agent, not a terminal)",
+     "title": "Usecolor"
+    },
+    "threshold": {
+     "anyOf": [
+      {
+       "type": "number"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "line charts only: draw a dashed horizontal reference line at this y-value",
+     "title": "Threshold"
+    },
+    "thresholds": {
+     "anyOf": [
+      {
+       "items": {
+        "$ref": "#/$defs/Threshold"
+       },
+       "maxItems": 20,
+       "type": "array"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "line charts only: several dashed horizontal reference lines, each named with its value right of the plot, e.g. [{\"value\": 106, \"label\": \"target\"}]",
+     "title": "Thresholds"
+    },
+    "showPoints": {
+     "anyOf": [
+      {
+       "type": "boolean"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "line charts only: mark each individual data point with a glyph on top of the connecting line",
+     "title": "Showpoints"
+    },
+    "pointChar": {
+     "anyOf": [
+      {
+       "type": "string"
+      },
+      {
+       "type": "null"
+      }
+     ],
+     "default": null,
+     "description": "line charts only, with showPoints: single character used to mark points on every series (default: a large circle for the first series, with a distinct shape per additional series)",
+     "title": "Pointchar"
+    }
+   },
+   "required": [
+    "chartType",
+    "series"
+   ],
+   "title": "render_chartArguments"
+  },
+  "outputSchema": {
+   "properties": {
+    "result": {
+     "title": "Result",
+     "type": "string"
+    }
+   },
+   "required": [
+    "result"
+   ],
+   "title": "render_chartOutput",
+   "type": "object"
+  }
+ }
+]

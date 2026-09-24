@@ -5,34 +5,23 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "asciicharts"
 version = "1.0.0"
-description = "ASCII/Unicode text charts for agents: a single-file Python renderer, an MCP server and an agent skill."
+description = "ASCII/Unicode text charts: the Python reference implementation of the asciicharts principles, one stdlib-only file."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 license-files = ["LICENSE"]
-dependencies = ["mcp>=2.2,<3"]
+dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/boligolov/asciicharts"
 Issues = "https://github.com/boligolov/asciicharts/issues"
 
 [project.optional-dependencies]
-# Anonymous usage statistics in Postgres (only used if DATABASE_URL is set).
-stats = ["asyncpg>=0.29"]
-dev = ["pytest>=8", "httpx"]
+dev = ["pytest>=8"]
 
-[project.scripts]
-asciicharts-mcp = "asciicharts_server.app:main"
-
-# asciicharts.py is a stdlib-only single file at the repository root (also shipped
-# inside the skill); the MCP server lives in server/ and installs as the
-# `asciicharts_server` package.
+# asciicharts.py is a stdlib-only single file (also shipped inside the skill).
 [tool.setuptools]
 py-modules = ["asciicharts"]
-packages = ["asciicharts_server"]
-
-[tool.setuptools.package-dir]
-asciicharts_server = "server"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

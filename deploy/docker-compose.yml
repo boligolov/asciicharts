@@ -1,69 +1,25 @@
-# Local development stack: Postgres + the HTTP server, with Postgres published on
-# :5432 and a default password. NOT for production — see docker-compose.prod.yml.
-# The point of this stack is to exercise the statistics database, so unlike the
-# server's own default (off) it turns statistics ON; set ASCIICHARTS_STATS=off to
-# run it without recording anything.
+# Local run of the HTTP server, published on :8080 (MCP at /mcp, health at /healthz).
+# For production (HTTPS through Caddy) see docker-compose.prod.yml.
 #
 #   docker compose -f deploy/docker-compose.yml up -d --build      (from the repo root)
-#
-# Optional overrides go in deploy/.env (copy deploy/.env.example).
 
 name: asciicharts
 
-networks:
-  asciicharts:
-    name: asciicharts
-
 services:
-  db:
-    image: postgres:16-alpine
-    restart: unless-stopped
-    networks: [asciicharts]
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-asciicharts}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-asciicharts}
-      POSTGRES_DB: ${POSTGRES_DB:-asciicharts}
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    ports:
-      # Exposed so a locally-run (non-Docker) process can point DATABASE_URL
-      # at localhost:5432. Drop this if the db should stay compose-internal.
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-asciicharts}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  # The always-on MCP server: PORT set below switches the same server from
-  # its default stdio mode into a long-running HTTP server exposing the
-  # streamable-HTTP MCP transport at /mcp (see main() in server/app.py), plus a
-  # plain /healthz this service's own healthcheck (and any external load
-  # balancer) can probe. On the same network as db, so DATABASE_URL below
-  # reaches it by service name — no published db port needed for this to
-  # work, that's only for a native (non-Docker) process or local debugging.
+  # PORT switches the server from its default stdio mode to a long-running HTTP server exposing the
+  # streamable-HTTP MCP transport at /mcp, plus a plain /healthz.
   web:
     build:
       context: ..
       dockerfile: deploy/Dockerfile
     restart: unless-stopped
-    networks: [asciicharts]
-    depends_on:
-      db:
-        condition: service_healthy
     environment:
       PORT: "8080"
-      ASCIICHARTS_STATS: ${ASCIICHARTS_STATS:-on}
-      DATABASE_URL: postgres://${POSTGRES_USER:-asciicharts}:${POSTGRES_PASSWORD:-asciicharts}@db:5432/${POSTGRES_DB:-asciicharts}?sslmode=disable
     ports:
       - "8080:8080"
     healthcheck:
-      # The image has no curl — the server checks itself instead (see the
-      # "healthcheck" subcommand in server/app.py).
-      test: ["CMD", "asciicharts-mcp", "healthcheck"]
+      # The image has nothing but the server, which checks itself ("healthcheck" subcommand).
+      test: ["CMD", "/asciicharts-mcp", "healthcheck"]
       interval: 10s
       timeout: 3s
       retries: 5
-
-volumes:
-  db-data:

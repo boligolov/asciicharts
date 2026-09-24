@@ -1,32 +1,21 @@
 # syntax=docker/dockerfile:1
 #
+# The asciicharts MCP server (go/cmd/asciicharts-mcp): one static binary on an empty image.
 # Build from the repository root (the build context is the whole repo):
 #   docker build -f deploy/Dockerfile -t asciicharts .
-FROM python:3.12-slim
+FROM golang:1.25-alpine AS build
+WORKDIR /src
+COPY go/go.mod go/go.sum ./
+RUN go mod download
+COPY go/ ./
+RUN CGO_ENABLED=0 go build -trimpath -ldflags "-s -w" -o /asciicharts-mcp ./cmd/asciicharts-mcp
 
-ENV PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONIOENCODING=utf-8 \
-    PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    ASCIICHARTS_STATS=off
+FROM scratch
+COPY --from=build /asciicharts-mcp /asciicharts-mcp
+USER 65534:65534
 
-WORKDIR /app
-COPY python/pyproject.toml python/README.md python/LICENSE ./
-COPY python/asciicharts.py ./
-COPY python/server ./server
-RUN pip install ".[stats]" && useradd --system --no-create-home app
-USER app
-
-# By default the server speaks MCP over stdio, so it must be run with
-# `docker run -i` (an MCP client typically manages this via its own config).
-# Setting PORT switches it to a long-running HTTP server instead, serving MCP
-# at /mcp and a plain health check at /healthz — see deploy/docker-compose.yml's
-# "web" service and docs/development.md.
-#
-# Anonymous usage statistics are OFF (ASCIICHARTS_STATS=off above). To record them
-# in Postgres, override at run time:
-#   docker run --rm -e PORT=8080 -p 8080:8080 \
-#     -e ASCIICHARTS_STATS=on -e DATABASE_URL=postgres://user:pass@host:5432/db asciicharts
+# By default the server speaks MCP over stdio, so it must be run with `docker run -i` (an MCP client
+# typically manages this via its own config). Setting PORT switches it to a long-running HTTP server
+# instead, serving MCP at /mcp and a plain health check at /healthz — see docker-compose.yml.
 EXPOSE 8080
-ENTRYPOINT ["asciicharts-mcp"]
+ENTRYPOINT ["/asciicharts-mcp"]
