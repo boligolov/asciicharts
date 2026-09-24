@@ -21,6 +21,9 @@ sys.path.insert(0, str(ROOT))
 from asciicharts import render_chart  # noqa: E402
 
 GALLERY = ROOT / "docs" / "gallery.md"
+# Every document whose examples are a ```json spec followed by its output. Only the gallery has a
+# table of contents (the <!-- toc --> block); the others just get their outputs checked.
+DOCS = [GALLERY, ROOT / "skills" / "asciicharts" / "references" / "drawing.md"]
 START, END = "<!-- toc -->", "<!-- /toc -->"
 
 
@@ -85,22 +88,26 @@ def refreshed(text: str):
 
 
 def main(argv):
-    text = GALLERY.read_text(encoding="utf-8")
-    new, stale = refreshed(text)
-    new = updated(new)
-    toc_stale = updated(text) != text
-    if "--check" in argv:
-        problems = (["stale examples: " + ", ".join(stale)] if stale else []) + (["stale contents"] if toc_stale else [])
-        if problems:
-            print("docs/gallery.md: " + "; ".join(problems) + " (run python scripts/gallery_refresh.py)", file=sys.stderr)
-            return 1
-        return 0
-    if new != text:
-        GALLERY.write_text(new, encoding="utf-8", newline="\n")
-    print(f"{len(stale)} example(s) refreshed" + (": " + ", ".join(stale) if stale else "")
-          + f"; contents {'rebuilt' if toc_stale else 'up to date'} ({len(headings(new))} examples)")
-    return 0
-
+    status = 0
+    for doc in DOCS:
+        text = doc.read_text(encoding="utf-8")
+        new, stale = refreshed(text)
+        has_toc = START in text
+        if has_toc:
+            new = updated(new)
+        toc_stale = has_toc and updated(text) != text
+        name = doc.relative_to(ROOT).as_posix()
+        if "--check" in argv:
+            problems = (["stale examples: " + ", ".join(stale)] if stale else []) + (["stale contents"] if toc_stale else [])
+            if problems:
+                print(f"{name}: " + "; ".join(problems) + " (run python scripts/gallery_refresh.py)", file=sys.stderr)
+                status = 1
+            continue
+        if new != text:
+            doc.write_text(new, encoding="utf-8", newline="\n")
+        print(f"{name}: {len(stale)} example(s) refreshed" + (": " + ", ".join(stale) if stale else "")
+              + (f"; contents {'rebuilt' if toc_stale else 'up to date'} ({len(headings(new))} examples)" if has_toc else ""))
+    return status
 
 if __name__ == "__main__":
     sys.exit(main(sys.argv[1:]))

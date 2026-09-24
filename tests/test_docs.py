@@ -89,8 +89,8 @@ def test_site_examples_are_current():
 
 
 def test_every_gallery_output_is_current():
-    """The printed output under each spec is exactly what the renderer produces today, and the
-    contents list matches the headings."""
+    """In the gallery and in the skill's hand-drawing guide, the printed output under each spec is
+    exactly what the renderer produces today, and the gallery's contents list matches its headings."""
     import subprocess
     import sys
     r = subprocess.run([sys.executable, str(ROOT / "scripts" / "gallery_refresh.py"), "--check"], capture_output=True, encoding="utf-8")

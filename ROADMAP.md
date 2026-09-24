@@ -77,12 +77,12 @@ Hand-drawability tiers (to be confirmed by the evals):
 | tier | charts | guidance |
 |---|---|---|
 | A — reliable by hand | sparkline, hbar (≤ 10 bars, width 10–20), small vbar, dotplot | draw it |
-| B — careful by hand | line (small grid), area, histogram (compute bins first), boxplot (compute quartiles first), small heatmap | draw it, keep it small, self-check |
-| C — use a tool | pie, scatter, dual_axis, anything large | tool if available; else a simplified version and say it is approximate |
+| B — careful by hand | line (small grid), area, histogram (compute bins first), boxplot (compute quartiles first), small heatmap, scatter with a few points | draw it, keep it small, self-check |
+| C — use a tool | pie (→ a 100% stacked bar), dual_axis (→ two small line charts), anything large | tool if available; else the simpler equivalent, and say so |
 
 Steps:
 
-- [ ] **1.1** `skills/asciicharts/references/drawing.md` — a recipe for each of the 12 chart types,
+- [x] **1.1** `skills/asciicharts/references/drawing.md` — a recipe for each of the 12 chart types,
       ordered by tier: inputs, the numbers to compute (with formulas from the principles), the strings to
       build, a worked example with real renderer output, and the specific self-check.
 - [ ] **1.2** `skills/asciicharts/references/glyphs.md` — a one-screen cheat sheet: safe alphabet (tiers,
@@ -176,3 +176,4 @@ Done when: 100% of `spec/conformance/` passes in Go.
 | date | step | note |
 |---|---|---|
 | 2026-09-24 | plan | this roadmap written; decisions 1–5 recorded |
+| 2026-09-24 | 1.1 | `drawing.md`: protocol, recipes for all 12 types by tier (A/B/C), worked arithmetic, frames, self-check; its 17 examples are checked against the renderer by `gallery_refresh.py --check` |

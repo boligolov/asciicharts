@@ -63,7 +63,7 @@ pytest
 python scripts/sync_skill.py
 ```
 
-`tests/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn or adding an example, `python scripts/gallery_refresh.py` re-renders every printed output and rebuilds the contents list; a test fails if either is stale) and `python scripts/sync_skill.py` copies it, and `docs/principles.md`, into the skill.
+`tests/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn or adding an example, `python scripts/gallery_refresh.py` re-renders every printed output — in the gallery and in the skill's `references/drawing.md` — and rebuilds the gallery's contents list; a test fails if either is stale) and `python scripts/sync_skill.py` copies it, and `docs/principles.md`, into the skill.
 
 ## Docker
 

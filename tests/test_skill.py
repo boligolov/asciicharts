@@ -106,7 +106,7 @@ def test_list_flag_and_error_convention():
     assert r.returncode == 1 and r.stdout == "" and r.stderr.startswith("error: ")
 
 
-@pytest.mark.parametrize("ref", ["reference.md", "gallery.md", "principles.md"])
+@pytest.mark.parametrize("ref", ["reference.md", "gallery.md", "principles.md", "drawing.md"])
 def test_references_exist_and_are_not_empty(ref):
     assert len((SKILL / "references" / ref).read_text(encoding="utf-8")) > 1000
 
