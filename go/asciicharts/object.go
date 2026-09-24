@@ -192,3 +192,66 @@ func writePyFloat(b *strings.Builder, f float64) {
 		b.WriteString(s)
 	}
 }
+
+// MarshalJSON writes the object with its keys in order.
+func (o *Object) MarshalJSON() ([]byte, error) {
+	return []byte(PyJSONCompact(o)), nil
+}
+
+// PyJSONIndent is json.dumps(v, ensure_ascii=False, indent=indent): one item per line, "[]" and "{}"
+// for empty containers.
+func PyJSONIndent(v any, indent int) string {
+	var b strings.Builder
+	writePyJSONIndent(&b, v, strings.Repeat(" ", indent), "\n")
+	return b.String()
+}
+
+func writePyJSONIndent(b *strings.Builder, v any, step, nl string) {
+	inner := nl + step
+	switch x := v.(type) {
+	case []any:
+		if len(x) == 0 {
+			b.WriteString("[]")
+			return
+		}
+		b.WriteByte('[')
+		for i, e := range x {
+			if i > 0 {
+				b.WriteByte(',')
+			}
+			b.WriteString(inner)
+			writePyJSONIndent(b, e, step, inner)
+		}
+		b.WriteString(nl + "]")
+	case *Object:
+		if len(x.keys) == 0 {
+			b.WriteString("{}")
+			return
+		}
+		b.WriteByte('{')
+		for i, k := range x.keys {
+			if i > 0 {
+				b.WriteByte(',')
+			}
+			b.WriteString(inner + jsonString(k) + ": ")
+			writePyJSONIndent(b, x.vals[k], step, inner)
+		}
+		b.WriteString(nl + "}")
+	default:
+		writePyJSON(b, v, ", ", ": ")
+	}
+}
+
+// Catalog returns the chart catalogue as ordered objects (type, summary, series, options, example),
+// the keys and examples in the order the Python reference lists them.
+func Catalog() []*Object {
+	all, err := DecodeOrdered([]byte(catalogJSON))
+	if err != nil {
+		panic("asciicharts: bad generated catalogue: " + err.Error())
+	}
+	var out []*Object
+	for _, c := range all.([]any) {
+		out = append(out, c.(*Object))
+	}
+	return out
+}

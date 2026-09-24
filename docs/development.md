@@ -73,7 +73,7 @@ python scripts/sync_skill.py
 ## The Go implementation
 
 `go/` holds the Go reference implementation, byte-for-byte identical to the Python one: the library
-(`go/asciicharts`) and the command line (`go/cmd/asciicharts`).
+(`go/asciicharts`), the command line (`go/cmd/asciicharts`) and the MCP server (`go/cmd/asciicharts-mcp`).
 
 ```sh
 cd go && go test ./...                                   # conformance suite (corpus, curated, gallery) + robustness + CLI
@@ -83,9 +83,12 @@ python scripts/differential_csv.py 10000 [seed]         # … on random CSV file
 python scripts/cli_parity.py                            # both command lines: stdout, stderr, exit code
 ```
 
-Two of its files are generated from the Python implementation, so both measure text and describe charts
-identically: `python scripts/gen_go_unicode.py` (display-width tables from `unicodedata`) and
-`python scripts/gen_go_catalog.py` (the chart catalogue). A Python test fails if either is stale. A change
+Three of its files are generated from the Python implementation, so both measure text, describe charts and
+offer MCP tools identically: `python scripts/gen_go_unicode.py` (display-width tables from `unicodedata`),
+`python scripts/gen_go_catalog.py` (the chart catalogue) and `python scripts/gen_go_mcp_tools.py` (the MCP
+server's tool definitions). A Python test fails if any is stale. `python/tests/test_go_server.py` runs the
+Python server's checks against the Go MCP server (`go/cmd/asciicharts-mcp`) over stdio and HTTP and compares
+both servers' answers. A change
 to how charts are drawn goes into both implementations in the same change, with the conformance suite
 regenerated (`scripts/conformance_refresh.py`) and `scripts/differential.py` run; a change to the CSV
 reader or the command line, in both too, with `scripts/differential_csv.py` and `scripts/cli_parity.py`.
