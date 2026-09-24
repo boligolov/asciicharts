@@ -1,0 +1,45 @@
+{
+  "expectations": [
+    {
+      "text": "The chart is in a fenced code block (so it stays aligned)",
+      "passed": true,
+      "evidence": "1 fenced block(s)"
+    },
+    {
+      "text": "If the chart is framed, every line has the same display width",
+      "passed": true,
+      "evidence": "not framed: n/a"
+    },
+    {
+      "text": "Only font-safe glyphs (ASCII, Latin-1, WGL4 box drawing, shades, half blocks, markers)",
+      "passed": true,
+      "evidence": "unsafe: none"
+    },
+    {
+      "text": "The value axis runs from the maximum (64) at the top to the minimum (29) at the bottom",
+      "passed": true,
+      "evidence": "axis labels: ['64', '60.82', '57.64', '54.45', '51.27', '48.09', '44.91', '41.73', '38.55', '35.36', '32.18', '29']"
+    },
+    {
+      "text": "The plot is about 12 rows tall, as asked (10 or more labelled rows)",
+      "passed": true,
+      "evidence": "12 labelled rows"
+    },
+    {
+      "text": "The peak (d9) is on the top row and the low (d6) on the bottom row, each at its place along x",
+      "passed": true,
+      "evidence": "top-row marks [32], bottom-row marks [20], plot width 53"
+    },
+    {
+      "text": "The first and last days are labelled on the x axis",
+      "passed": true,
+      "evidence": "d1: True, d14: True"
+    }
+  ],
+  "summary": {
+    "passed": 7,
+    "failed": 0,
+    "total": 7,
+    "pass_rate": 1.0
+  }
+}

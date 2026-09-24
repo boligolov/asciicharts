@@ -68,11 +68,14 @@ def test_the_renderers_own_chart_passes_every_check(name):
     assert failed(perfect(name), name) == []
 
 
-@pytest.mark.parametrize("name", ["hand-hbar-ranking", "hand-hbar-grouped", "hand-vbar", "hand-diverging"])
+@pytest.mark.parametrize("name", ["hand-hbar-ranking", "hand-hbar-grouped", "hand-vbar", "hand-diverging",
+                                  "hand-hbar-many", "hand-stacked-negative"])
 def test_correct_charts_in_other_layouts_pass(name):
     """Real replies from the eval baseline, drawn correctly but not in the renderer's layout: no separator,
     ░ as a series, a value axis and values over the columns, the zero axis as the only vertical line.
-    An early grader failed all four — it must judge the chart, not its resemblance to ours."""
+    An early grader failed all four — it must judge the chart, not its resemblance to ours. From the 1.6 run:
+    numbered rows ("1. auth"), and refunds drawn in ░ (a series, named in the legend, not a track) next to
+    "40 + 15 − 8 = net 47"."""
     reply = (HERE / "formats" / f"{name}.md").read_text(encoding="utf-8")
     assert failed(reply, name) == []
 
@@ -152,4 +155,26 @@ def test_a_line_too_short_is_caught():
     d = DATA["hand-line-large"]
     chart = render_chart({"chartType": "line", "height": 6, "width": 40, "labels": d["labels"], "series": [{"values": d["values"]}]})
     assert any("12 rows" in t for t in failed(fenced(chart), "hand-line-large"))
+
+
+def test_a_chart_outside_a_code_block_fails_only_that_check():
+    """Without a fence the chart is still graded (a real 1.6 reply): one mistake, not a cascade of zeros."""
+    reply = (HERE / "formats" / "hand-hbar-grouped-unfenced.md").read_text(encoding="utf-8")
+    assert failed(reply, "hand-hbar-grouped") == ["The chart is in a fenced code block (so it stays aligned)"]
+
+
+def test_one_misaligned_zero_is_caught_and_the_segments_are_still_judged():
+    lines = perfect("hand-stacked-negative").split(chr(10))
+    i = next(k for k, l in enumerate(lines) if "Apr" in l)
+    lines[i] = lines[i].replace("Apr │ ", "Apr │", 1) + " "  # the whole row one column left
+    fails = failed(chr(10).join(lines), "hand-stacked-negative")
+    assert any("same column" in t for t in fails) and not any("proportional" in t for t in fails)
+
+
+def test_a_blank_line_is_not_a_frame_corner():
+    """`"" in "┌╭╔┏"` is true in Python, so blank lines once looked like a frame's corners: an unfenced
+    reply was cut down to what lay between two of them (a real 1.6 reply lost its chart that way)."""
+    fence = "```" + chr(10)
+    reply = chr(10) + perfect("hand-pie").replace(fence, "").replace(chr(10) + "```", "") + chr(10) + "The end." + chr(10)
+    assert failed(reply, "hand-pie") == ["The chart is in a fenced code block (so it stays aligned)"]
 

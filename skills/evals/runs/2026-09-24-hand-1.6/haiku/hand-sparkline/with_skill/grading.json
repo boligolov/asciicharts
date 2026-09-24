@@ -1,0 +1,25 @@
+{
+  "expectations": [
+    {
+      "text": "A sparkline of eighth-block ticks with one glyph per value",
+      "passed": true,
+      "evidence": "sparkline: '▁▂▁▄▃▆▅█'"
+    },
+    {
+      "text": "Higher values never get a lower tick than smaller ones",
+      "passed": true,
+      "evidence": "levels [0, 1, 0, 3, 2, 5, 4, 7] for [5, 8, 6, 12, 9, 15, 14, 20]"
+    },
+    {
+      "text": "The maximum gets the tallest tick and the minimum the lowest",
+      "passed": true,
+      "evidence": "levels [0, 1, 0, 3, 2, 5, 4, 7]"
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  }
+}

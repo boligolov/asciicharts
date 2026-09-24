@@ -1,0 +1,40 @@
+{
+  "expectations": [
+    {
+      "text": "The chart is in a fenced code block (so it stays aligned)",
+      "passed": true,
+      "evidence": "1 fenced block(s)"
+    },
+    {
+      "text": "If the chart is framed, every line has the same display width",
+      "passed": true,
+      "evidence": "not framed: n/a"
+    },
+    {
+      "text": "Only font-safe glyphs (ASCII, Latin-1, WGL4 box drawing, shades, half blocks, markers)",
+      "passed": true,
+      "evidence": "unsafe: none"
+    },
+    {
+      "text": "Every row has a bar, in ranking order",
+      "passed": true,
+      "evidence": "rows: ['Python', 'JavaScript', 'Go', 'Rust', 'Java', 'C']"
+    },
+    {
+      "text": "Bar lengths are proportional to the values (±1 cell of round(v / max × longest))",
+      "passed": true,
+      "evidence": "drawn [20, 19, 10, 7, 6, 3] for [412, 388, 197, 143, 131, 64]; all within ±1"
+    },
+    {
+      "text": "Every value is printed in the chart",
+      "passed": true,
+      "evidence": "missing: []"
+    }
+  ],
+  "summary": {
+    "passed": 6,
+    "failed": 0,
+    "total": 6,
+    "pass_rate": 1.0
+  }
+}

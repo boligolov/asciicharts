@@ -523,6 +523,9 @@ from common fonts.
 - [ ] Every line of the chart has the same width (count them; with a frame, the right border is straight).
 - [ ] Labels are padded so all `│` separators line up.
 - [ ] Bars start at zero, or grow both ways from a marked axis.
+- [ ] With negative values, the zero axis is in the same column on every row: count what is left of it
+      (label, separator, negative bar, padding) on each row — the counts must be equal.
+- [ ] CJK characters and most emoji counted as two columns, when padding labels and sizing the frame.
 - [ ] Each series has its own glyph; the legend shows the same glyphs in the same order.
 - [ ] The values are printed where the drawing is approximate.
 - [ ] The chart is in a fenced code block.

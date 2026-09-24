@@ -25,6 +25,9 @@ FENCE = re.compile(r"```[^\n]*\n(.*?)```", re.S)
 # blocks, markers. Sparkline ticks are allowed only where a sparkline is the point.
 WGL4_BOX = set("─│┌┐└┘├┤┬┴┼═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬")
 SAFE = WGL4_BOX | set("█▓▒░▌▄▐▀") | set("●○▲■□▼♦◊►◄") | set("¦·")
+# WGL4 characters a chart's text may use besides those: dashes, quotes, arrows, math signs (principles
+# §2.1 draws with a subset of WGL4; its text may use the rest)
+WGL4_TEXT = set("–—‘’“”•…‰‹›€™←↑→↓↔↕−∙√∞≈≠≡≤≥")
 SPARK = "▁▂▃▄▅▆▇█"
 TRACK = set(" ░,·")
 SEPARATORS = "│|¦┃"
@@ -44,9 +47,23 @@ def code_blocks(text):
     return [m.group(1) for m in FENCE.finditer(text)]
 
 
+def starts_with(line, chars):
+    """Does line start with one of chars? (Not `line[:1] in chars`: the empty string is in every string.)"""
+    return bool(line) and line[0] in chars
+
+
 def chart_block(text):
+    """The longest fenced block; without one, the whole reply (the fence check fails on its own, and the
+    other checks still judge the chart that is there)."""
     blocks = code_blocks(text)
-    return max(blocks, key=len) if blocks else ""
+    if blocks:
+        return max(blocks, key=len)
+    lines = text.splitlines()
+    top = next((i for i, l in enumerate(lines) if starts_with(l.strip(), "┌╭╔┏")), None)
+    bottom = next((i for i in range(len(lines) - 1, -1, -1) if starts_with(lines[i].strip(), "└╰╚┗")), None)
+    if top is not None and bottom is not None and bottom > top:
+        return "\n".join(lines[top:bottom + 1])
+    return text
 
 
 def unframe(block):
@@ -54,7 +71,9 @@ def unframe(block):
     lines = [l.rstrip("\n") for l in block.splitlines()]
     while lines and not lines[-1].strip():
         lines.pop()
-    framed = bool(lines) and lines[0][:1] in "┌╭╔┏+" and lines[-1][:1] in "└╰╚┗+"
+    while lines and not lines[0].strip():
+        lines.pop(0)
+    framed = bool(lines) and starts_with(lines[0], "┌╭╔┏+") and starts_with(lines[-1], "└╰╚┗+")
     if not framed:
         return lines, False
     inner = []
@@ -73,8 +92,7 @@ def unframe(block):
 # --- generic checks ------------------------------------------------------------------------------
 
 def check_block(reply):
-    block = chart_block(reply)
-    return ("The chart is in a fenced code block (so it stays aligned)", bool(block.strip()),
+    return ("The chart is in a fenced code block (so it stays aligned)", any(b.strip() for b in code_blocks(reply)),
             f"{len(code_blocks(reply))} fenced block(s)")
 
 
@@ -89,8 +107,10 @@ def check_rectangular(block):
 
 def check_glyphs(block, allow_spark=False, text=""):
     """text: characters the data itself brings (e.g. CJK labels), allowed as they are."""
-    allowed = SAFE | (set(SPARK) if allow_spark else set()) | set(text)
-    bad = sorted({c for c in block if ord(c) > 0xFF and c not in allowed})
+    allowed = SAFE | WGL4_TEXT | (set(SPARK) if allow_spark else set()) | set(text)
+    # letters of any script are text (a title or label in Japanese), not glyphs a chart is drawn with
+    bad = sorted({c for c in block if ord(c) > 0xFF and c not in allowed
+                  and not unicodedata.category(c).startswith("L")})
     return ("Only font-safe glyphs (ASCII, Latin-1, WGL4 box drawing, shades, half blocks, markers)", not bad,
             f"unsafe: {''.join(bad) or 'none'}")
 
@@ -163,7 +183,7 @@ def bar_cells(line, start, track):
 def label_line(lines, label, after=0):
     """(index, end of the label) of the first line from `after` whose text starts with label."""
     for i in range(after, len(lines)):
-        m = re.match(r"^\s*" + re.escape(label) + r"(?!\w)", lines[i])
+        m = re.match(r"^\s*(?:#?\d+[.)]?\s+)?" + re.escape(label) + r"(?!\w)", lines[i])
         if m:
             return i, m.end()
     return None, None
@@ -383,35 +403,27 @@ def glyph_runs(line, cells):
     return [(g, n) for g, n, _ in runs]
 
 
-def zero_axis(rows, track):
-    """The column holding a vertical line in every row, the one most bar cells touch."""
-    axes = None
-    for line, end in rows.values():
-        cols = {k for k in range(end, len(line)) if line[k] in VERTICALS}
-        axes = cols if axes is None else axes & cols
-    # an axis has bars on its left in some row; the label separator never does
-    axes = {k for k in axes or () if any(c < k for line, end in rows.values() for c in bar_cells(line, end, track))}
-    if not axes:
-        return None
-
-    def touching(k):
-        return sum(1 for line, end in rows.values() for c in bar_cells(line, end, track) if abs(c - k) == 1)
-    return max(sorted(axes), key=touching)
+def row_zero(line, cells):
+    """Where zero is in one row: an axis glyph with bar cells on both sides, or, when no glyph marks it
+    (the renderer's own stacked bars), the column where the glyph first changes."""
+    for k in sorted({c + 1 for c in cells} | {c - 1 for c in cells}):
+        if 0 <= k < len(line) and line[k] in VERTICALS and any(c < k for c in cells) and any(c > k for c in cells):
+            return k + 1, k
+    for i in range(1, len(cells)):
+        if line[cells[i]] != line[cells[i - 1]] or cells[i] != cells[i - 1] + 1:
+            return cells[i], None
+    return None, None
 
 
-def zero_split(rows, track):
-    """(z, axis): negative cells are left of column z, positive ones from z on. The zero line is a vertical
-    axis glyph shared by every row, or, as in the renderer's stacked bars, no glyph at all: the column where
-    the glyph changes in every row."""
-    axis = zero_axis(rows, track)
-    if axis is not None:
-        return axis + 1, axis
-    common = None
-    for line, end in rows.values():
-        cells = bar_cells(line, end, track)
-        starts = {c for i, c in enumerate(cells) if i and (line[c] != line[cells[i - 1]] or c != cells[i - 1] + 1)}
-        common = starts if common is None else common & starts
-    return (min(common) if common else None), None
+def run_next_to(cells, edge, step):
+    """The unbroken run of cells that starts at `edge` (or one column past it) and goes in `step`."""
+    have = set(cells)
+    k = edge if edge in have else edge + step
+    run = []
+    while k in have:
+        run.append(k)
+        k += step
+    return sorted(run)
 
 
 def grade_stacked_negative(reply, data):
@@ -419,21 +431,20 @@ def grade_stacked_negative(reply, data):
     lines, _ = unframe(block)
     names = list(data["series"])
     pos, neg = names[:2], names[2]
-    track = uses_track(block)
-    rows = {}
-    for lab in data["labels"]:
-        i, end = label_line(lines, lab)
-        if i is not None:
-            rows[lab] = (lines[i], end)
-    z, axis = zero_split(rows, track)
-    lengths, values, sides_ok, split_ok = [], [], z is not None, True
+    # ░ is a series here when the legend gives it a name, not the track behind a bar
+    track = uses_track(block) and not re.search(r"░\s*[=:]?\s*[A-Za-z]", reply)
+    zeros, lengths, values, split_ok, found = {}, [], [], True, []
     glyphs = {n: set() for n in names}
     for m, lab in enumerate(data["labels"]):
-        line, end = rows.get(lab, ("", 0))
-        cells = bar_cells(line, end, track)
-        left = [c for c in cells if z is not None and c < z]
-        right = [c for c in cells if z is not None and c >= z]
-        sides_ok &= bool(left) and bool(right)
+        i, end = label_line(lines, lab)
+        line = lines[i] if i is not None else ""
+        cells = bar_cells(line, end, track) if i is not None else []
+        z, axis = row_zero(line, cells)
+        if i is not None:
+            found.append(lab)
+        zeros[lab] = z
+        left = run_next_to(cells, (axis if axis is not None else z) - 1, -1) if z is not None else []
+        right = run_next_to(cells, z, +1) if z is not None else []
         runs = glyph_runs(line, right)
         split_ok &= len(runs) == 2
         segs = [n for _, n in runs] + [0, 0]
@@ -443,13 +454,15 @@ def grade_stacked_negative(reply, data):
         glyphs[neg] |= {line[c] for c in left}
         lengths += [segs[0], segs[1], len(left)]
         values += [data["series"][pos[0]][m], data["series"][pos[1]][m], data["series"][neg][m]]
+    shared = len(found) == len(data["labels"]) and None not in zeros.values() and len(set(zeros.values())) == 1
+    sides = all(lengths[k * 3 + 2] > 0 and lengths[k * 3] > 0 for k in range(len(data["labels"])))
     apart = (split_ok and len(glyphs[pos[0]]) == 1 and len(glyphs[pos[1]]) == 1
              and not (glyphs[pos[0]] & glyphs[pos[1]]))
     legend = [n for n in names if n not in reply.lower()]
     return [check_block(reply), check_rectangular(block), check_glyphs(block),
-            ("Refunds hang left and income stacks right of one shared zero line, in every month",
-             sides_ok and len(rows) == len(data["labels"]),
-             f"zero at column {z} (axis glyph: {axis is not None}); months found {list(rows)}"),
+            ("Refunds hang left and income stacks right of zero, in every month", sides,
+             f"zero per month: {zeros}"),
+            ("Every month's zero is at the same column (one shared zero line)", shared, f"zero per month: {zeros}"),
             ("Subscriptions and services are two segments told apart by glyph, the same glyph every month", apart,
              f"glyphs: { {n: ''.join(sorted(g)) for n, g in glyphs.items()} }"),
             check_lengths(lengths, values, "Segment lengths"),

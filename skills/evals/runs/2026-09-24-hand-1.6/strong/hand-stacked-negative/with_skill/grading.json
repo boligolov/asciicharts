@@ -1,0 +1,50 @@
+{
+  "expectations": [
+    {
+      "text": "The chart is in a fenced code block (so it stays aligned)",
+      "passed": true,
+      "evidence": "1 fenced block(s)"
+    },
+    {
+      "text": "If the chart is framed, every line has the same display width",
+      "passed": true,
+      "evidence": "not framed: n/a"
+    },
+    {
+      "text": "Only font-safe glyphs (ASCII, Latin-1, WGL4 box drawing, shades, half blocks, markers)",
+      "passed": true,
+      "evidence": "unsafe: none"
+    },
+    {
+      "text": "Refunds hang left and income stacks right of zero, in every month",
+      "passed": true,
+      "evidence": "zero per month: {'Jan': 14, 'Feb': 14, 'Mar': 14, 'Apr': 14}"
+    },
+    {
+      "text": "Every month's zero is at the same column (one shared zero line)",
+      "passed": true,
+      "evidence": "zero per month: {'Jan': 14, 'Feb': 14, 'Mar': 14, 'Apr': 14}"
+    },
+    {
+      "text": "Subscriptions and services are two segments told apart by glyph, the same glyph every month",
+      "passed": true,
+      "evidence": "glyphs: {'subscriptions': '█', 'services': '▓', 'refunds': '▒'}"
+    },
+    {
+      "text": "Segment lengths are proportional to the values (±1 cell of round(v / max × longest))",
+      "passed": true,
+      "evidence": "drawn [20, 8, 4, 23, 6, 3, 26, 9, 7, 25, 10, 3] for [40, 15, -8, 46, 12, -5, 52, 18, -14, 49, 21, -6]; all within ±1"
+    },
+    {
+      "text": "A legend names the three series",
+      "passed": true,
+      "evidence": "missing: []"
+    }
+  ],
+  "summary": {
+    "passed": 8,
+    "failed": 0,
+    "total": 8,
+    "pass_rate": 1.0
+  }
+}

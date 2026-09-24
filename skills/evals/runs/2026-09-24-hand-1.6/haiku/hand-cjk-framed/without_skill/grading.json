@@ -1,0 +1,45 @@
+{
+  "expectations": [
+    {
+      "text": "The chart is in a fenced code block (so it stays aligned)",
+      "passed": false,
+      "evidence": "0 fenced block(s)"
+    },
+    {
+      "text": "The chart is inside a box frame, as asked",
+      "passed": true,
+      "evidence": "framed"
+    },
+    {
+      "text": "If the chart is framed, every line has the same display width",
+      "passed": false,
+      "evidence": "line widths: [42, 44, 45, 46, 48]"
+    },
+    {
+      "text": "Only font-safe glyphs (ASCII, Latin-1, WGL4 box drawing, shades, half blocks, markers)",
+      "passed": true,
+      "evidence": "unsafe: none"
+    },
+    {
+      "text": "Every team has a bar, labelled with its Japanese name",
+      "passed": true,
+      "evidence": "missing: []"
+    },
+    {
+      "text": "Bar lengths are proportional to the values (±1 cell of round(v / max × longest))",
+      "passed": true,
+      "evidence": "drawn [25, 16, 11, 7, 4] for [48, 31, 22, 12, 7]; all within ±1"
+    },
+    {
+      "text": "Every value is printed in the chart",
+      "passed": true,
+      "evidence": "missing: []"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 2,
+    "total": 7,
+    "pass_rate": 0.7142857142857143
+  }
+}
