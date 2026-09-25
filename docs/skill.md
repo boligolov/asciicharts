@@ -56,9 +56,7 @@ Download **[asciicharts.skill](https://asciicharts.online/asciicharts.skill)** a
 wording may differ between versions). A `.skill` file is a zip archive: the folder `asciicharts/` with
 `SKILL.md` directly inside.
 
-To build it from a checkout instead: `python scripts/package_skill.py` writes `dist/asciicharts.skill`. The
-build is deterministic, and a test checks that the copy the site serves (`site/public/asciicharts.skill`) is
-the current skill.
+To build it from a checkout instead: `python scripts/package_skill.py` writes `dist/asciicharts.skill`.
 
 ## Claude API and other agents
 
@@ -84,6 +82,20 @@ they scan; anything without skill support can use the [MCP server](../go/cmd/asc
 
 They render identically and work best side by side: the skill knows how to choose and read a chart, and
 uses the server as its renderer when it is connected.
+
+## Versions: releasing a change to the skill
+
+The skill has a version, **0.0.1** now, in two places that must agree (a test checks): `metadata.version` in
+`SKILL.md`'s frontmatter and `version` in `skills/asciicharts/.claude-plugin/plugin.json`. Claude Code offers
+plugin users an update only when that version goes up, so **every change to `skills/asciicharts/` bumps it**
+(semver: `0.0.2` for a fix or a wording change, `0.1.0` for something new). Then, one command:
+
+```sh
+python scripts/package_skill.py --site      # rebuilds dist/asciicharts.skill and site/public/asciicharts.skill
+```
+
+and commit the result with the change. The site's download is committed, so a test fails while it is older
+than the skill; deploy the site afterwards so asciicharts.online serves the new package.
 
 ## Listing it in Claude's plugin directories
 

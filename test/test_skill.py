@@ -17,10 +17,14 @@ def frontmatter_and_body():
     text = (SKILL / "SKILL.md").read_text(encoding="utf-8")
     m = re.match(r"^---\n(.*?)\n---\n(.*)$", text, re.S)
     assert m, "SKILL.md must start with a YAML frontmatter block"
-    fields = {}
+    fields, parent = {}, None
     for line in m.group(1).splitlines():
         key, _, value = line.partition(":")
-        fields[key.strip()] = value.strip()
+        if line[:1].isspace() and parent:  # a nested field, e.g. metadata: / version: "0.0.1"
+            fields[parent][key.strip()] = value.strip().strip('"')
+            continue
+        parent = key.strip()
+        fields[parent] = value.strip() or {}
     return fields, m.group(2)
 
 
@@ -163,10 +167,21 @@ def test_claude_plugin_validate_passes(target):
     assert r.returncode == 0 and "Validation passed" in r.stdout, r.stdout + r.stderr
 
 
+def test_the_skill_has_one_version():
+    """The version is bumped for every change to the skill: SKILL.md's metadata.version and plugin.json's
+    version (which Claude Code uses to offer updates) must agree, as semver."""
+    import json
+    version = frontmatter_and_body()[0]["metadata"]["version"]
+    plugin = json.loads((SKILL / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+    assert re.fullmatch(r"\d+\.\d+\.\d+", version), version
+    assert plugin["version"] == version
+
+
 def test_the_sites_download_is_the_current_skill():
     """asciicharts.online/asciicharts.skill is what claude.ai users upload; the packager is deterministic,
-    so the committed copy must equal a fresh build (python scripts/package_skill.py --out site/public/asciicharts.skill)."""
+    so the committed copy must equal a fresh build (python scripts/package_skill.py --site)."""
     sys.path.insert(0, str(ROOT / "scripts"))
     import package_skill
-    assert (ROOT / "site" / "public" / "asciicharts.skill").read_bytes() == package_skill.build(), "the site's asciicharts.skill is stale"
+    assert (ROOT / "site" / "public" / "asciicharts.skill").read_bytes() == package_skill.build(), \
+        "the site's asciicharts.skill is stale: run python scripts/package_skill.py --site"
 

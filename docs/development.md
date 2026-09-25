@@ -89,7 +89,7 @@ the same files. Neither runs the other's tests; `test/parity/` compares them dir
 python scripts/sync_skill.py
 ```
 
-`test/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn or adding an example, `python scripts/gallery_refresh.py` re-renders every printed output — in the gallery and in the skill's `references/drawing.md` — and rebuilds the gallery's contents list; a test fails if either is stale) and `python scripts/sync_skill.py` copies it, and `spec/principles.md`, into the skill.
+`test/test_skill.py` fails when the copies differ. **Every change to the skill bumps its version** (`metadata.version` in `SKILL.md` and `version` in its `.claude-plugin/plugin.json`, kept equal by a test), then `python scripts/package_skill.py --site` rebuilds the package the site serves (`site/public/asciicharts.skill`; a test fails while it is stale) — see [docs/skill.md](skill.md#versions-releasing-a-change-to-the-skill). `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn or adding an example, `python scripts/gallery_refresh.py` re-renders every printed output — in the gallery and in the skill's `references/drawing.md` — and rebuilds the gallery's contents list; a test fails if either is stale) and `python scripts/sync_skill.py` copies it, and `spec/principles.md`, into the skill.
 
 ## The Go implementation
 
