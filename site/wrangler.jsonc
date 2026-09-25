@@ -5,7 +5,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   // must equal the name of the Worker this repository deploys to (Workers & Pages → the project)
   "name": "asciicharts",
-  "compatibility_date": "2026-09-26",
+  "compatibility_date": "2026-09-01",
   "assets": {
     "directory": "./dist"
   },
