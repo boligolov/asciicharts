@@ -1,0 +1,14 @@
+// Cloudflare Workers configuration for asciicharts.online: a static site, the Astro build in dist/.
+// Without this file Workers Builds generates one on every build; that generated config has no `previews`
+// block, which `npx wrangler preview` (the deploy command for non-production branches) requires.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  // must equal the name of the Worker this repository deploys to (Workers & Pages → the project)
+  "name": "asciicharts",
+  "compatibility_date": "2026-09-26",
+  "assets": {
+    "directory": "./dist"
+  },
+  // one preview per branch; nothing in it differs from production
+  "previews": {}
+}
