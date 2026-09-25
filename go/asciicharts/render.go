@@ -1,5 +1,5 @@
 // Package asciicharts renders numbers as text charts: the Go reference implementation of
-// asciicharts principles v1.1 (spec/principles.md in https://github.com/boligolov/asciicharts).
+// asciicharts principles v1.1 (docs/spec/principles.md in https://github.com/boligolov/asciicharts).
 //
 // A spec is the JSON object of the principles (§9.1). The output is deterministic and matches the
 // conformance suite (test/conformance/) byte for byte, error messages included.
@@ -82,7 +82,7 @@ var renderers = map[string]func(*input) (string, error){
 	"boxplot":   renderBoxplot,
 }
 
-// --- glyphs (spec/principles.md §2) ------------------------------------------------------------
+// --- glyphs (docs/spec/principles.md §2) ------------------------------------------------------------
 
 var (
 	eighthsUp     = []string{" ", "▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"}
@@ -193,7 +193,7 @@ func wrapBorder(body, title, style string) string {
 	return strings.Join(out, "\n")
 }
 
-// --- scales and axes (spec/principles.md §4, §5) --------------------------------------------------
+// --- scales and axes (docs/spec/principles.md §4, §5) --------------------------------------------------
 
 func xPixel(i, n, span int) int {
 	if n <= 1 || span <= 1 {

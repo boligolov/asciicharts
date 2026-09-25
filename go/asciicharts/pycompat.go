@@ -2,7 +2,7 @@ package asciicharts
 
 // The primitives whose exact behaviour the conformance suite pins down: rounding, number
 // formatting, min/max, and the text of error messages. They follow the Python reference
-// implementation to the byte (see spec/principles.md §4.1, §4.13, §14).
+// implementation to the byte (see docs/spec/principles.md §4.1, §4.13, §14).
 
 import (
 	"encoding/json"

@@ -5,7 +5,7 @@ Unicode/ASCII chart as plain text that an agent can paste straight into a reply 
 plotting library, no files, no network access.
 
 It is a thin layer over the Go renderer ([`go/asciicharts`](../../asciicharts/), byte-for-byte the
-[asciicharts principles](../../../spec/principles.md)) built on the official
+[asciicharts principles](../../../docs/spec/principles.md)) built on the official
 [Go MCP SDK](https://github.com/modelcontextprotocol/go-sdk). One static binary, nothing else to install.
 
 | | |
@@ -102,7 +102,7 @@ docker run -i --rm asciicharts                                  # stdio
 docker run --rm -e PORT=8080 -p 8080:8080 asciicharts           # HTTP
 ```
 
-Production (HTTPS on your own domain with Caddy): see [docs/development.md](../../../docs/development.md#production-deployment).
+Production, with HTTPS on your own domain: [below](#production-https-on-your-own-domain).
 
 ### Configuration
 
@@ -119,6 +119,32 @@ in stateless mode (no sessions; nothing is pushed to the client outside a tool c
 `200 ok`. The server listens on all interfaces and has **no authentication**; a request that arrives on a loopback
 address must name a localhost host (the SDK's DNS-rebinding protection). Put it behind a reverse proxy or
 ingress for TLS and access control.
+
+### Production: HTTPS on your own domain
+
+`deploy/docker-compose.prod.yml` + `deploy/Caddyfile` run the server behind HTTPS on your own domain:
+
+```
+internet ──80/443──▶ Caddy ──▶ web (MCP server, :8080 internal)
+```
+
+1. Point your domain's DNS record at the host (ports 80 and 443 must be reachable from the internet).
+2. `cp deploy/.env.example deploy/.env` and set `DOMAIN`. Compose refuses to start without it.
+3. `docker compose -f deploy/docker-compose.prod.yml up -d --build` (from the repository root)
+4. Your MCP endpoint is `https://<DOMAIN>/mcp` (health: `https://<DOMAIN>/healthz`).
+
+To deploy a prebuilt image instead of building on the host, push it to your registry, set `IMAGE=registry.example.com/asciicharts:1.0.0` in `deploy/.env`, and run `docker compose -f deploy/docker-compose.prod.yml pull && docker compose -f deploy/docker-compose.prod.yml up -d`.
+
+What it sets up, and why:
+
+- **Only Caddy is published** (80/443). The server lives on the internal network (the local `deploy/docker-compose.yml` publishes it on `:8080` instead).
+- **Automatic certificates.** Caddy obtains and renews the Let's Encrypt certificate itself; keep the `caddy-data` volume so it isn't re-issued on every deploy. Plain HTTP redirects to HTTPS.
+- **Only `/mcp` and `/healthz` are forwarded**; any other path is a 404 at the proxy. Request bodies over 1 MB get a 413.
+- **Hardened container:** an image with nothing but the binary, read-only filesystem, all Linux capabilities dropped, `no-new-privileges`, non-root user.
+- **No authentication.** The server is meant to be a public utility: both tools are stateless and bounded (see [Limits](../../../skills/asciicharts/references/reference.md#limits)), and it stores nothing, not even counters. If you need it private, put access control in front (Caddy `basic_auth`, an IP allow-list, or your platform's ingress).
+- **DNS-rebinding protection** (the Go MCP SDK's default): a request that arrives on a loopback address must name a localhost host. Caddy reaches the server over the compose network, not loopback, so your domain works.
+
+To try the whole stack locally without a domain, set `DOMAIN=localhost` (Caddy issues a certificate from its own CA, so clients must trust it or skip verification).
 
 ## Connecting a client
 

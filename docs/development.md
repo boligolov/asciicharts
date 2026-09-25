@@ -3,24 +3,27 @@
 ## Repository layout
 
 ```
-skills/asciicharts/     the skill: SKILL.md, scripts/, references/, .claude-plugin/ — see docs/skill.md
-spec/                   the principles (principles.md, v1.1), CHANGELOG.md, LICENSE (CC BY 4.0)
-test/                   everything that checks the project as a whole:
+skills/asciicharts/     the skill — the main product: SKILL.md, references/, scripts/, .claude-plugin/ (see below)
+docs/                   the documentation (this folder; an index: docs/README.md)
+  spec/                   the principles (principles.md, v1.1), CHANGELOG.md, LICENSE (CC BY 4.0)
+  skill.md                installing the skill
+  gallery.md              every chart rendered, with its spec
+  development.md          this file
+test/                   everything that checks the project as a whole
   conformance/            the language-neutral suite every implementation must pass byte for byte (CC BY 4.0)
   evals/                  the skill's evals: prompts, programmatic graders, recorded runs
   parity/                 Go against Python: differential.py, differential_csv.py, cli_parity.py
   test_*.py               pytest: the docs, the skill folder, the evals' grader
-python/                 the Python implementation: asciicharts.py (the renderer and CLI, one file, standard library
-                        only, also shipped inside the skill), pyproject.toml, tests/ (its own tests only)
-go/                     the Go implementation: package asciicharts, cmd/asciicharts (CLI), cmd/asciicharts-mcp (the MCP
-                        server — see go/cmd/asciicharts-mcp/README.md); its tests live next to the code, as Go wants
-deploy/                 Dockerfile, docker-compose (dev and prod), Caddyfile, .env.example
+python/                 the Python renderer: asciicharts.py (renderer and CLI, one stdlib-only file, also shipped
+                        inside the skill), pyproject.toml, tests/ (its own tests)
+go/                     the Go renderer: package asciicharts, cmd/asciicharts (CLI), cmd/asciicharts-mcp (the MCP
+                        server); its tests live next to the code, as Go wants
+site/                   asciicharts.online (Astro); serves the skill's download, site/public/asciicharts.skill
+deploy/                 Dockerfile, docker-compose (local and production), Caddyfile — see the MCP server's README
 scripts/                sync_skill.py, package_skill.py, gallery_refresh.py, site_examples.py, og_image.py,
                         conformance_refresh.py, gen_go_*.py
-site/                   asciicharts.online
-docs/                   this file, gallery.md (every chart rendered), skill.md
 .claude-plugin/         the Claude Code plugin marketplace (one plugin: the skill)
-LICENSE  ROADMAP.md
+LICENSE  ROADMAP.md  pytest.ini
 ```
 
 ## Setup
@@ -65,7 +68,7 @@ the same files. Neither runs the other's tests; `test/parity/` compares them dir
   curated cases with their exact output, so every chart is pinned byte-for-byte. If you change how
   something is drawn on purpose, that is a new version of the principles: `python scripts/conformance_refresh.py`
   reports which cases change (by chart type), `--write` writes them; review the diff and add an entry to
-  `spec/CHANGELOG.md`.
+  `docs/spec/CHANGELOG.md`.
 - `test_csv.py` — CSV input (`--csv`); `test_catalog.py` — the chart catalogue (`list_charts` / `--list`)
   against the renderers; `test_ascii_style.py`, `test_version.py`.
 - `test_excsv.py` — [ExCSV](https://github.com/boligolov/excsv) input: `#chart` suggestions resolved into a
@@ -81,15 +84,22 @@ the same files. Neither runs the other's tests; `test/parity/` compares them dir
 - `test_docs.py` — the docs: every printed chart is current and rectangular, links, the generated Go files.
 - `test_hand_grader.py` — the grader of the hand-drawn evals is itself right.
 
-### The skill folder
+## The skill
 
-`skills/asciicharts/` must be self-contained (it is copied, zipped or uploaded on its own), but the renderer and the licence live outside it because the tests and pip use them. So the skill holds *copies*: after editing `asciicharts.py` or `LICENSE`, run
+`skills/asciicharts/` must be self-contained — it is copied, zipped or uploaded on its own — so it holds
+*copies* of files that live elsewhere: `scripts/asciicharts.py` (from `python/`), `LICENSE`,
+`references/principles.md` (from `docs/spec/`) and `references/gallery.md` (from `docs/`). After editing an
+original:
 
 ```sh
-python scripts/sync_skill.py
+python scripts/sync_skill.py        # refresh the copies (a test fails while one differs)
+python scripts/gallery_refresh.py   # after a rendering change: re-render every printed example, in docs/gallery.md
+                                    # and in references/drawing.md (a test fails while one is stale)
 ```
 
-`test/test_skill.py` fails when the copies differ. **Every change to the skill bumps its version** (`metadata.version` in `SKILL.md` and `version` in its `.claude-plugin/plugin.json`, kept equal by a test), then `python scripts/package_skill.py --site` rebuilds the package the site serves (`site/public/asciicharts.skill`; a test fails while it is stale) — see [docs/skill.md](skill.md#versions-releasing-a-change-to-the-skill). `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn or adding an example, `python scripts/gallery_refresh.py` re-renders every printed output — in the gallery and in the skill's `references/drawing.md` — and rebuilds the gallery's contents list; a test fails if either is stale) and `python scripts/sync_skill.py` copies it, and `spec/principles.md`, into the skill.
+`references/drawing.md`, `glyphs.md` and `reference.md` are edited in place; `drawing.md`'s examples are
+still printed by `gallery_refresh.py`. How much the skill helps is measured in `test/evals/` (see its
+README): run those before and after a change to what the skill tells the agent. Every change to the skill is a new version of it: see [Releasing](#a-new-version-of-the-skill).
 
 ## The Go implementation
 
@@ -113,80 +123,46 @@ to how charts are drawn goes into both implementations in the same change, with 
 regenerated (`scripts/conformance_refresh.py`) and `test/parity/differential.py` run; a change to the CSV
 reader or the command line, in both too, with `test/parity/differential_csv.py` and `test/parity/cli_parity.py`.
 
-## Docker
+The MCP server — running it, Docker, production behind Caddy, connecting clients, the HTTP transport — is
+documented in [go/cmd/asciicharts-mcp/README.md](../go/cmd/asciicharts-mcp/README.md).
+
+## Releasing
+
+### A new version of the skill
+
+The skill has a version in two places that must agree (a test checks): `metadata.version` in
+`SKILL.md`'s frontmatter and `version` in `skills/asciicharts/.claude-plugin/plugin.json`. Claude Code offers
+plugin users an update only when that version goes up, so **every change to `skills/asciicharts/` bumps it**
+(semver: `0.0.2` for a fix or a wording change, `0.1.0` for something new). Then, one command:
 
 ```sh
-docker build -f deploy/Dockerfile -t asciicharts .    # from the repository root
+python scripts/package_skill.py --site      # rebuilds dist/asciicharts.skill and site/public/asciicharts.skill
 ```
 
-Stdio (default) — run with `-i` so the client's stdio reaches the container:
+and commit the result with the change. The site's download is committed, so a test fails while it is older
+than the skill; deploy the site afterwards so asciicharts.online serves the new package.
 
-```sh
-docker run -i --rm asciicharts
-```
+### The site
 
-HTTP — set `PORT`:
+asciicharts.online is built from `site/` (`npm run build`; see [site/README.md](../site/README.md)) and deployed
+by the owner. Its charts come from `scripts/site_examples.py` (committed as `site/src/data/charts.json`, a test
+fails while it is stale) and its download is the committed `site/public/asciicharts.skill`. Deploy after a
+change to either.
 
-```sh
-docker run --rm -e PORT=8080 -p 8080:8080 asciicharts
-curl localhost:8080/healthz          # ok  (on Windows prefer 127.0.0.1: the server listens on IPv4,
-                                     #      and "localhost" tries IPv6 first — ~200 ms per request)
-```
+### The Go binaries
 
-The image holds nothing but the static binary (`FROM scratch`), so no `curl`; `asciicharts-mcp healthcheck` is a subcommand of the server itself that GETs its own `/healthz` and exits 0/1 (used by the compose files in `deploy/`).
+Set `Version` in `go/asciicharts/render.go`, then push a tag `go/vX.Y.Z` with the same version:
+`.github/workflows/release-go.yml` tests, checks the tag against `asciicharts --version`, builds the command
+line and the MCP server for Linux, macOS and Windows (amd64/arm64), and publishes them with `checksums.txt`
+as a GitHub release.
 
-## Production deployment
+### Listing it in Claude's plugin directories
 
-`deploy/docker-compose.prod.yml` + `deploy/Caddyfile` run the server behind HTTPS on your own domain:
-
-```
-internet ──80/443──▶ Caddy ──▶ web (MCP server, :8080 internal)
-```
-
-1. Point your domain's DNS record at the host (ports 80 and 443 must be reachable from the internet).
-2. `cp deploy/.env.example deploy/.env` and set `DOMAIN`. Compose refuses to start without it.
-3. `docker compose -f deploy/docker-compose.prod.yml up -d --build` (from the repository root)
-4. Your MCP endpoint is `https://<DOMAIN>/mcp` (health: `https://<DOMAIN>/healthz`).
-
-To deploy a prebuilt image instead of building on the host, push it to your registry, set `IMAGE=registry.example.com/asciicharts:1.0.0` in `deploy/.env`, and run `docker compose -f deploy/docker-compose.prod.yml pull && docker compose -f deploy/docker-compose.prod.yml up -d`.
-
-What it sets up, and why:
-
-- **Only Caddy is published** (80/443). The server lives on the internal network (the local `deploy/docker-compose.yml` publishes it on `:8080` instead).
-- **Automatic certificates.** Caddy obtains and renews the Let's Encrypt certificate itself; keep the `caddy-data` volume so it isn't re-issued on every deploy. Plain HTTP redirects to HTTPS.
-- **Only `/mcp` and `/healthz` are forwarded**; any other path is a 404 at the proxy. Request bodies over 1 MB get a 413.
-- **Hardened container:** an image with nothing but the binary, read-only filesystem, all Linux capabilities dropped, `no-new-privileges`, non-root user.
-- **No authentication.** The server is meant to be a public utility: both tools are stateless and bounded (see [Limits](../skills/asciicharts/references/reference.md#limits)), and it stores nothing, not even counters. If you need it private, put access control in front (Caddy `basic_auth`, an IP allow-list, or your platform's ingress).
-- **DNS-rebinding protection** (the Go MCP SDK's default): a request that arrives on a loopback address must name a localhost host. Caddy reaches the server over the compose network, not loopback, so your domain works.
-
-To try the whole stack locally without a domain, set `DOMAIN=localhost` (Caddy issues a certificate from its own CA, so clients must trust it or skip verification).
-
-## Using it from an MCP client
-
-Local process (`go install github.com/boligolov/asciicharts/go/cmd/asciicharts-mcp@latest` puts it on the PATH):
-
-```json
-{ "mcpServers": { "asciicharts": { "command": "asciicharts-mcp" } } }
-```
-
-Through Docker:
-
-```json
-{ "mcpServers": { "asciicharts": { "command": "docker", "args": ["run", "-i", "--rm", "asciicharts"] } } }
-```
-
-Against a running HTTP server:
-
-```json
-{ "mcpServers": { "asciicharts": { "url": "http://localhost:8080/mcp" } } }
-```
-
-## HTTP transport
-
-Setting `PORT` switches the server from stdio to a long-running HTTP server, so one instance can serve many clients:
-
-- `/mcp` — the [streamable-HTTP MCP transport](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports#streamable-http); `list_charts` and `render_chart` behave exactly as over stdio
-- `/healthz` — plain `200 ok`, for container/orchestrator probes
-
-It runs in **stateless** mode: no session tracking, no server-initiated messages — the server never needs to push anything outside of answering a tool call, so there is no session state worth keeping between requests. It listens on all interfaces; a request that arrives on a loopback address must name a localhost host (the SDK's DNS-rebinding protection). Put it behind your reverse proxy/ingress and restrict access there.
-
+Anthropic runs two public marketplaces: `claude-plugins-official` (curated by Anthropic, no application) and
+`claude-community` (third-party plugins, after review). To submit this plugin to the community one, the
+repository must be public on GitHub and pass `claude plugin validate .` (a test runs it); then submit the
+repository link through the Console form, [platform.claude.com/plugins/submit](https://platform.claude.com/plugins/submit)
+(or, for a Team or Enterprise organization, the claude.ai directory form). Once approved it is pinned to a
+commit in [anthropics/claude-plugins-community](https://github.com/anthropics/claude-plugins-community) and
+follows new commits automatically; users then install it with
+`/plugin install asciicharts@claude-community`.

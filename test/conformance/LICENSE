@@ -1,7 +1,7 @@
 asciicharts principles and conformance suite
 Copyright (c) 2026 asciicharts contributors
 
-The conformance suite in this directory (test/conformance/) — like the principles in ../../spec/ it
+The conformance suite in this directory (test/conformance/) — like the principles in ../../docs/spec/ it
 belongs to — is licensed under the Creative Commons Attribution 4.0
 International License (CC BY 4.0).
 

@@ -3,7 +3,7 @@
 What is still to do. Done work is in the git history; how the project is laid out and tested is in
 [docs/development.md](docs/development.md). Remove an item in the same commit that finishes it.
 
-The skill (`skills/asciicharts/`) is the main product; the principles (`spec/`), the conformance suite
+The skill (`skills/asciicharts/`) is the main product; the principles (`docs/spec/`), the conformance suite
 (`test/conformance/`) and the two renderers (`go/`, `python/`) serve it.
 
 ## Release
@@ -18,7 +18,7 @@ The skill (`skills/asciicharts/`) is the main product; the principles (`spec/`),
       appear on the release page, then the install instructions in `go/README.md` are true.
 - [ ] **Submit the plugin to the community directory** (`claude-community`): after the merge, with the
       repository public, submit its link at [platform.claude.com/plugins/submit](https://platform.claude.com/plugins/submit)
-      (see [docs/skill.md](docs/skill.md#listing-it-in-claudes-plugin-directories)). The owner's step.
+      (see [docs/development.md](docs/development.md#listing-it-in-claudes-plugin-directories)). The owner's step.
 
 ## Open work
 
@@ -51,7 +51,7 @@ The skill (`skills/asciicharts/`) is the main product; the principles (`spec/`),
   `python scripts/package_skill.py --site`.
 - A deliberate change in rendering is a new version of the principles: regenerate the suite
   (`scripts/conformance_refresh.py`), check that every changed case is one the change is about (count them
-  by chart type) before writing them, and record it in `spec/CHANGELOG.md`; change both implementations.
+  by chart type) before writing them, and record it in `docs/spec/CHANGELOG.md`; change both implementations.
 - Examples in docs are generated from specs, never hand-edited (`scripts/gallery_refresh.py`,
   `scripts/site_examples.py`, `scripts/sync_skill.py`, each with `--check`).
 - On Windows, Python writes CRLF by default: write files with `newline="\n"`. Heredocs mangle `\n` inside

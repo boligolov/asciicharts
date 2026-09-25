@@ -1,6 +1,6 @@
 # asciicharts
 
-**[asciicharts.online](https://asciicharts.online)** · [the gallery](docs/gallery.md) · [the principles](spec/principles.md)
+**[asciicharts.online](https://asciicharts.online)** · [the gallery](docs/gallery.md) · [the principles](docs/spec/principles.md)
 
 **An agent skill for charts made of text characters — drawn right.** Ask Claude for a chart in a reply, a PR
 description, a commit message or a terminal, and you get bars, lines, sparklines, histograms, pies or heatmaps
@@ -53,7 +53,7 @@ drew smaller charts and showed its working.
 
 ## The principles behind it
 
-What the skill knows is written down in [`spec/principles.md`](spec/principles.md) — *asciicharts
+What the skill knows is written down in [`docs/spec/principles.md`](docs/spec/principles.md) — *asciicharts
 principles v1.1*, for a person, an agent, or a port to another language:
 
 - **The medium** (§1–3): a grid of equal cells; which glyphs survive every font (WGL4, not "Unicode");
@@ -67,7 +67,7 @@ principles v1.1*, for a person, an agent, or a port to another language:
 
 A chart conforms when it meets §15; a renderer conforms when it reproduces the
 [conformance suite](test/conformance/) — 317 random specs, 107 curated cases, 31 documented examples —
-byte for byte. Changes are versioned in [`spec/CHANGELOG.md`](spec/CHANGELOG.md). The principles and the
+byte for byte. Changes are versioned in [`docs/spec/CHANGELOG.md`](docs/spec/CHANGELOG.md). The principles and the
 suite are CC BY 4.0: use them, adapt them, build on them — with credit.
 
 ## The renderers
@@ -179,7 +179,7 @@ fits together: [docs/development.md](docs/development.md); the plan: [ROADMAP.md
 
 ## License
 
-The principles in [`spec/`](spec/) and the conformance suite in [`test/conformance/`](test/conformance/) are [CC BY 4.0](spec/LICENSE): use and adapt
+The principles in [`docs/spec/`](docs/spec/) and the conformance suite in [`test/conformance/`](test/conformance/) are [CC BY 4.0](docs/spec/LICENSE): use and adapt
 them freely, with credit. The code — the skill, both implementations, the tools — is [MIT](LICENSE).
 
 ## Credits

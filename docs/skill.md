@@ -3,7 +3,8 @@
 The skill is the folder [`skills/asciicharts/`](../skills/asciicharts/): `SKILL.md`, `references/` — the principles,
 a hand-drawing guide and a glyph cheat sheet — and the one-file renderer in `scripts/asciicharts.py`. It is
 self-contained — copy the folder and you are done. It teaches the agent to draw text charts itself and to
-use an exact renderer (the MCP server, or the script) when one is available.
+use an exact renderer (the MCP server, the `asciicharts` command, or the script) when one is available. It is
+versioned: as a plugin, Claude Code offers the update when a new version is out.
 
 Agents find skills in known folders or in an uploaded package: they read each skill's `name` and
 `description` from the `SKILL.md` frontmatter, and load the rest only when a task matches. For Claude Code
@@ -69,41 +70,17 @@ they scan; anything without skill support can use the [MCP server](../go/cmd/asc
 - **Update:** as a plugin, `/plugin marketplace update asciicharts`; as a folder, replace it with the new
   version (delete the old one first so no stale files remain); on Claude.ai, upload the new `.skill`.
 - **Remove:** `/plugin uninstall asciicharts@asciicharts`, or delete the folder.
-- **Working on the skill itself:** the script inside the skill is a copy of the repository's `asciicharts.py`;
-  after editing the original run `python scripts/sync_skill.py` (a test fails if the copy is stale).
 
 ## Skill or MCP server?
 
 | | skill | MCP server |
 |---|---|---|
-| needs | nothing (draws by hand); a shell and Python for exact rendering | an MCP client |
+| needs | nothing (draws by hand); a shell with the `asciicharts` command or Python for exact rendering | an MCP client |
 | input | JSON spec, or a CSV file straight from disk | JSON tool arguments |
 | good for | Claude Code and other agents that run commands | any MCP client, or one shared always-on deployment |
 
 They render identically and work best side by side: the skill knows how to choose and read a chart, and
 uses the server as its renderer when it is connected.
 
-## Versions: releasing a change to the skill
-
-The skill has a version, **0.0.1** now, in two places that must agree (a test checks): `metadata.version` in
-`SKILL.md`'s frontmatter and `version` in `skills/asciicharts/.claude-plugin/plugin.json`. Claude Code offers
-plugin users an update only when that version goes up, so **every change to `skills/asciicharts/` bumps it**
-(semver: `0.0.2` for a fix or a wording change, `0.1.0` for something new). Then, one command:
-
-```sh
-python scripts/package_skill.py --site      # rebuilds dist/asciicharts.skill and site/public/asciicharts.skill
-```
-
-and commit the result with the change. The site's download is committed, so a test fails while it is older
-than the skill; deploy the site afterwards so asciicharts.online serves the new package.
-
-## Listing it in Claude's plugin directories
-
-Anthropic runs two public marketplaces: `claude-plugins-official` (curated by Anthropic, no application) and
-`claude-community` (third-party plugins, after review). To submit this plugin to the community one, the
-repository must be public on GitHub and pass `claude plugin validate .` (a test runs it); then submit the
-repository link through the Console form, [platform.claude.com/plugins/submit](https://platform.claude.com/plugins/submit)
-(or, for a Team or Enterprise organization, the claude.ai directory form). Once approved it is pinned to a
-commit in [anthropics/claude-plugins-community](https://github.com/anthropics/claude-plugins-community) and
-follows new commits automatically; users then install it with
-`/plugin install asciicharts@claude-community`.
+Working on the skill itself — its copies of shared files, its version, releasing it: see
+[development.md](development.md#the-skill).

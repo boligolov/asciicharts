@@ -29,7 +29,7 @@ Command line (JSON spec from a file, stdin, or --json):
 Spec fields: chartType, series, labels, title, width, height, border, style, stacked, bins,
 useColor, threshold, thresholds, showPoints, pointChar.
 The rules behind every chart: asciicharts principles v` + asciicharts.PrinciplesVersion + `
-(https://github.com/boligolov/asciicharts/blob/master/spec/principles.md).
+(https://github.com/boligolov/asciicharts/blob/master/docs/spec/principles.md).
 `
 
 func main() { os.Exit(run(os.Args[1:], os.Stdin, os.Stdout, os.Stderr)) }

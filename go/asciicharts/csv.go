@@ -1,6 +1,6 @@
 package asciicharts
 
-// A chart spec straight from a CSV file (spec/principles.md §9.5), as the Python reference builds it:
+// A chart spec straight from a CSV file (docs/spec/principles.md §9.5), as the Python reference builds it:
 // the same delimiter sniffing (a port of CPython's csv.Sniffer), the same record parsing (a port of
 // CPython's _csv reader state machine), the same number parsing and column matching, and the same
 // error messages.

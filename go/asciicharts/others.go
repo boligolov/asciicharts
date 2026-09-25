@@ -1,6 +1,6 @@
 package asciicharts
 
-// Pie, histogram, heatmap and boxplot (spec/principles.md §4.9–§4.12, §7).
+// Pie, histogram, heatmap and boxplot (docs/spec/principles.md §4.9–§4.12, §7).
 
 import (
 	"math"

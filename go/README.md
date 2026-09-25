@@ -1,6 +1,6 @@
 # asciicharts — Go
 
-The Go reference implementation of [asciicharts principles v1.1](../spec/principles.md): numbers in, a text
+The Go reference implementation of [asciicharts principles v1.1](../docs/spec/principles.md): numbers in, a text
 chart out. The library has no dependencies beyond the standard library.
 
 It is byte-for-byte identical to the Python implementation: it passes the whole

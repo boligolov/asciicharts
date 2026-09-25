@@ -24,7 +24,7 @@ errors · 10 Other media · 11 Mistakes we made · 12 Limitations and choices ·
 ## 0. Status and conformance
 
 **Version.** asciicharts principles **v1.1**, published 2026-09-24. Every change to how a chart is drawn is
-a new version, recorded in `spec/CHANGELOG.md` of the asciicharts repository
+a new version, recorded in `docs/spec/CHANGELOG.md` of the asciicharts repository
 (https://github.com/boligolov/asciicharts), together with regenerated conformance outputs.
 
 **Licence.** The principles and the conformance suite are licensed under the Creative Commons Attribution

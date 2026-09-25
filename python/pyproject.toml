@@ -15,7 +15,7 @@ dependencies = []
 
 [project.urls]
 Homepage = "https://github.com/boligolov/asciicharts"
-Principles = "https://github.com/boligolov/asciicharts/blob/master/spec/principles.md"
+Principles = "https://github.com/boligolov/asciicharts/blob/master/docs/spec/principles.md"
 Gallery = "https://github.com/boligolov/asciicharts/blob/master/docs/gallery.md"
 Issues = "https://github.com/boligolov/asciicharts/issues"
 

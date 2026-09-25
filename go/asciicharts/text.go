@@ -1,6 +1,6 @@
 package asciicharts
 
-// Text is measured in terminal columns, not code points (spec/principles.md §6).
+// Text is measured in terminal columns, not code points (docs/spec/principles.md §6).
 
 import (
 	"regexp"

@@ -1,6 +1,6 @@
 package asciicharts
 
-// Bars: hbar, vbar and the histogram's bars (spec/principles.md §4.4–§4.6, §5.3–§5.4).
+// Bars: hbar, vbar and the histogram's bars (docs/spec/principles.md §4.4–§4.6, §5.3–§5.4).
 
 import (
 	"strconv"

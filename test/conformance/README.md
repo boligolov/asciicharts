@@ -40,9 +40,9 @@ python scripts/conformance_refresh.py --write   # then write them
 ```
 
 Check that every changed case is one the change is about before writing, record the change in
-`../../spec/CHANGELOG.md`, and regenerate the documentation examples (`scripts/gallery_refresh.py`,
+`../../docs/spec/CHANGELOG.md`, and regenerate the documentation examples (`scripts/gallery_refresh.py`,
 `scripts/site_examples.py`, `scripts/sync_skill.py`).
 
 ## Licence
 
-Like the principles in `spec/`, this suite is licensed under CC BY 4.0 (see `LICENSE`).
+Like the principles in `docs/spec/`, this suite is licensed under CC BY 4.0 (see `LICENSE`).

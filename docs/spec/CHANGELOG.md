@@ -4,6 +4,11 @@ Versions of the principles (`principles.md`) and of the conformance suite (`conf
 how any chart is drawn is a change to the principles: it gets an entry here and regenerated conformance
 outputs, never a silent edit.
 
+## v1.1, moved into docs — 2026-09-26
+
+No rule changed. The principles, this changelog and their licence moved from `spec/` to `docs/spec/`, with
+the rest of the documentation.
+
 ## v1.1, suite moved — 2026-09-26
 
 No rule changed. The conformance suite moved from `spec/conformance/` to `test/conformance/`, next to the

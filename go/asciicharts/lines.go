@@ -1,6 +1,6 @@
 package asciicharts
 
-// Sparkline, line, area, scatter, dual_axis and dotplot (spec/principles.md §4.7–§4.8, §5.5–§5.6, §7).
+// Sparkline, line, area, scatter, dual_axis and dotplot (docs/spec/principles.md §4.7–§4.8, §5.5–§5.6, §7).
 
 import (
 	"strings"

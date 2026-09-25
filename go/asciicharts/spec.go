@@ -1,7 +1,7 @@
 package asciicharts
 
 // Validating a JSON-shaped spec and turning it into the input the renderers use
-// (spec/principles.md §9). The checks run in the same order, with the same messages, as the Python
+// (docs/spec/principles.md §9). The checks run in the same order, with the same messages, as the Python
 // reference implementation, so both reject an invalid spec with the same words.
 
 import (
@@ -13,7 +13,7 @@ import (
 	"unicode/utf8"
 )
 
-// Limits on a single request (spec/principles.md §9.2).
+// Limits on a single request (docs/spec/principles.md §9.2).
 const (
 	MaxWidth          = 500
 	MaxHeight         = 200

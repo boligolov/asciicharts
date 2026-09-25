@@ -1,7 +1,7 @@
 package asciicharts
 
 // Beyond conformance: no input makes the renderer panic, and every framed chart is rectangular
-// (spec/principles.md R1, R15).
+// (docs/spec/principles.md R1, R15).
 
 import (
 	"encoding/json"
