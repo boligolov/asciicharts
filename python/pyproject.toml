@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "asciicharts"
 version = "1.0.0"
 description = "Charts made of text characters, done right: the Python reference implementation of the asciicharts principles, in one standard-library file."
-keywords = ["ascii", "unicode", "text", "chart", "plot", "terminal", "cli", "sparkline", "bar chart", "agents"]
+keywords = ["ascii", "unicode", "text", "chart", "plot", "terminal", "cli", "sparkline", "bar chart", "csv", "excsv", "agents"]
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"

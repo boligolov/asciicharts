@@ -18,7 +18,7 @@
       "homepage": "https://asciicharts.online",
       "repository": "https://github.com/boligolov/asciicharts",
       "license": "MIT",
-      "keywords": ["charts", "ascii", "unicode", "text", "visualization", "terminal", "csv"],
+      "keywords": ["charts", "ascii", "unicode", "text", "visualization", "terminal", "csv", "excsv"],
       "category": "productivity"
     }
   ]

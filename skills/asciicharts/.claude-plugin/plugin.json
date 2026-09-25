@@ -16,6 +16,7 @@
     "text",
     "visualization",
     "terminal",
-    "csv"
+    "csv",
+    "excsv"
   ]
 }
