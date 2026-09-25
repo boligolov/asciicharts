@@ -5,7 +5,7 @@ Builds go/cmd/asciicharts, then runs both on JSON specs (file, stdin, --json), -
 CSV files with every --csv option, errors included. Help texts and argparse usage errors may differ by
 design and are not compared.
 
-    python scripts/cli_parity.py
+    python test/parity/cli_parity.py
 """
 import os
 import subprocess
@@ -13,7 +13,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 
 CSV_FILES = {
     "latency.csv": "service,p50_ms,p99_ms\napi,12,80\nauth,8,35\nsearch,25,140\nbilling,15,61\n",

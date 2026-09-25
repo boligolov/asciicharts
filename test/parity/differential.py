@@ -6,8 +6,8 @@ negative zeros, text in several scripts with control characters, options of the 
 each (output or error message), writes them to a file, and runs the Go test TestDifferential on it.
 Any byte difference is a divergence between the two implementations.
 
-    python scripts/differential.py            # 3000 specs, seed 1
-    python scripts/differential.py 20000 7    # N specs, seed
+    python test/parity/differential.py            # 3000 specs, seed 1
+    python test/parity/differential.py 20000 7    # N specs, seed
 """
 import json
 import os
@@ -17,7 +17,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "python"))
 from asciicharts import CHART_TYPES, ChartError, render_chart  # noqa: E402
 

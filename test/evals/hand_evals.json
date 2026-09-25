@@ -1,7 +1,7 @@
 {
  "skill_name": "asciicharts",
  "mode": "hand-drawn: the agent may not run code, scripts or tools",
- "note": "Each prompt is followed at run time by: 'You cannot run any code, scripts or tools for this; write the chart yourself. Save your final reply to me, exactly as you'd send it, to the file {OUT}/reply.md.' Grade with skills/evals/hand_grade.py <run_dir> <eval_name>.",
+ "note": "Each prompt is followed at run time by: 'You cannot run any code, scripts or tools for this; write the chart yourself. Save your final reply to me, exactly as you'd send it, to the file {OUT}/reply.md.' Grade with test/evals/hand_grade.py <run_dir> <eval_name>.",
  "evals": [
   {
    "id": 0,

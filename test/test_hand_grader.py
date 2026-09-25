@@ -8,7 +8,7 @@ import pytest
 
 from asciicharts import render_chart
 
-HERE = Path(__file__).resolve().parents[2] / "skills" / "evals"
+HERE = Path(__file__).resolve().parent / "evals"
 spec = importlib.util.spec_from_file_location("hand_grade", HERE / "hand_grade.py")
 hand_grade = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(hand_grade)

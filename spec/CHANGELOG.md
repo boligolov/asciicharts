@@ -4,6 +4,11 @@ Versions of the principles (`principles.md`) and of the conformance suite (`conf
 how any chart is drawn is a change to the principles: it gets an entry here and regenerated conformance
 outputs, never a silent edit.
 
+## v1.1, suite moved — 2026-09-26
+
+No rule changed. The conformance suite moved from `spec/conformance/` to `test/conformance/`, next to the
+other checks of the repository; it is still CC BY 4.0 (`test/conformance/LICENSE`).
+
 ## v1.1 — 2026-09-24
 
 - **Stacked bars with negatives draw their zero axis** (§4.6): `¦` (`+` in the ascii style) in hbar, a

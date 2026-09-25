@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[2]  # the repository
+ROOT = Path(__file__).resolve().parents[1]  # the repository
 
 # Fractional block glyphs that Consolas, Courier New and Lucida Console (the default monospace fonts on
 # Windows, hence GitHub and most IDEs there) do not contain. When a font lacks a glyph the OS substitutes
@@ -111,5 +111,5 @@ def test_the_doc_gallery_shows_exactly_the_golden_examples():
     from asciicharts import render_chart
     blocks = _fenced((ROOT / "docs" / "gallery.md").read_text(encoding="utf-8"))
     printed = [c for lang, c in blocks if lang != "json"]
-    golden = json.loads((ROOT / "spec" / "conformance" / "gallery.json").read_text(encoding="utf-8"))
+    golden = json.loads((ROOT / "test" / "conformance" / "gallery.json").read_text(encoding="utf-8"))
     assert sorted(render_chart(x["spec"]) for x in golden) == sorted(printed)  # same examples (the doc groups them by chart type)

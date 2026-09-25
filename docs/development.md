@@ -3,19 +3,23 @@
 ## Repository layout
 
 ```
+skills/asciicharts/     the skill: SKILL.md, scripts/, references/, .claude-plugin/ — see docs/skill.md
+spec/                   the principles (principles.md, v1.1), CHANGELOG.md, LICENSE (CC BY 4.0)
+test/                   everything that checks the project as a whole:
+  conformance/            the language-neutral suite every implementation must pass byte for byte (CC BY 4.0)
+  evals/                  the skill's evals: prompts, programmatic graders, recorded runs
+  parity/                 Go against Python: differential.py, differential_csv.py, cli_parity.py
+  test_*.py               pytest: the docs, the skill folder, the evals' grader
 python/                 the Python implementation: asciicharts.py (the renderer and CLI, one file, standard library
-                        only, also shipped inside the skill), pyproject.toml, tests/
-skills/asciicharts/     the skill: SKILL.md, scripts/, references/ — see docs/skill.md
-deploy/                 Dockerfile, docker-compose (dev and prod), Caddyfile, .env.example
-spec/                   the principles (principles.md, v1.1), CHANGELOG.md, LICENSE (CC BY 4.0), conformance/ — the
-                        language-neutral suite every implementation must pass byte for byte
-python/tests/           pytest suite (runs spec/conformance/); tests/golden/excsv_fixtures/
+                        only, also shipped inside the skill), pyproject.toml, tests/ (its own tests only)
 go/                     the Go implementation: package asciicharts, cmd/asciicharts (CLI), cmd/asciicharts-mcp (the MCP
-                        server — see go/cmd/asciicharts-mcp/README.md); see go/README.md
-skills/evals/           the skill's evals (prompts, programmatic graders, recorded runs)
+                        server — see go/cmd/asciicharts-mcp/README.md); its tests live next to the code, as Go wants
+deploy/                 Dockerfile, docker-compose (dev and prod), Caddyfile, .env.example
 scripts/                sync_skill.py, package_skill.py, gallery_refresh.py, site_examples.py, og_image.py,
-                        conformance_refresh.py, differential.py, differential_csv.py, cli_parity.py, gen_go_*.py
+                        conformance_refresh.py, gen_go_*.py
+site/                   asciicharts.online
 docs/                   this file, gallery.md (every chart rendered), skill.md
+.claude-plugin/         the Claude Code plugin marketplace (one plugin: the skill)
 LICENSE  ROADMAP.md
 ```
 
@@ -48,15 +52,34 @@ PORT=8080 go run ./cmd/asciicharts-mcp    # streamable HTTP at :8080/mcp, health
 ## Tests
 
 ```sh
-pytest                  # from python/ (or: pytest python/tests from the root)
-cd go && go test ./...  # the Go library, CLI and MCP server
+pytest python/tests test   # from the root: the Python implementation, then the project-wide checks
+cd go && go test ./...     # the Go library, CLI and MCP server (they read test/conformance/ too)
 ```
 
-- `tests/test_charts.py` — the renderers. They run the conformance suite in `spec/conformance/` — first captured from the original Go implementation this project was ported from: the gallery plus a corpus of 317 random specs and their exact output — so every chart is pinned byte-for-byte. If you change how something is drawn on purpose, that is a new version of the principles: `python scripts/conformance_refresh.py` reports which cases change (by chart type), `--write` writes them; review the diff and add an entry to `spec/CHANGELOG.md`.
-- `tests/test_csv.py` — CSV input (`--csv`).
-- `tests/test_excsv.py` — [ExCSV](https://github.com/boligolov/excsv) input: `#chart` suggestions resolved into a spec (`--chart-name`/`--list-charts`, `spec_from_excsv`), checked in part against `tests/golden/excsv_fixtures/` — that spec's own `#chart` fixtures, copied verbatim (CC0) from its shared fixture corpus, so this is tested against the format's ground truth rather than only our own assumptions about it.
-- `tests/test_catalog.py` — the chart catalogue (`list_charts` / `--list`) against the renderers.
-- `tests/test_skill.py` — the skill folder: valid frontmatter, self-contained links, the commands `SKILL.md` shows actually run, and its example output is current.
+Both implementations are held to one suite, **`test/conformance/`**: the Python tests and the Go tests read
+the same files. Neither runs the other's tests; `test/parity/` compares them directly.
+
+`python/tests/` — the Python implementation:
+
+- `test_charts.py` — the renderers against the conformance suite: the gallery, 317 random specs and 107
+  curated cases with their exact output, so every chart is pinned byte-for-byte. If you change how
+  something is drawn on purpose, that is a new version of the principles: `python scripts/conformance_refresh.py`
+  reports which cases change (by chart type), `--write` writes them; review the diff and add an entry to
+  `spec/CHANGELOG.md`.
+- `test_csv.py` — CSV input (`--csv`); `test_catalog.py` — the chart catalogue (`list_charts` / `--list`)
+  against the renderers; `test_ascii_style.py`, `test_version.py`.
+- `test_excsv.py` — [ExCSV](https://github.com/boligolov/excsv) input: `#chart` suggestions resolved into a
+  spec (`--chart-name`/`--list-charts`, `spec_from_excsv`), checked in part against `golden/excsv_fixtures/` —
+  that format's own `#chart` fixtures, copied verbatim (CC0), so it is tested against the format's ground
+  truth rather than only our own assumptions about it.
+
+`test/` — the project as a whole:
+
+- `test_skill.py` — the skill folder: valid frontmatter, self-contained links, the commands `SKILL.md` shows
+  actually run and its example output is current, the plugin manifests (and `claude plugin validate`, when
+  the CLI is installed), the site's `asciicharts.skill` is the current skill.
+- `test_docs.py` — the docs: every printed chart is current and rectangular, links, the generated Go files.
+- `test_hand_grader.py` — the grader of the hand-drawn evals is itself right.
 
 ### The skill folder
 
@@ -66,7 +89,7 @@ cd go && go test ./...  # the Go library, CLI and MCP server
 python scripts/sync_skill.py
 ```
 
-`tests/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn or adding an example, `python scripts/gallery_refresh.py` re-renders every printed output — in the gallery and in the skill's `references/drawing.md` — and rebuilds the gallery's contents list; a test fails if either is stale) and `python scripts/sync_skill.py` copies it, and `spec/principles.md`, into the skill.
+`test/test_skill.py` fails when the copies differ. `references/reference.md` is edited in place. The gallery is `docs/gallery.md` (after changing how anything is drawn or adding an example, `python scripts/gallery_refresh.py` re-renders every printed output — in the gallery and in the skill's `references/drawing.md` — and rebuilds the gallery's contents list; a test fails if either is stale) and `python scripts/sync_skill.py` copies it, and `spec/principles.md`, into the skill.
 
 ## The Go implementation
 
@@ -76,9 +99,9 @@ python scripts/sync_skill.py
 ```sh
 cd go && go test ./...                                   # conformance suite (corpus, curated, gallery) + robustness + CLI + MCP server
 go test -run '^$' -fuzz FuzzRenderJSON -fuzztime 60s ./asciicharts/
-python scripts/differential.py 10000 [seed]             # from the root: Go vs Python on random specs
-python scripts/differential_csv.py 10000 [seed]         # … on random CSV files (--csv)
-python scripts/cli_parity.py                            # both command lines: stdout, stderr, exit code
+python test/parity/differential.py 10000 [seed]         # from the root: Go vs Python on random specs
+python test/parity/differential_csv.py 10000 [seed]     # … on random CSV files (--csv)
+python test/parity/cli_parity.py                        # both command lines: stdout, stderr, exit code
 ```
 
 Two of its files are generated from the Python implementation, so both measure text and describe charts
@@ -87,8 +110,8 @@ identically: `python scripts/gen_go_unicode.py` (display-width tables from `unic
 server's tools are defined in `go/cmd/asciicharts-mcp/tools.json`, and its answers are pinned by
 `go/cmd/asciicharts-mcp/testdata/` (recorded from the Python server it replaced). A change
 to how charts are drawn goes into both implementations in the same change, with the conformance suite
-regenerated (`scripts/conformance_refresh.py`) and `scripts/differential.py` run; a change to the CSV
-reader or the command line, in both too, with `scripts/differential_csv.py` and `scripts/cli_parity.py`.
+regenerated (`scripts/conformance_refresh.py`) and `test/parity/differential.py` run; a change to the CSV
+reader or the command line, in both too, with `test/parity/differential_csv.py` and `test/parity/cli_parity.py`.
 
 ## Docker
 

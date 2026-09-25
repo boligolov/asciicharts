@@ -1,4 +1,4 @@
-"""Renderer tests: the conformance suite of the principles (spec/conformance/, first captured from the
+"""Renderer tests: the conformance suite of the principles (test/conformance/, first captured from the
 original Go implementation), behavioural regressions, validation and limits."""
 
 import json
@@ -9,7 +9,7 @@ import pytest
 from asciicharts import CHART_TYPES, ChartError, render_chart
 
 # The language-neutral conformance suite every implementation of the principles must pass byte for byte.
-GOLDEN = Path(__file__).resolve().parents[2] / "spec" / "conformance"
+GOLDEN = Path(__file__).resolve().parents[2] / "test" / "conformance"
 
 
 def load(name):

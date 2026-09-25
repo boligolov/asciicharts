@@ -38,7 +38,7 @@ informative: they explain, derive and illustrate; section 15 and the conformance
 
 **Two kinds of conformance.**
 
-1. **A renderer** conforms to v1.1 when it reproduces the conformance suite — `spec/conformance/` in the
+1. **A renderer** conforms to v1.1 when it reproduces the conformance suite — `test/conformance/` in the
    repository: 317 specs with their exact output or error message, and the 31 documented examples —
    **byte for byte**. Sections 4–9 describe the arithmetic and layout the suite pins down; where prose
    and suite disagree, the suite wins and the prose is a bug.
@@ -1114,8 +1114,8 @@ Charts that draw freely (line, scatter, dual_axis) share a canvas: a grid of `(g
 `set` (bounds-checked, out-of-range ignored) and Bresenham `line`. Keep the catalogue (section 9.1) as
 data; generate `--list`, the tool description and tests from it.
 
-**Conformance.** `spec/conformance/corpus.json` holds 317 random specs with their exact output (or, for a few,
-their exact error message); `spec/conformance/gallery.json` / `gallery.txt` the documented examples; its
+**Conformance.** `test/conformance/corpus.json` holds 317 random specs with their exact output (or, for a few,
+their exact error message); `test/conformance/gallery.json` / `gallery.txt` the documented examples; its
 `README.md` gives the exact format. Run them against
 the port. To reach byte parity:
 

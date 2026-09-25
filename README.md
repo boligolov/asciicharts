@@ -46,7 +46,7 @@ The skill picks the chart for the question, then uses an exact renderer if one i
 recipe per chart type: compute the lengths first, build each row from counted runs of glyphs, then check.
 It needs nothing installed.
 
-It is measured, not assumed ([`skills/evals`](skills/evals/)): drawing by hand with no code allowed, a
+It is measured, not assumed ([`test/evals`](test/evals/)): drawing by hand with no code allowed, a
 small model went from 68% to 89% of the checks with the skill — code blocks, bar lengths, axes that come
 from the data, pies turned into proportional bars; a strong model was right with or without it, and with it
 drew smaller charts and showed its working.
@@ -66,7 +66,7 @@ principles v1.1*, for a person, an agent, or a port to another language:
   (§13), a **porting checklist** (§14) and **the requirements** (§15, MUST/SHOULD).
 
 A chart conforms when it meets §15; a renderer conforms when it reproduces the
-[conformance suite](spec/conformance/) — 317 random specs, 107 curated cases, 31 documented examples —
+[conformance suite](test/conformance/) — 317 random specs, 107 curated cases, 31 documented examples —
 byte for byte. Changes are versioned in [`spec/CHANGELOG.md`](spec/CHANGELOG.md). The principles and the
 suite are CC BY 4.0: use them, adapt them, build on them — with credit.
 
@@ -169,7 +169,7 @@ Sans Mono.
 ## Development
 
 ```sh
-pip install -e "./python[dev]" && pytest python/tests
+pip install -e "./python[dev]" && pytest python/tests test
 cd go && go test ./...
 ```
 
@@ -179,7 +179,7 @@ fits together: [docs/development.md](docs/development.md); the plan: [ROADMAP.md
 
 ## License
 
-The principles and the conformance suite in [`spec/`](spec/) are [CC BY 4.0](spec/LICENSE): use and adapt
+The principles in [`spec/`](spec/) and the conformance suite in [`test/conformance/`](test/conformance/) are [CC BY 4.0](spec/LICENSE): use and adapt
 them freely, with credit. The code — the skill, both implementations, the tools — is [MIT](LICENSE).
 
 ## Credits

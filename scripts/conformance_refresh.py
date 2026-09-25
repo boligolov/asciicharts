@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate the conformance suite (spec/conformance/) from the Python reference renderer — only after a
+"""Regenerate the conformance suite (test/conformance/) from the Python reference renderer — only after a
 deliberate change to how charts are drawn, and only after reading what it reports.
 
     python scripts/conformance_refresh.py           # report what would change, change nothing
@@ -8,7 +8,7 @@ deliberate change to how charts are drawn, and only after reading what it report
 The report counts the changed corpus cases by chart type and style, names the changed curated cases, and prints the first few before/after, so a
 change can be checked to touch only the charts it is about. corpus.json keeps each case's spec and
 replaces its "out" (or "err"); gallery.txt is rebuilt from gallery.json. The files keep their exact
-formatting (see spec/conformance/README.md).
+formatting (see test/conformance/README.md).
 """
 import collections
 import json
@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 from asciicharts import ChartError, render_chart  # noqa: E402
 
-CONFORMANCE = ROOT / "spec" / "conformance"
+CONFORMANCE = ROOT / "test" / "conformance"
 
 
 def main(argv):

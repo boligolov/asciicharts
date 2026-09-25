@@ -2,7 +2,7 @@
 // asciicharts principles v1.1 (spec/principles.md in https://github.com/boligolov/asciicharts).
 //
 // A spec is the JSON object of the principles (§9.1). The output is deterministic and matches the
-// conformance suite (spec/conformance/) byte for byte, error messages included.
+// conformance suite (test/conformance/) byte for byte, error messages included.
 //
 //	out, err := asciicharts.RenderJSON([]byte(`{"chartType":"hbar","labels":["a","b"],"series":[{"values":[3,5]}]}`))
 package asciicharts

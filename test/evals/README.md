@@ -31,7 +31,7 @@ What it checks — the ways hand-drawn charts go wrong: bar lengths and column h
 diverging bars sharing one zero line (in stacked bars: every month's zero in the same column, and the
 two income segments in two glyphs); sparkline ticks in value order with the extremes at `▁` and `█`;
 the line chart's axis from the maximum to the minimum; correct percentages, and a pie (or its 100% stacked
-bar substitute) in proportion. `python/tests/test_hand_grader.py` checks the grader itself: the renderer's own
+bar substitute) in proportion. `test/test_hand_grader.py` checks the grader itself: the renderer's own
 chart for each prompt passes everything, and each typical mistake fails the check meant to catch it.
 
 ### Hand-drawn results (2026-09-24, one run per configuration, the same model for both)
@@ -125,7 +125,7 @@ What this run showed:
   this and drew `¦` because the prompt asked for a zero line. The grader accepts both forms; which one
   the principles want is a decision for their next version.
 - **The grader was wrong three times before the models were**, and each fix is now a test in
-  `python/tests/test_hand_grader.py`: a chart outside a code block made every later check fail with zeros
+  `test/test_hand_grader.py`: a chart outside a code block made every later check fail with zeros
   (now only the fence check fails); numbered rows (`1. auth`) and `░` used as a named series were not
   read; and a blank line counted as a frame corner, because `"" in "┌╭╔┏"` is true in Python. Its glyph
   check also now allows letters of any script (Japanese titles) and the rest of WGL4 for text (`← → − ≈`).

@@ -33,18 +33,20 @@ We still love and maintain the Python library; we just no longer lead with it.
 ## Target layout
 
 ```
-spec/                     CC BY 4.0
-  principles.md           the normative principles, v1.0 (MUST / SHOULD)
-  CHANGELOG.md            versions of the principles
-  LICENSE                 CC BY 4.0
-  conformance/            corpus.json, gallery.json, gallery.txt + README (format)
-python/                   MIT — asciicharts.py, pyproject.toml, tests/
+skills/asciicharts/       the skill — the main product (draw first, tool when available); a Claude Code plugin
+spec/                     CC BY 4.0 — principles.md (v1.1, MUST / SHOULD), CHANGELOG.md, LICENSE
+test/                     everything that checks the project as a whole
+  conformance/            CC BY 4.0 — corpus.json, curated.json, gallery.json, gallery.txt + README (format)
+  evals/                  the skill's evals: prompts, graders, recorded runs
+  parity/                 Go against Python: random specs, random CSV files, command lines
+  test_*.py               pytest: docs, skill folder, evals grader
+python/                   MIT — asciicharts.py, pyproject.toml, tests/ (the Python implementation's own)
 go/                       MIT — go.mod, package asciicharts, cmd/asciicharts (CLI), cmd/asciicharts-mcp (MCP server)
-skills/asciicharts/       the skill (draw first, tool when available)
-site/                     the landing page
-scripts/                  repository tooling (gallery, site examples, skill sync/package, og image)
+site/                     the landing page (asciicharts.online), serves asciicharts.skill
+scripts/                  repository tooling (gallery, site examples, skill sync/package, og image, generators)
 docs/                     gallery.md, development.md, skill.md
 deploy/                   Docker/compose of the Go MCP server (FROM scratch), Caddy for production
+.claude-plugin/           the plugin marketplace (one plugin: the skill)
 ```
 
 ## Working rules (apply to every step)
@@ -201,3 +203,4 @@ Done when: 100% of `spec/conformance/` passes in Go.
 | 2026-09-24 | v1.1 | Decided by the owner: stacked bars with negatives draw their zero axis (`¦`/`+` in hbar, a `-` row in vbar), owned by no bar — the renderer now meets its own R6. Both implementations, principles §4.6, CHANGELOG, 6 corpus + 2 new curated cases (107), gallery, site, the MCP server's recorded answers (3); Go = Python on 20 000 random specs |
 | 2026-09-24 | skill | Leaner skill: `SKILL.md` 1 920 → 1 279 words (same workflow, table, rules, commands, CSV/ExCSV); `drawing.md` trimmed of what `SKILL.md` already says, the "for reference" renders of pie and dual_axis dropped, the self-check merged, the v1.1 stacked-negatives recipe added (3 613 → 3 397 words); hand drawing now reads only `drawing.md` + `glyphs.md` (`principles.md`, ~10k words, only for the why). Re-run: Haiku on the four hard prompts 25/29 (was 24/29), stacked 8/8 (was 6/8) |
 | 2026-09-24 | 7.1–7.3 | README leads with the principles (what they cover, the suite, CC BY), then the skill (with the eval numbers), then the implementations: the `asciicharts` binary, Python, the Go library, the MCP server; all examples rendered (the stale v1.0 stacked example replaced). Site: hero "How to build charts out of text characters — right", a Principles section, "the reference implementations", four ways in (skill, command line, library, MCP), stats v1.1 / 455 conformance cases / 2 implementations / 12 chart types. pyproject description, keywords, principle/gallery URLs. **Not checked by eye:** the site below the hero (the browser froze; the build and the HTML are fine) |
+| 2026-09-26 | layout | Decided by the owner: everything that checks the project moved to `test/` — the conformance suite (`spec/conformance/` → `test/conformance/`, still CC BY 4.0 with its own `LICENSE`; principles v1.1 unchanged, CHANGELOG notes the move), the skill's evals (`skills/evals/` → `test/evals/`), the Go/Python parity scripts (`scripts/` → `test/parity/`) and the project-wide pytest files (docs, skill, grader) from `python/tests/`, which keeps only the Python implementation's own tests. A root `pytest.ini` runs both. Checked: 766 pytest, `go test ./...`, parity 3000/3000 specs and CSV files, CLI 42/42, suite unchanged |

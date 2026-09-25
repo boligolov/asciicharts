@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[2]  # the repository
+ROOT = Path(__file__).resolve().parents[1]  # the repository
 SKILL = ROOT / "skills" / "asciicharts"
 ALLOWED_KEYS = {"name", "description", "license", "compatibility", "allowed-tools", "metadata"}
 

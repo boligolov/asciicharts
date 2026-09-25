@@ -4,9 +4,9 @@ The Go reference implementation of [asciicharts principles v1.1](../spec/princip
 chart out. The library has no dependencies beyond the standard library.
 
 It is byte-for-byte identical to the Python implementation: it passes the whole
-[conformance suite](../spec/conformance/) — 317 corpus cases, 107 curated cases (text in any script,
+[conformance suite](../test/conformance/) — 317 corpus cases, 107 curated cases (text in any script,
 control characters, number formatting, every validation message), the 31 gallery examples — and agrees
-with Python on tens of thousands of random specs (`scripts/differential.py`).
+with Python on tens of thousands of random specs (`test/parity/differential.py`).
 
 ```go
 // the output below is checked by ExampleRenderJSON in asciicharts/example_test.go
@@ -75,9 +75,9 @@ uses the official Go MCP SDK; the library package itself has no dependencies.
 ```sh
 go test ./...                                          # conformance (corpus, curated, gallery) + robustness
 go test -run '^$' -fuzz FuzzRenderJSON -fuzztime 60s ./asciicharts/
-python ../scripts/differential.py 10000                # compare with the Python reference on random specs
-python ../scripts/differential_csv.py 10000            # … on random CSV files
-python ../scripts/cli_parity.py                        # both command lines: stdout, stderr, exit code
+python ../test/parity/differential.py 10000                # compare with the Python reference on random specs
+python ../test/parity/differential_csv.py 10000            # … on random CSV files
+python ../test/parity/cli_parity.py                        # both command lines: stdout, stderr, exit code
 ```
 
 ## Releasing

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Programmatic grading for the skill evals (see evals.json).
 
-    python skills/evals/grade.py <run_dir> <eval_name>
+    python test/evals/grade.py <run_dir> <eval_name>
 
 <run_dir> holds outputs/reply.md, the agent's final reply. Writes grading.json in
 the format the skill-creator viewer expects: expectations[] of {text, passed, evidence}.

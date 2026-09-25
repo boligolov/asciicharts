@@ -7,8 +7,8 @@ random --label/--values/--sort/--limit/--set choices; it builds the spec with sp
 error), prints it as --print-spec does, renders it, and runs the Go test TestCSVDifferential on the
 result. Any byte difference is a divergence.
 
-    python scripts/differential_csv.py            # 3000 files, seed 1
-    python scripts/differential_csv.py 20000 7    # N files, seed
+    python test/parity/differential_csv.py            # 3000 files, seed 1
+    python test/parity/differential_csv.py 20000 7    # N files, seed
 """
 import csv
 import json
@@ -19,7 +19,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "python"))
 from asciicharts import CHART_TYPES, ChartError, _parse_set, render_chart, spec_from_csv  # noqa: E402
 

@@ -1,6 +1,6 @@
 package main
 
-// Parity with the Python command line is checked by scripts/cli_parity.py; these tests pin the exit
+// Parity with the Python command line is checked by test/parity/cli_parity.py; these tests pin the exit
 // codes and the paths through run.
 
 import (
