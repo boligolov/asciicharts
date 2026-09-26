@@ -1776,7 +1776,6 @@ def _quantile(sorted_vals, q: float) -> float:
 
 
 def _render_boxplot(inp):
-    width = inp["width"] or 40
     summaries, names = [], []
     g_min, g_max = math.inf, -math.inf
     for i, s in enumerate(inp["series"]):
@@ -1791,13 +1790,20 @@ def _render_boxplot(inp):
     max_name_w = max(_width(n) for n in names)
     color_on = inp["color"]
 
-    def pos(v):
-        return _clamp(_round((v - g_min) / (g_max - g_min) * (width - 1)), 0, width - 1)
-
     # the five numbers as a table: a header row names the columns once, each column right-aligned
     cols = [_fmt_column([fn[k] for fn in summaries]) for k in range(len(BOX_STATS))]
     stats = [[col[i] for col in cols] for i in range(len(summaries))]
     col_w = [max([len(h)] + [len(r[k]) for r in stats]) for k, h in enumerate(BOX_STATS)]
+    width = inp["width"]
+    if not width:
+        # by default the axis gives way to the names and the table, so the whole chart (with its
+        # frame) fits in 80 columns: 40 at most, 20 at least
+        frame = 0 if inp["border"] == "none" else 4
+        rest = frame + max_name_w + len(" │ ") + 1 + sum(col_w) + len(col_w) - 1
+        width = max(BOX_MIN_WIDTH, min(BOX_WIDTH, FIT_WIDTH - rest))
+
+    def pos(v):
+        return _clamp(_round((v - g_min) / (g_max - g_min) * (width - 1)), 0, width - 1)
     lines = [f"{' ' * max_name_w} │ {' ' * width} " + " ".join(h.rjust(w) for h, w in zip(BOX_STATS, col_w))]
     for i, (mn, q1, med, q3, mx) in enumerate(summaries):
         row = [" "] * width
@@ -1815,6 +1821,8 @@ def _render_boxplot(inp):
 
 
 BOX_STATS = ("min", "q1", "med", "q3", "max")
+BOX_WIDTH, BOX_MIN_WIDTH = 40, 20  # the default axis, and how far it narrows to fit
+FIT_WIDTH = 80  # the width a default-sized chart keeps to
 
 
 _RENDERERS = {

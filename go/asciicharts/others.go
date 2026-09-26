@@ -282,10 +282,6 @@ func quantile(sorted []float64, q float64) float64 {
 }
 
 func renderBoxplot(in *input) (string, error) {
-	w := in.width
-	if w == 0 {
-		w = 40
-	}
 	type summary struct{ min, q1, med, q3, max float64 }
 	var summaries []summary
 	var names []string
@@ -307,9 +303,6 @@ func renderBoxplot(in *input) (string, error) {
 		maxNameW = maxInt(maxNameW, width(n))
 	}
 	colorOn := in.color
-	pos := func(v float64) int {
-		return clamp(round((v-gMin)/(gMax-gMin)*float64(w-1)), 0, w-1)
-	}
 	// the five numbers as a table: a header row names the columns once, each column right-aligned
 	stats := make([][]string, len(summaries))
 	colW := make([]int, len(boxStats))
@@ -327,6 +320,19 @@ func renderBoxplot(in *input) (string, error) {
 			stats[i] = append(stats[i], s)
 			colW[k] = maxInt(colW[k], len(s))
 		}
+	}
+	w := in.width
+	if w == 0 {
+		// by default the axis gives way to the names and the table, so the whole chart (with its
+		// frame) fits in 80 columns: 40 at most, 20 at least
+		rest := maxNameW + 3 + 1 + sumInts(colW) + len(colW) - 1 // name, " │ ", plot, " ", table
+		if in.border != "none" {
+			rest += 4
+		}
+		w = maxInt(boxMinWidth, min(boxWidth, fitWidth-rest))
+	}
+	pos := func(v float64) int {
+		return clamp(round((v-gMin)/(gMax-gMin)*float64(w-1)), 0, w-1)
 	}
 	table := func(cols []string) string {
 		out := make([]string, len(cols))
@@ -357,3 +363,8 @@ func renderBoxplot(in *input) (string, error) {
 }
 
 var boxStats = []string{"min", "q1", "med", "q3", "max"}
+
+const (
+	boxWidth, boxMinWidth = 40, 20 // the default axis, and how far it narrows to fit
+	fitWidth              = 80     // the width a default-sized chart keeps to
+)

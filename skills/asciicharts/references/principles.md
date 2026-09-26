@@ -655,7 +655,8 @@ A chart without `width` should fill a readable width, not shrink to its data.
 | vbar | plot 60 wide × 10 tall |
 | heatmap | grid 60 wide (cells ≥ 3), one row per series |
 | hbar, histogram | bar 40 long |
-| dotplot, boxplot | axis 40 wide |
+| dotplot | axis 40 wide |
+| boxplot | axis 40 wide, narrowed (down to 20) so that the chart, its table and frame fit 80 columns |
 | pie | 44 × 22 |
 
 `width`, when given, is the **plot's** width (bars, grid or axis), not the whole output: labels, axis

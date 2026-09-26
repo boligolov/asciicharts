@@ -8,7 +8,7 @@ draw every chart the same way.
 | file | contents |
 |---|---|
 | `corpus.json` | 317 cases, mostly randomly generated specs covering every chart type, style, border and option; each is `{"spec": {...}, "out": "..."}` or, when the spec must be rejected, `{"spec": {...}, "err": "..."}` |
-| `curated.json` | 116 named cases for what random specs barely reach — text in any script (CJK, emoji, combining marks, RTL), control characters, number formatting, each rule of v1.0, and **every validation message** (48 of the cases are errors): `[{"name": "...", "spec": ..., "out": "..."}]` or with `"err"` |
+| `curated.json` | 117 named cases for what random specs barely reach — text in any script (CJK, emoji, combining marks, RTL), control characters, number formatting, each rule of v1.0, and **every validation message** (48 of the cases are errors): `[{"name": "...", "spec": ..., "out": "..."}]` or with `"err"` |
 | `gallery.json` | the 31 documented examples: `[{"name": "...", "spec": {...}}]` |
 | `gallery.txt` | their expected output, concatenated: for each example, `=== <name> ===\n<output>\n\n` |
 
