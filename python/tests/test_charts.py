@@ -99,7 +99,7 @@ def test_stacked_area_with_negatives_labels_span_both_signs():
     out = render_chart({"chartType": "area", "stacked": True, "height": 6, "width": 20, "border": "none", "series": [
         {"values": [1, 2, 3]}, {"values": [-1, -2, -3]}]})
     labels = [r.split("┤")[0].strip() for r in rows(out)[:6]]
-    assert labels[0] == "3" and float(labels[-1]) <= -3 and "0" in labels  # both signs, and zero on a row
+    assert labels[0] == "3.00" and float(labels[-1]) <= -3 and "0.00" in labels  # both signs, and zero on a row
 
 
 @pytest.mark.parametrize("chart_type", ["vbar", "hbar", "area"])
@@ -179,8 +179,8 @@ def test_thresholds_are_dashed_and_named_right_of_the_plot():
                         "series": [{"values": [2, 4, 6]}]})
     r = rows(out)
     # the scale stretches to take in both lines: 10 is the top row, 0 the bottom one
-    assert r[0].lstrip().startswith("10 ┤- - - - - ") and r[0].endswith("  target: 10")
-    assert r[4].lstrip().startswith("0 ┤- - - - - ") and r[4].endswith("  0")
+    assert r[0].lstrip().startswith("10.00 ┤- - - - - ") and r[0].endswith("  target: 10")
+    assert r[4].lstrip().startswith("0.00 ┤- - - - - ") and r[4].endswith("  0")
     assert "threshold" not in out  # no footnote: every line is named on its own row
 
 
@@ -278,7 +278,7 @@ def test_small_values_keep_two_significant_digits():
 def test_a_flat_series_sits_mid_plot_and_reports_its_real_range():
     line = rows(render_chart({"chartType": "line", "border": "none", "height": 5, "width": 10,
                               "series": [{"values": [5, 5, 5]}]}))
-    assert line[2] == "   5 ┤" + "█" * 10 and line[0].startswith("   6") and line[4].startswith("   4")
+    assert line[2] == "5.00 ┤" + "█" * 10 and line[0].startswith("6.00") and line[4].startswith("4.00")
     dot = render_chart({"chartType": "dotplot", "border": "none", "width": 10, "labels": ["a"], "series": [{"values": [5]}]})
     assert "value axis: [5, 5]" in dot and rows(dot)[0].index("●") == 9  # the middle of 10 cells
     scatter = render_chart({"chartType": "scatter", "border": "none", "width": 9, "height": 3,
@@ -303,7 +303,7 @@ def test_overlapping_markers_of_different_series_are_shown_not_hidden():
 def test_zero_falls_on_a_labelled_row_with_the_least_widening():
     out = render_chart({"chartType": "line", "border": "none", "height": 6, "width": 20,
                         "series": [{"values": [-3, 2, 7, -1]}]})
-    assert [r.split("┤")[0].strip() for r in rows(out)] == ["7", "4.67", "2.33", "0", "-2.33", "-4.67"]
+    assert [r.split("┤")[0].strip() for r in rows(out)] == ["7.00", "4.67", "2.33", "0.00", "-2.33", "-4.67"]
     same_sign = render_chart({"chartType": "line", "border": "none", "height": 3, "series": [{"values": [2, 4]}]})
     assert [r.split("┤")[0].strip() for r in rows(same_sign)] == ["4", "3", "2"]  # nothing to widen
 

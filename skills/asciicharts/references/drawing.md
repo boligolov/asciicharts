@@ -261,7 +261,7 @@ Working: min = 3.6, max = 5.2, W − 1 = 10: 5.2 → 10; 4.4 → 5; 3.6 → 0.
 
 ```
 H rows, W columns; lo, hi = min and max of the data
-row labels   value(r) = lo + (1 − r / (H − 1)) × (hi − lo),  r = 0 (top) … H − 1; right-aligned; then " ┤"
+row labels   value(r) = lo + (1 − r / (H − 1)) × (hi − lo),  r = 0 (top) … H − 1; right-aligned, all with two decimals if any has them; then " ┤"
 point i      column x = floor(i × (W − 1) / (n − 1)),  row y = round((1 − (v − lo) / (hi − lo)) × (H − 1))
 joining      between two points, step along the longer direction; at each step round the other coordinate
              (a shallow segment: one cell per column; a steep one: one cell per row)
@@ -321,10 +321,10 @@ range: min(data, 0) … max(data, 0)
 ```
 
 ```
-   4 ┤   ██       
+4.00 ┤   ██       
 2.67 ┤  ██████████
 1.33 ┤████████████
-   0 ┤████████████
+0.00 ┤████████████
 ```
 
 Working: range 0…4, H = 4, rows are 4, 2.67, 1.33, 0. Column 3: pos = 3 × 3 / 11 = 0.82 → 1 + 0.82 × 3 =
@@ -398,7 +398,7 @@ legend, after a blank line: ░ min..e1   ▒ e1..e2   ▓ e2..e3   █ e3..max 
 am ░░░ ▒▒▒ ▓▓▓ ███ 
 pm ███ ▓▓▓ ▒▒▒ ░░░ 
 
-░ 2..3.75   ▒ 3.75..5.50   ▓ 5.50..7.25   █ 7.25..9
+░ 2.00..3.75   ▒ 3.75..5.50   ▓ 5.50..7.25   █ 7.25..9.00
 ```
 
 Working: min 2, max 9: 2 → 0 `░`; 4 → 1.14 → 1 `▒`; 6 → 2.29 → 2 `▓`; 8 → 3.43 → 3 `█`; 9 → 4 → 3 `█`;

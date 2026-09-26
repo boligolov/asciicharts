@@ -54,7 +54,7 @@ drew smaller charts and showed its working.
 ## The principles behind it
 
 What the skill knows is written down in [`docs/spec/principles.md`](docs/spec/principles.md) — *asciicharts
-principles v1.2*, for a person, an agent, or a port to another language:
+principles v1.3*, for a person, an agent, or a port to another language:
 
 - **The medium** (§1–3): a grid of equal cells; which glyphs survive every font (WGL4, not "Unicode");
   ink density; how series stay distinct without color.
@@ -66,7 +66,7 @@ principles v1.2*, for a person, an agent, or a port to another language:
   (§13), a **porting checklist** (§14) and **the requirements** (§15, MUST/SHOULD).
 
 A chart conforms when it meets §15; a renderer conforms when it reproduces the
-[conformance suite](test/conformance/) — 317 random specs, 116 curated cases, 31 documented examples —
+[conformance suite](test/conformance/) — 317 random specs, 117 curated cases, 31 documented examples —
 byte for byte. Changes are versioned in [`docs/spec/CHANGELOG.md`](docs/spec/CHANGELOG.md). The principles and the
 suite are CC BY 4.0: use them, adapt them, build on them — with credit.
 
@@ -107,8 +107,8 @@ copy it anywhere. The same command line (`python asciicharts.py …`, plus
 [ExCSV](https://github.com/boligolov/excsv) files with their own `#chart` suggestions), and a library:
 
 ```python
-from asciicharts import render_chart            # raises ChartError, a ValueError, with a one-line message
-print(render_chart({"chartType": "sparkline", "series": [{"values": [4, 6, 5, 9, 3]}]}))
+from asciicharts import print_chart, render_chart   # both raise ChartError, a ValueError, with a one-line message
+print_chart({"chartType": "sparkline", "series": [{"values": [4, 6, 5, 9, 3]}]})   # as UTF-8, on any console
 ```
 
 **Go library** — `github.com/boligolov/asciicharts/go/asciicharts`, standard library only:
