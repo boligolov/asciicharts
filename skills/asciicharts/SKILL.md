@@ -1,10 +1,10 @@
 ---
 name: asciicharts
-description: Use this skill to draw a chart out of text characters (Unicode/ASCII) in the reply — bar, line, area, sparkline, histogram, pie, heatmap, boxplot, scatter, dot plot — from numbers given inline, a CSV file, or an ExCSV file's own #chart suggestion. Trigger on any request to plot, chart, graph, visualize or draw a histogram or distribution of numbers, e.g. "quick histogram of these response times", rankings, trends over time, shares of a whole, benchmark results, "top N by X", and whenever a chart would help in a terminal, README, commit message, PR description or code comment, even if the user never says "chart". It teaches drawing such charts correctly by hand and uses an exact renderer when available (MCP server, asciicharts command or bundled Python script), so prefer it to describing numbers in prose or eyeballing ASCII bars. Not for PNG/SVG/image files, interactive dashboards, plotting-library code (matplotlib, seaborn, pandas), explanations of chart concepts, or stats calculations without a chart.
+description: Use this skill to draw a chart out of text characters (Unicode/ASCII) in the reply — bar, line, area, sparkline, histogram, pie, heatmap, boxplot, scatter, dot plot — from numbers given inline, a CSV file, or an ExCSV file's own #chart suggestion. Trigger on any request to plot, chart, graph, visualize or draw a histogram or distribution of numbers, e.g. "quick histogram of these response times", rankings, trends over time, shares of a whole, benchmark results, "top N by X", and whenever a chart would help in a terminal, README, commit message, PR description or code comment, even if the user never says "chart". It teaches drawing such charts correctly by hand and uses an exact renderer when available (MCP server, achart command or bundled Python script), so prefer it to describing numbers in prose or eyeballing ASCII bars. Not for PNG/SVG/image files, interactive dashboards, plotting-library code (matplotlib, seaborn, pandas), explanations of chart concepts, or stats calculations without a chart.
 license: MIT
 metadata:
-  version: "0.1.0"
-compatibility: Works without any tool (the charts are drawn by hand from references/drawing.md); a connected asciicharts MCP server, the asciicharts command (a single binary), or Python 3 (standard library only) makes them exact.
+  version: "0.1.1"
+compatibility: Works without any tool (the charts are drawn by hand from references/drawing.md); a connected asciicharts MCP server, the achart command (a single binary), or Python 3 (standard library only) makes them exact.
 ---
 
 # asciicharts
@@ -18,7 +18,7 @@ Hand-drawn text charts go wrong in one way: characters are eyeballed, not counte
 1. **Pick the chart** (table below).
 2. **Pick how to draw it** — the first that works:
    - MCP server `asciicharts` connected → its `render_chart` tool (the JSON spec below; `list_charts` is the catalogue);
-   - `asciicharts --version` works → the `asciicharts` command: same arguments and output as the script, except ExCSV;
+   - `achart --version` works → the `achart` command: same arguments and output as the script, except ExCSV;
    - Python 3 → `python scripts/asciicharts.py` ([below](#with-the-script));
    - nothing → **draw by hand** with [references/drawing.md](references/drawing.md) and
      [references/glyphs.md](references/glyphs.md). That is all you need to read; open
@@ -125,7 +125,7 @@ dropped silently. No way to run the script: read the CSV, sort, trim, and draw b
 
 [ExCSV](https://github.com/boligolov/excsv) is CSV with a `#!excsv` first line and `#` meta lines above
 the rows: column roles (`#column`) and chart suggestions (`#chart type=bar x=category y=amount`). The
-script (not the `asciicharts` command yet) renders a suggestion directly:
+script (not the `achart` command yet) renders a suggestion directly:
 
 ```sh
 python scripts/asciicharts.py --csv sales.excsv --list-charts                # the file's suggestions

@@ -152,9 +152,11 @@ change to either.
 ### The Go binaries
 
 Set `Version` in `go/asciicharts/render.go`, then push a tag `go/vX.Y.Z` with the same version:
-`.github/workflows/release-go.yml` tests, checks the tag against `asciicharts --version`, builds the command
-line and the MCP server for Linux, macOS and Windows (amd64/arm64), and publishes them with `checksums.txt`
-as a GitHub release.
+`.github/workflows/release-go.yml` tests, checks the tag against `achart --version`, builds the command
+line, `achart`, for Linux, macOS and Windows (amd64/arm64), one zip each (`achart-<os>-<arch>.zip`, the
+version and SHA256 in the zip comment), and publishes them with `SHA256SUMS.txt` as a GitHub release. The
+MCP server is not released; `go install` builds it. `.github/workflows/ci.yml` runs both test suites and
+the parity checks on every push to `master` and every pull request.
 
 ### Listing it in Claude's plugin directories
 

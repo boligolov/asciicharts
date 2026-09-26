@@ -3,7 +3,7 @@
 The skill is the folder [`skills/asciicharts/`](../skills/asciicharts/): `SKILL.md`, `references/` — the principles,
 a hand-drawing guide and a glyph cheat sheet — and the one-file renderer in `scripts/asciicharts.py`. It is
 self-contained — copy the folder and you are done. It teaches the agent to draw text charts itself and to
-use an exact renderer (the MCP server, the `asciicharts` command, or the script) when one is available. It is
+use an exact renderer (the MCP server, the `achart` command, or the script) when one is available. It is
 versioned: as a plugin, Claude Code offers the update when a new version is out.
 
 Agents find skills in known folders or in an uploaded package: they read each skill's `name` and
@@ -63,7 +63,7 @@ a chart ("plot these numbers as a bar chart, plain text": 62, 21, 12, 5). The fo
 `name` in the frontmatter (`asciicharts`).
 
 **Requirements:** none to draw charts — without a tool the agent draws them by hand from
-`references/drawing.md`. With the MCP server connected, the `asciicharts` command on the PATH (a single
+`references/drawing.md`. With the MCP server connected, the `achart` command on the PATH (a single
 binary from the [releases](https://github.com/boligolov/asciicharts/releases)), or `python` (or `python3`),
 they are rendered exactly. Nothing is installed.
 
@@ -92,7 +92,7 @@ they scan; anything without skill support can use the [MCP server](../go/cmd/asc
 
 | | skill | MCP server |
 |---|---|---|
-| needs | nothing (draws by hand); a shell with the `asciicharts` command or Python for exact rendering | an MCP client |
+| needs | nothing (draws by hand); a shell with the `achart` command or Python for exact rendering | an MCP client |
 | input | JSON spec, or a CSV file straight from disk | JSON tool arguments |
 | good for | Claude Code and other agents that run commands | any MCP client, or one shared always-on deployment |
 
