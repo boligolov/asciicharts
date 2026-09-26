@@ -28,6 +28,11 @@ work around.
   shade and the value. The shades had no key at all, against "print the numbers". Conformance: the 30
   heatmap corpus cases, 47 MCP answers, the gallery example, three curated cases; two new ones pin it
   (`rule/heatmap legend`, `rule/heatmap legend in color`).
+- **A vbar with one bar per category prints its values** (§5.4): a row under the bars, each value (a
+  stack's total) centred under its bar; a value wider than its group widens the group, as a label does.
+  A row is too coarse to read a value from: 5 and 1.93 next to 65 were both one row high. Grouped bars
+  still print none. Conformance: 10 vbar corpus cases, 6 MCP answers, the gallery, five curated cases;
+  a new one pins the widening (`rule/vbar values widen the group`).
 
 ## v1.1, moved into docs — 2026-09-26
 

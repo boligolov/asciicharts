@@ -212,6 +212,19 @@ func renderVbar(labels, names []string, matrix [][]float64, w, height int, stack
 		maxLabelW = maxInt(maxLabelW, width(l))
 	}
 	groupW := maxInt(barsPerGroup*barWidth, maxLabelW)
+	// one bar per group (a single series, or a stack): its value (a stack's total) goes under it,
+	// since a row of the grid is too coarse to read it from
+	var valueTexts []string
+	if barsPerGroup == 1 {
+		for c := 0; c < numCat; c++ {
+			col := make([]float64, numSeries)
+			for s := range col {
+				col[s] = matrix[s][c]
+			}
+			valueTexts = append(valueTexts, fmtValue(sum(col)))
+			groupW = maxInt(groupW, width(valueTexts[c]))
+		}
+	}
 	barsOffset := (groupW - barsPerGroup*barWidth) / 2
 	totalW := maxInt(numCat*groupW+(numCat-1)*gap, 1)
 	g := newGrid(totalW, height)
@@ -432,19 +445,10 @@ func renderVbar(labels, names []string, matrix [][]float64, w, height int, stack
 	for y := 0; y < height; y++ {
 		out = append(out, g.row(y, colorOn))
 	}
-	labelRow := make([]string, totalW)
-	for i := range labelRow {
-		labelRow[i] = " "
+	if len(valueTexts) > 0 {
+		out = append(out, centredRow(valueTexts, groupW, gap, totalW))
 	}
-	for c, lbl := range labels {
-		start := c*(groupW+gap) + (groupW-width(lbl))/2
-		for j, ch := range cells(lbl) {
-			if start+j >= 0 && start+j < totalW {
-				labelRow[start+j] = ch
-			}
-		}
-	}
-	out = append(out, strings.TrimRight(strings.Join(labelRow, ""), " "))
+	out = append(out, centredRow(labels, groupW, gap, totalW))
 	body := strings.Join(out, "\n")
 	if numSeries > 1 {
 		legendRamp := r
@@ -454,6 +458,23 @@ func renderVbar(labels, names []string, matrix [][]float64, w, height int, stack
 		body += "\n\n" + namedLegend(names, colorOn, legendRamp)
 	}
 	return body
+}
+
+// centredRow puts one text centred under each vbar group, right-trimmed.
+func centredRow(texts []string, groupW, gap, totalW int) string {
+	row := make([]string, totalW)
+	for i := range row {
+		row[i] = " "
+	}
+	for c, text := range texts {
+		start := c*(groupW+gap) + (groupW-width(text))/2
+		for j, ch := range cells(text) {
+			if start+j >= 0 && start+j < totalW {
+				row[start+j] = ch
+			}
+		}
+	}
+	return strings.TrimRight(strings.Join(row, ""), " ")
 }
 
 // divergingScale is the zero-axis column and the cells per data unit of a diverging row.

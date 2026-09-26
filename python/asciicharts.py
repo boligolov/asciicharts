@@ -881,7 +881,11 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
                 bar_width = bw
 
     max_label_w = max(_width(l) for l in labels)
-    group_w = max(bars_per_group * bar_width, max_label_w)
+    # one bar per group (a single series, or a stack): its value (a stack's total) goes under it,
+    # since a row of the grid is too coarse to read it from
+    value_texts = ([_fmt(_sum(matrix[s][c] for s in range(num_series))) for c in range(num_cat)]
+              if bars_per_group == 1 else [])
+    group_w = max([bars_per_group * bar_width, max_label_w] + [_width(v) for v in value_texts])
     bars_offset = (group_w - bars_per_group * bar_width) // 2
     total_w = max(num_cat * group_w + (num_cat - 1) * gap, 1)
 
@@ -1033,18 +1037,25 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
     out = []
     for r in range(height):
         out.append("".join(_colorize(grid[r][x], cgrid[r][x], color_on) for x in range(total_w)))
-    label_row = [" "] * total_w
-    for c, lbl in enumerate(labels):
-        start = c * (group_w + gap) + (group_w - _width(lbl)) // 2
-        for j, ch in enumerate(_cells(lbl)):
-            if 0 <= start + j < total_w:
-                label_row[start + j] = ch
-    out.append("".join(label_row).rstrip(" "))
+    if value_texts:
+        out.append(_centred_row(value_texts, group_w, gap, total_w))
+    out.append(_centred_row(labels, group_w, gap, total_w))
     body = "\n".join(out)
 
     if num_series > 1:
         body += "\n\n" + (_named_legend(names, color_on, ramp) if ramp else _named_legend(names, color_on))
     return body
+
+
+def _centred_row(texts, group_w, gap, total_w) -> str:
+    """One text centred under each vbar group, right-trimmed."""
+    row = [" "] * total_w
+    for c, text in enumerate(texts):
+        start = c * (group_w + gap) + (group_w - _width(text)) // 2
+        for j, ch in enumerate(_cells(text)):
+            if 0 <= start + j < total_w:
+                row[start + j] = ch
+    return "".join(row).rstrip(" ")
 
 
 def _diverging_scale(min_val, max_val, width):

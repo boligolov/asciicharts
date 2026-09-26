@@ -83,7 +83,7 @@ def test_stacked_vbar_with_negatives_grows_both_ways():
     # first series above the zero baseline, second below it, in every column; the baseline is a row
     # of its own (principles v1.1, §4.6)
     assert all("█" in r for r in grid[:4]) and grid[4].strip() == "---" and all("▓" in r for r in grid[5:])
-    assert rows(out)[8].strip() == "a b"
+    assert rows(out)[8].strip() == "0 5" and rows(out)[9].strip() == "a b"  # the net totals, then the labels
 
 
 def test_stacked_hbar_with_negatives_puts_net_total_at_row_end():
@@ -322,7 +322,8 @@ def test_every_non_zero_segment_of_a_stacked_bar_keeps_a_cell():
     assert rows(out)[0] == "share │ ████████████▓▓▓▓▒▒░▌ 100"  # Firefox (3%) keeps its ▌, taken from Chrome
     tiny = render_chart({"chartType": "vbar", "stacked": True, "border": "none", "height": 4, "width": 5,
                          "labels": ["a", "b"], "series": [{"values": [100, 1]}, {"values": [1, 0]}]})
-    assert [r[3] for r in rows(tiny)[:4]] == [" ", " ", " ", "█"]  # 1 next to 101 still gets a row
+    b = rows(tiny)[5].index("b")
+    assert [r[b] for r in rows(tiny)[:4]] == [" ", " ", " ", "█"]  # 1 next to 101 still gets a row
 
 
 def test_float_rounding_is_half_away_from_zero_like_go():
@@ -478,8 +479,8 @@ def test_a_nonzero_value_never_disappears_but_zero_stays_empty():
     assert big.count("█") == 40 and tiny.count("█") == 1 and zero.count("█") == 0
     out = render_chart({"chartType": "vbar", "width": 1, "border": "none", "height": 5, "labels": ["a", "b", "c"],
                         "series": [{"values": [1000, 0.4, 0]}]})
-    rows = out.split("\n")[:5]
-    assert [sum(r[i] == "█" for r in rows) for i in (0, 2, 4)] == [5, 1, 0]
+    rows, labels = out.split("\n")[:5], out.split("\n")[6]
+    assert [sum(r[labels.index(c)] == "█" for r in rows) for c in "abc"] == [5, 1, 0]
 
 
 def test_style_fine_is_accepted_and_ignored_by_charts_without_bars():
@@ -495,9 +496,10 @@ def test_track_fills_the_space_after_a_short_bar():
     assert full == "a │ ████████████████████████████████████████ 10"
     assert short == "b │ ████████████████░░░░░░░░░░░░░░░░░░░░░░░░ 4"
     out = render_chart({"chartType": "vbar", "width": 1, "border": "none", "height": 5, "labels": ["a", "b"], "series": [{"values": [10, 4]}]})
-    rows = out.split("\n")[:5]
-    assert [r[0] for r in rows] == ["█", "█", "█", "█", "█"]  # full column: no track needed
-    assert [r[2] for r in rows] == ["░", "░", "░", "█", "█"]  # short column: track above the bar
+    rows, labels = out.split("\n")[:5], out.split("\n")[6]
+    a, b = labels.index("a"), labels.index("b")
+    assert [r[a] for r in rows] == ["█", "█", "█", "█", "█"]  # full column: no track needed
+    assert [r[b] for r in rows] == ["░", "░", "░", "█", "█"]  # short column: track above the bar
 
 
 def test_track_covers_the_whole_bar_for_a_zero_value():
@@ -528,9 +530,10 @@ def test_ascii_style_gets_its_own_comma_track_never_the_unicode_shade():
     assert out == "a | ######################################## 10\nb | ################,,,,,,,,,,,,,,,,,,,,,,,, 4"
     out = render_chart({"chartType": "vbar", "width": 1, "border": "none", "height": 5, "labels": ["a", "b"], "style": "ascii",
                         "series": [{"values": [10, 4]}]})
-    rows = out.split("\n")[:5]
-    assert [r[0] for r in rows] == ["#", "#", "#", "#", "#"]  # full column: no track needed
-    assert [r[2] for r in rows] == [",", ",", ",", "#", "#"]  # short column: track above the bar
+    rows, labels = out.split("\n")[:5], out.split("\n")[6]
+    a, b = labels.index("a"), labels.index("b")
+    assert [r[a] for r in rows] == ["#", "#", "#", "#", "#"]  # full column: no track needed
+    assert [r[b] for r in rows] == [",", ",", ",", "#", "#"]  # short column: track above the bar
 
 
 def test_track_never_reuses_a_bars_own_fill_glyph():

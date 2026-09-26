@@ -565,9 +565,11 @@ Q2
 gap        = 1 column between categories
 k          = number of series side by side (1 if stacked)
 bar_w      = max(1, (W − (n − 1) × gap) // (n × k))        # W default 60
-group_w    = max(k × bar_w, widest label)
+values     = one bar per group (k = 1): its value, a stack's total, as text; none when grouped
+group_w    = max(k × bar_w, widest label, widest value)
 bars start = (group_w − k × bar_w) // 2 inside each group
-labels     = centred under their group; the label row is right-trimmed
+values     = centred under their group, in a row between the bars and the labels
+labels     = centred under their group; both rows are right-trimmed
 ```
 
 Floor division means the chart can be a few columns narrower than `W` (asked 23, got 19 below). Heights:
@@ -738,8 +740,9 @@ visual variable.
 
 ### vbar
 
-Single, grouped side by side, stacked, diverging (5.4). No value labels, so the value is only as precise
-as a row; prefer hbar when exact values matter.
+Single, grouped side by side, stacked, diverging (5.4). A single series prints each value under its bar,
+a stack its total: a row of the grid is too coarse to read a value from (5 and 1.93 of 65 are both one
+row). Grouped bars print no values; prefer hbar when their exact values matter.
 
 ### line
 
@@ -1078,7 +1081,8 @@ Several series: series 1 `█`, series 2 `▓`, series 3 `▒`, series 4 `░`; 
 1. H rows (6–10). rows(v) = round(v / max × H), at least 1 for a non-zero value
 2. bar width b columns (2–6); one space between categories
 3. build the grid top row first: a cell at row r (r = 1 at the bottom … H at the top) is filled if r ≤ rows(v)
-4. the label row: each label centred under its bar
+4. one series: the value row, each value centred under its bar (a stack: its total)
+5. the label row: each label centred under its bar
 ```
 
 Example, `H = 6`, `max = 70`, 2025 = `30 45 40 60` → rows `3 4 3 5`; 2026 = `35 50 55 70` → rows

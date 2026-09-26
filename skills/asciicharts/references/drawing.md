@@ -186,7 +186,8 @@ H       = rows (4–8)
 rows    = round(v / max × H)        (≥ 1 if v ≠ 0)
 b       = bar width in columns (2–4); 1 space between categories
 row r (r = H at the top … 1 at the bottom): each bar shows "█" × b if rows ≥ r, else "░" × b
-label   = centred under its bar
+value   = centred under its bar (one series; a stack: its total); widen b if a value is wider
+label   = centred under its value
 ```
 
 ```json
@@ -199,6 +200,7 @@ label   = centred under its bar
 ███ ███ ███
 ███ ███ ███
 ███ ███ ███
+30  45  60
 Q1  Q2  Q3
 ```
 
@@ -206,7 +208,8 @@ Working: max = 60, H = 5: 30 → 2.5 → **3**; 45 → 3.75 → 4; 60 → 5. Row
 Q2 and Q3; rows 3–1: all.
 
 **Several series side by side**: each category holds one bar per series (`█`, `▓`, …) with no gap
-between them; the category label is centred under the group; legend below.
+between them; the category label is centred under the group; legend below. No value row: put the
+numbers in the reply, or use grouped hbar.
 
 ```json
 { "chartType": "vbar", "border": "none", "height": 5, "width": 14, "labels": ["Q1", "Q2", "Q3"], "series": [{ "name": "2025", "values": [30, 45, 40] }, { "name": "2026", "values": [35, 50, 60] }] }
