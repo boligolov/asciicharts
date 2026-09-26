@@ -1,5 +1,5 @@
 // Package asciicharts renders numbers as text charts: the Go reference implementation of
-// asciicharts principles v1.1 (docs/spec/principles.md in https://github.com/boligolov/asciicharts).
+// asciicharts principles v1.2 (docs/spec/principles.md in https://github.com/boligolov/asciicharts).
 //
 // A spec is the JSON object of the principles (§9.1). The output is deterministic and matches the
 // conformance suite (test/conformance/) byte for byte, error messages included.

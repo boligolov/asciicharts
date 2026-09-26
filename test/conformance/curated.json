@@ -2865,5 +2865,56 @@
    ]
   },
   "err": "series 0 \"g\" must contain at least one value"
+ },
+ {
+  "name": "number/an integer reached from below",
+  "spec": {
+   "chartType": "hbar",
+   "stacked": true,
+   "border": "none",
+   "width": 20,
+   "labels": [
+    "2024"
+   ],
+   "series": [
+    {
+     "name": "a",
+     "values": [
+      33.07
+     ]
+    },
+    {
+     "name": "b",
+     "values": [
+      6.26
+     ]
+    },
+    {
+     "name": "c",
+     "values": [
+      2.35
+     ]
+    },
+    {
+     "name": "d",
+     "values": [
+      4.39
+     ]
+    },
+    {
+     "name": "e",
+     "values": [
+      51.97
+     ]
+    },
+    {
+     "name": "f",
+     "values": [
+      1.96
+     ]
+    }
+   ]
+  },
+  "out": "2024 │ ███████▓▒░▌▌▌▌▌▌▌▌▌▄ 100\n\n█ a   ▓ b   ▒ c   ░ d   ▌ e   ▄ f"
  }
 ]

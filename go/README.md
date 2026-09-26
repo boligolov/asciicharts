@@ -1,10 +1,10 @@
 # asciicharts — Go
 
-The Go reference implementation of [asciicharts principles v1.1](../docs/spec/principles.md): numbers in, a text
+The Go reference implementation of [asciicharts principles v1.2](../docs/spec/principles.md): numbers in, a text
 chart out. The library has no dependencies beyond the standard library.
 
 It is byte-for-byte identical to the Python implementation: it passes the whole
-[conformance suite](../test/conformance/) — 317 corpus cases, 107 curated cases (text in any script,
+[conformance suite](../test/conformance/) — 317 corpus cases, 108 curated cases (text in any script,
 control characters, number formatting, every validation message), the 31 gallery examples — and agrees
 with Python on tens of thousands of random specs (`test/parity/differential.py`).
 

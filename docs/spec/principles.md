@@ -1,6 +1,6 @@
-# asciicharts principles v1.1
+# asciicharts principles v1.2
 
-*The principles of text charts* — version 1.0, 2026-09-24. Licensed under CC BY 4.0.
+*The principles of text charts* — version 1.2, 2026-09-26. Licensed under CC BY 4.0.
 
 This document is the distilled knowledge behind `asciicharts`: how to turn numbers into a chart made of
 characters, what every rule is for, which calculations produce which cells, and which mistakes we made on
@@ -23,13 +23,13 @@ errors · 10 Other media · 11 Mistakes we made · 12 Limitations and choices ·
 
 ## 0. Status and conformance
 
-**Version.** asciicharts principles **v1.1**, published 2026-09-24. Every change to how a chart is drawn is
+**Version.** asciicharts principles **v1.2**, published 2026-09-26. Every change to how a chart is drawn is
 a new version, recorded in `docs/spec/CHANGELOG.md` of the asciicharts repository
 (https://github.com/boligolov/asciicharts), together with regenerated conformance outputs.
 
 **Licence.** The principles and the conformance suite are licensed under the Creative Commons Attribution
 4.0 International License (CC BY 4.0, https://creativecommons.org/licenses/by/4.0/): copy, adapt and build
-on them, commercially too, with credit — *"asciicharts principles v1.1" by asciicharts contributors*. The
+on them, commercially too, with credit — *"asciicharts principles v1.2" by asciicharts contributors*. The
 reference implementations are MIT-licensed code.
 
 **Key words.** "MUST", "MUST NOT", "SHOULD", "SHOULD NOT" and "MAY" in section 15 are to be interpreted as
@@ -38,7 +38,7 @@ informative: they explain, derive and illustrate; section 15 and the conformance
 
 **Two kinds of conformance.**
 
-1. **A renderer** conforms to v1.1 when it reproduces the conformance suite — `test/conformance/` in the
+1. **A renderer** conforms to v1.2 when it reproduces the conformance suite — `test/conformance/` in the
    repository: 317 specs with their exact output or error message, and the 31 documented examples —
    **byte for byte**. Sections 4–9 describe the arithmetic and layout the suite pins down; where prose
    and suite disagree, the suite wins and the prose is a bug.
@@ -483,8 +483,10 @@ bottom fifth of every heatmap empty, and a heatmap of equal values entirely empt
 
 ### 4.13 Numbers as text
 
-- Integers print without decimals (`|v − trunc(v)| < 1e−9` counts as one, which absorbs float noise
-  like `2.0000000001`): `62`.
+- Integers print without decimals: `62`. A value within 1e−9 of the **nearest** integer counts as one
+  (`|v − round(v)| < 1e−9`), which absorbs float noise on either side — `2.0000000001`, and the
+  `99.99999999999999` that shares adding up to 100 give. v1.1 compared with `trunc(v)`, so noise below
+  an integer printed `100.00` next to rows that printed `100`.
 - From 1 up, two decimals: `26.40`, `123456789.50`.
 - Below 1, **two significant digits**, so small values stay apart: `0.50`, `0.050`, `0.0010`, `0.0042`
   (digits = max(2, 1 − floor(log10 |v|))); below 1e−7, exponent form `3e-09`. Two fixed decimals would
@@ -1157,7 +1159,7 @@ handful of glyphs); build rows as arrays and join once.
 
 ## 15. The requirements
 
-Normative for v1.1 (section 0). Each requirement names the section that explains it.
+Normative for v1.2 (section 0). Each requirement names the section that explains it.
 
 **Any chart** — rendered or hand-drawn:
 

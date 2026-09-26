@@ -51,7 +51,7 @@ func round(x float64) int {
 // fmtValue prints a value: integers without decimals, from 1 up with two decimals, below 1 with two
 // significant digits (below 1e-7 in exponent form); never a negative zero.
 func fmtValue(v float64) string {
-	if math.Abs(v-math.Trunc(v)) < 1e-9 {
+	if math.Abs(v-math.Round(v)) < 1e-9 { // either side of the integer: 99.99999999999999 is 100
 		s := strconv.FormatFloat(v, 'f', 0, 64)
 		if math.Abs(v) < 1 {
 			s = strings.ReplaceAll(s, "-0", "0")

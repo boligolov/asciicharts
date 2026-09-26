@@ -5,7 +5,7 @@
 ```
 skills/asciicharts/     the skill — the main product: SKILL.md, references/, scripts/, .claude-plugin/ (see below)
 docs/                   the documentation (this folder; an index: docs/README.md)
-  spec/                   the principles (principles.md, v1.1), CHANGELOG.md, LICENSE (CC BY 4.0)
+  spec/                   the principles (principles.md, v1.2), CHANGELOG.md, LICENSE (CC BY 4.0)
   skill.md                installing the skill
   gallery.md              every chart rendered, with its spec
   development.md          this file
@@ -64,7 +64,7 @@ the same files. Neither runs the other's tests; `test/parity/` compares them dir
 
 `python/tests/` — the Python implementation:
 
-- `test_charts.py` — the renderers against the conformance suite: the gallery, 317 random specs and 107
+- `test_charts.py` — the renderers against the conformance suite: the gallery, 317 random specs and 108
   curated cases with their exact output, so every chart is pinned byte-for-byte. If you change how
   something is drawn on purpose, that is a new version of the principles: `python scripts/conformance_refresh.py`
   reports which cases change (by chart type), `--write` writes them; review the diff and add an entry to

@@ -161,7 +161,7 @@ def _round(x: float) -> int:
 def _fmt(v: float) -> str:
     """Integers without decimals; other values from 1 up with two decimals; smaller ones with two
     significant digits, so 0.001 and 0.004 don't both print as 0.00 (0.5 stays 0.50)."""
-    if abs(v - math.trunc(v)) < 1e-9:
+    if abs(v - round(v)) < 1e-9:  # either side of the integer: 99.99999999999999 is 100
         return format(v, ".0f").replace("-0", "0") if abs(v) < 1 else format(v, ".0f")
     if abs(v) >= 1:
         return format(v, ".2f")

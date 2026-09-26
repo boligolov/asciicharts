@@ -4,6 +4,17 @@ Versions of the principles (`principles.md`) and of the conformance suite (`conf
 how any chart is drawn is a change to the principles: it gets an entry here and regenerated conformance
 outputs, never a silent edit.
 
+## v1.2 — 2026-09-26
+
+From an agent's review of the skill: it drew twelve charts of browser shares and reported what it had to
+work around.
+
+- **A number within 1e−9 of the nearest integer prints as that integer** (§4.13). v1.1 compared with
+  `trunc(v)`, so float noise *below* an integer was not absorbed: a stacked bar whose shares add up to
+  `99.99999999999999` printed its total as `100.00`, next to rows that printed `100`. Conformance: 4
+  corpus cases (histogram edges such as `84.00`, now `84`), one MCP answer, and a curated case pins it
+  (`number/an integer reached from below`).
+
 ## v1.1, moved into docs — 2026-09-26
 
 No rule changed. The principles, this changelog and their licence moved from `spec/` to `docs/spec/`, with
