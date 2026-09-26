@@ -3,7 +3,7 @@ name: asciicharts
 description: Use this skill to draw a chart out of text characters (Unicode/ASCII) in the reply — bar, line, area, sparkline, histogram, pie, heatmap, boxplot, scatter, dot plot — from numbers given inline, a CSV file, or an ExCSV file's own #chart suggestion. Trigger on any request to plot, chart, graph, visualize or draw a histogram or distribution of numbers, e.g. "quick histogram of these response times", rankings, trends over time, shares of a whole, benchmark results, "top N by X", and whenever a chart would help in a terminal, README, commit message, PR description or code comment, even if the user never says "chart". It teaches drawing such charts correctly by hand and uses an exact renderer when available (MCP server, achart command or bundled Python script), so prefer it to describing numbers in prose or eyeballing ASCII bars. Not for PNG/SVG/image files, interactive dashboards, plotting-library code (matplotlib, seaborn, pandas), explanations of chart concepts, or stats calculations without a chart.
 license: MIT
 metadata:
-  version: "0.1.1"
+  version: "0.1.2"
 compatibility: Works without any tool (the charts are drawn by hand from references/drawing.md); a connected asciicharts MCP server, the achart command (a single binary), or Python 3 (standard library only) makes them exact.
 ---
 
@@ -61,8 +61,8 @@ work everywhere (bars grow both ways from a zero axis).
 - **Series told apart without color**: one glyph per series, densest first, and a legend with those
   glyphs (`█ 2025   ▓ 2026`) — or the series named on every row.
 - **Print the numbers** where the grid is approximate: after hbars, under vbars, a sparkline's `lo..hi`,
-  a heatmap's key (`░ 3..18   ▒ 18..34 …`), in legends, on axes. A column of numbers shares its
-  decimals: `5.00` above `3.59`.
+  a heatmap's key (`░ 3..18   ▒ 18..34 …`), in legends, on axes. Numbers shown together (a column,
+  an axis, a legend, a range) share their decimals: `5.00` above `3.59`, `66.00..85.50`.
 - **Small and even**: 60–80 columns; by hand, bars of 10–20 cells. Every line the same display width:
   pad labels to the longest, count CJK and most emoji as two columns. Frame only when asked.
 - **Sort and trim** before plotting (top 10, not 40 bars); give a title; round or scale noisy values.

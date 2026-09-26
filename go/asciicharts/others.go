@@ -122,9 +122,10 @@ func renderPie(in *input) (string, error) {
 		}
 		rows[y] = b.String()
 	}
+	texts := fmtColumn(values)
 	legend := make([]string, len(values))
 	for i, v := range values {
-		legend[i] = legendSwatch(i, colorOn, fills) + " " + names[i] + ": " + fmtValue(v) +
+		legend[i] = legendSwatch(i, colorOn, fills) + " " + names[i] + ": " + texts[i] +
 			" (" + strconv.FormatFloat(v/total*100, 'f', 1, 64) + "%)"
 	}
 	return strings.Join(rows, "\n") + "\n\n" + strings.Join(legend, "\n"), nil
@@ -154,10 +155,15 @@ func renderHistogram(in *input) (string, error) {
 	for _, v := range values {
 		counts[clamp(int((v-lo)/binWidth), 0, bins-1)]++
 	}
-	labels := make([]string, bins)
+	var bounds []float64
 	for i := 0; i < bins; i++ {
 		bLo := lo + float64(i)*binWidth
-		labels[i] = fmtValue(bLo) + ".." + fmtValue(bLo+binWidth)
+		bounds = append(bounds, bLo, bLo+binWidth)
+	}
+	edges := fmtColumn(bounds)
+	labels := make([]string, bins)
+	for i := range labels {
+		labels[i] = edges[2*i] + ".." + edges[2*i+1]
 	}
 	return renderHorizontalBars(labels, counts, in.width, barFillRamp(in.style), in.style == "fine", false, false), nil
 }
@@ -243,7 +249,8 @@ func heatLegend(dataLo, dataHi, lo, hi float64, colorOn bool) string {
 		for _, c := range heatRamp {
 			ramp.WriteString(colorize("█", c, true))
 		}
-		return ramp.String() + " " + fmtValue(dataLo) + ".." + fmtValue(dataHi)
+		ends := fmtColumn([]float64{dataLo, dataHi})
+		return ramp.String() + " " + ends[0] + ".." + ends[1]
 	}
 	n := len(shades) - 1
 	// inner edges rounded to 12 significant digits, like axis labels, to drop float noise
@@ -252,9 +259,10 @@ func heatLegend(dataLo, dataHi, lo, hi float64, colorOn bool) string {
 		edges = append(edges, roundSig12(dataLo+float64(k)/float64(n)*(dataHi-dataLo)))
 	}
 	edges = append(edges, dataHi)
+	texts := fmtColumn(edges)
 	parts := make([]string, n)
 	for k := range n {
-		parts[k] = shades[1+k] + " " + fmtValue(edges[k]) + ".." + fmtValue(edges[k+1])
+		parts[k] = shades[1+k] + " " + texts[k] + ".." + texts[k+1]
 	}
 	return joinLegend(parts)
 }

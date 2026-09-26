@@ -5,7 +5,7 @@
 ```
 skills/asciicharts/     the skill — the main product: SKILL.md, references/, scripts/, .claude-plugin/ (see below)
 docs/                   the documentation (this folder; an index: docs/README.md)
-  spec/                   the principles (principles.md, v1.2), CHANGELOG.md, LICENSE (CC BY 4.0)
+  spec/                   the principles (principles.md, v1.3), CHANGELOG.md, LICENSE (CC BY 4.0)
   skill.md                installing the skill
   gallery.md              every chart rendered, with its spec
   development.md          this file

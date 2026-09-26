@@ -71,8 +71,9 @@ func fmtValue(v float64) string {
 	return pyFormatG(v, 2)
 }
 
-// fmtColumn is fmtValue for values printed one under another (after bars, in a table): when any of
-// them prints with decimals, the integers print with two as well, so 5 next to 3.59 is 5.00.
+// fmtColumn is fmtValue for numbers shown together (a column after bars, a table, an axis, a legend,
+// a range): when any of them prints with decimals, the integers print with two as well, so 5 next to
+// 3.59 is 5.00.
 func fmtColumn(values []float64) []string {
 	texts := make([]string, len(values))
 	decimals := false

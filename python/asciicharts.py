@@ -170,8 +170,9 @@ def _fmt(v: float) -> str:
 
 
 def _fmt_column(values) -> list:
-    """_fmt for values printed one under another (after bars, in a table): when any of them prints
-    with decimals, the integers print with two as well, so 5 next to 3.59 is 5.00."""
+    """_fmt for numbers shown together (a column after bars, a table, an axis, a legend, a range):
+    when any of them prints with decimals, the integers print with two as well, so 5 next to 3.59
+    is 5.00."""
     texts = [_fmt(v) for v in values]
     if any("." in t for t in texts):
         texts = [t if "." in t or "e" in t else format(float(t), ".2f") for t in texts]
@@ -430,13 +431,14 @@ def _series_max_len(series) -> int:
 
 
 def _left_axis_labels(lo: float, hi: float, height: int):
-    labels = []
+    values = []
     for row in range(height):
         frac = 1.0
         if height > 1:
             frac = 1 - row / (height - 1)
         # 12 significant digits drop the float noise of lo + frac * span (-27.999999999 → -28)
-        labels.append(_fmt(float(f"{lo + frac * (hi - lo):.12g}")))
+        values.append(float(f"{lo + frac * (hi - lo):.12g}"))
+    labels = _fmt_column(values)
     return labels, max([0] + [len(l) for l in labels])
 
 
@@ -733,6 +735,7 @@ def _render_sparkline(inp):
     # names padded to the widest and ticks to the longest series, so the ranges line up
     name_w = max(_width(s["name"]) for s in series)
     ticks_n = max(len(s["values"]) for s in series)
+    ends = _fmt_column([v for s in series for v in (min(s["values"]), max(s["values"]))])
     lines = []
     for i, s in enumerate(series):
         vals = s["values"]
@@ -742,7 +745,7 @@ def _render_sparkline(inp):
         spark = "".join(SPARK_TICKS[_level((v - lo) / span, len(SPARK_TICKS)) if span > 0 else 3] for v in vals)
         spark = _colorize(spark, _series_color(i), inp["color"]) + " " * (ticks_n - len(vals))
         # each series has its own scale (§4.2), so each prints its own range
-        rng = f"{_fmt(lo)}..{_fmt(hi)}" if span > 0 else _fmt(lo)
+        rng = f"{ends[2 * i]}..{ends[2 * i + 1]}" if span > 0 else ends[2 * i]
         name = _pad(s["name"], name_w) + " " if name_w else ""
         lines.append(f"{name}{spark} {rng}")
     return "\n".join(lines)
@@ -1502,7 +1505,8 @@ def _render_dotplot(inp):
             line += " " + texts[c]
         lines.append(line)
 
-    body = "\n".join(lines) + f"\nvalue axis: [{_fmt(data_min)}, {_fmt(data_max)}]"
+    axis = _fmt_column([data_min, data_max])
+    body = "\n".join(lines) + f"\nvalue axis: [{axis[0]}, {axis[1]}]"
     if num_series > 1:
         body += "\n" + _named_legend(names, color_on, MARKERS) + ("   " + OVERLAP_NOTE if overlap else "")
     return body
@@ -1542,7 +1546,8 @@ def _render_scatter(inp):
                 c.set_marker(px, py, MARKERS[si % len(MARKERS)], color)
 
     body = "\n".join(c.render(color_on))
-    body += f"\nx: [{_fmt(data_x[0])}, {_fmt(data_x[1])}]  y: [{_fmt(data_y[0])}, {_fmt(data_y[1])}]"
+    xr, yr = _fmt_column(data_x), _fmt_column(data_y)
+    body += f"\nx: [{xr[0]}, {xr[1]}]  y: [{yr[0]}, {yr[1]}]"
     if len(series) > 1:
         names = [_series_label(s, i) for i, s in enumerate(series)]
         body += "\n" + _named_legend(names, color_on, MARKERS) + ("   " + OVERLAP_NOTE if overlap else "")
@@ -1662,8 +1667,9 @@ def _render_pie(inp):
     rows = ["".join(" " if sl < 0 else _colorize(FILLS[sl % len(FILLS)], _series_color(sl), color_on)
                     for sl in row) for row in grid]
 
+    texts = _fmt_column(values)
     legend = [
-        f"{_legend_swatch(i, color_on, FILLS)} {names[i]}: {_fmt(v)} ({v / total * 100:.1f}%)"
+        f"{_legend_swatch(i, color_on, FILLS)} {names[i]}: {texts[i]} ({v / total * 100:.1f}%)"
         for i, v in enumerate(values)
     ]
     return "\n".join(rows) + "\n\n" + "\n".join(legend)
@@ -1684,10 +1690,8 @@ def _render_histogram(inp):
     counts = [0.0] * bins
     for v in values:
         counts[_clamp(int((v - lo) / bin_width), 0, bins - 1)] += 1
-    labels = []
-    for i in range(bins):
-        b_lo = lo + i * bin_width
-        labels.append(f"{_fmt(b_lo)}..{_fmt(b_lo + bin_width)}")
+    edges = _fmt_column([e for i in range(bins) for e in (lo + i * bin_width, lo + i * bin_width + bin_width)])
+    labels = [f"{edges[2 * i]}..{edges[2 * i + 1]}" for i in range(bins)]
     return _render_horizontal_bars(labels, counts, inp["width"], _bar_fill_ramp(inp["style"]), inp["style"] == "fine")
 
 
@@ -1751,11 +1755,13 @@ def _heat_legend(data_lo, data_hi, lo, hi, color_on) -> str:
         return f"{swatch} {_fmt(data_lo)}"
     if color_on:
         ramp = "".join(_colorize("█", c, True) for c in HEAT_RAMP)
-        return f"{ramp} {_fmt(data_lo)}..{_fmt(data_hi)}"
+        ends = _fmt_column([data_lo, data_hi])
+        return f"{ramp} {ends[0]}..{ends[1]}"
     n = len(SHADES) - 1
     # inner edges rounded to 12 significant digits, like axis labels, to drop float noise
     edges = [data_lo] + [float(f"{data_lo + k / n * (data_hi - data_lo):.12g}") for k in range(1, n)] + [data_hi]
-    return _join_legend(f"{SHADES[1 + k]} {_fmt(edges[k])}..{_fmt(edges[k + 1])}" for k in range(n))
+    texts = _fmt_column(edges)
+    return _join_legend(f"{SHADES[1 + k]} {texts[k]}..{texts[k + 1]}" for k in range(n))
 
 
 def _quantile(sorted_vals, q: float) -> float:

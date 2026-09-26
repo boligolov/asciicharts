@@ -1,6 +1,6 @@
-# asciicharts principles v1.2
+# asciicharts principles v1.3
 
-*The principles of text charts* — version 1.2, 2026-09-26. Licensed under CC BY 4.0.
+*The principles of text charts* — version 1.3, 2026-09-27. Licensed under CC BY 4.0.
 
 This document is the distilled knowledge behind `asciicharts`: how to turn numbers into a chart made of
 characters, what every rule is for, which calculations produce which cells, and which mistakes we made on
@@ -23,13 +23,13 @@ errors · 10 Other media · 11 Mistakes we made · 12 Limitations and choices ·
 
 ## 0. Status and conformance
 
-**Version.** asciicharts principles **v1.2**, published 2026-09-26. Every change to how a chart is drawn is
+**Version.** asciicharts principles **v1.3**, published 2026-09-27. Every change to how a chart is drawn is
 a new version, recorded in `docs/spec/CHANGELOG.md` of the asciicharts repository
 (https://github.com/boligolov/asciicharts), together with regenerated conformance outputs.
 
 **Licence.** The principles and the conformance suite are licensed under the Creative Commons Attribution
 4.0 International License (CC BY 4.0, https://creativecommons.org/licenses/by/4.0/): copy, adapt and build
-on them, commercially too, with credit — *"asciicharts principles v1.2" by asciicharts contributors*. The
+on them, commercially too, with credit — *"asciicharts principles v1.3" by asciicharts contributors*. The
 reference implementations are MIT-licensed code.
 
 **Key words.** "MUST", "MUST NOT", "SHOULD", "SHOULD NOT" and "MAY" in section 15 are to be interpreted as
@@ -38,7 +38,7 @@ informative: they explain, derive and illustrate; section 15 and the conformance
 
 **Two kinds of conformance.**
 
-1. **A renderer** conforms to v1.2 when it reproduces the conformance suite — `test/conformance/` in the
+1. **A renderer** conforms to v1.3 when it reproduces the conformance suite — `test/conformance/` in the
    repository: 317 specs with their exact output or error message, and the 31 documented examples —
    **byte for byte**. Sections 4–9 describe the arithmetic and layout the suite pins down; where prose
    and suite disagree, the suite wins and the prose is a bug.
@@ -495,11 +495,12 @@ bottom fifth of every heatmap empty, and a heatmap of equal values entirely empt
   print `0.001` and `0.004` both as `0.00`. log10 is the correctly rounded one (C's): right under a power
   of ten it decides the digits — log10 0.09999999999999996 is −1.0000000000000002, so a histogram edge
   computed as that prints `-0.100`; a log10 that is off by an ulp (Go's `math.Log10`) prints `-0.10`.
-- **A column of values shares its decimals.** Values printed one under another — after bars (and a
-  stack's totals), under vbars, after a dotplot's dots, in a boxplot's table — print integers with two
-  decimals when another value of the column has decimals: `5.00` above `3.59`, not `5`. (v1.1 printed
-  each value on its own, and a column mixed `5` with `3.59`.) Axis labels are right-aligned and keep
-  their own form.
+- **Numbers shown together share their decimals.** A group of numbers — the values after bars (and a
+  stack's totals), under vbars and after a dotplot's dots; each column of a boxplot's table; an axis;
+  the ranges of a sparkline; the bin edges of a histogram; a heatmap's and a pie's legend; a range
+  `[lo, hi]` — prints its integers with two decimals when another number of the group has decimals:
+  `5.00` above `3.59`, `66.00..85.50`, not `5` and `66..85.50`. (v1.1 printed each number on its own;
+  v1.2 applied this to value columns only.)
 - Pie percentages: one decimal.
 - **Axis labels are the exact values of their rows**, `lo + (1 − r / (H − 1)) × (hi − lo)`, rounded to
   12 significant digits first (float noise would print `−27.999999999` as `−28.00`), right-aligned to the
@@ -610,12 +611,12 @@ The x-axis labels go under the plot, indented by the axis width + 2. Placement:
    let them run together (`JaFeb`).
 
 ```
-   30 ┤                     ██       
+30.00 ┤                     ██       
 26.40 ┤                   ██  ████   
 22.80 ┤                 ██        ███
 19.20 ┤      █████    ██             
 15.60 ┤  ████     ████               
-   12 ┤██                            
+12.00 ┤██                            
        Mon   Tue    Wed    Thu    Fri
 ```
 
@@ -635,12 +636,12 @@ dual_axis adds the second axis on the right, `├ {value}` left-aligned, and a t
   `5%: 5`.
 
 ```
-   30 ┤                     ●·       
+30.00 ┤                     ●·       
 26.40 ┤- - - - - - - - - -·· -···· -   target: 25
 22.80 ┤                 ··        ··●
 19.20 ┤      ·●···    ··             
 15.60 ┤  ····     ···●               
-   12 ┤●·                            
+12.00 ┤●·                            
 ```
 
 ### 5.7 Default sizes
@@ -763,11 +764,11 @@ with an equal value must not look like one.
 Overlaid or stacked, negative values fill downward (4.8). All series the same length.
 
 ```
-    5 ┤   ████                 
+ 5.00 ┤   ████                 
  2.50 ┤█████████               
-    0 ┤████████████████████████
+ 0.00 ┤████████████████████████
 -2.50 ┤           ██████████   
-   -5 ┤                 █      
+-5.00 ┤                 █      
 ```
 
 ### scatter
@@ -792,11 +793,11 @@ x: [1, 5]  y: [1, 5]
 Exactly two series, independent left and right scales (5.5).
 
 ```
-18 ┤▒▒           ██████     ├ 80   
+18 ┤▒▒           ██████     ├ 80.00
 16 ┤  ▒▒▒▒   ████      █████├ 73.75
 14 ┤      ▒▒▒               ├ 67.50
 12 ┤  ████   ▒▒▒▒      ▒▒▒▒▒├ 61.25
-10 ┤██           ▒▒▒▒▒▒     ├ 55   
+10 ┤██           ▒▒▒▒▒▒     ├ 55.00
 
 left:  █ Temp
 right: ▒ Humidity %
@@ -1186,7 +1187,7 @@ handful of glyphs); build rows as arrays and join once.
 
 ## 15. The requirements
 
-Normative for v1.2 (section 0). Each requirement names the section that explains it.
+Normative for v1.3 (section 0). Each requirement names the section that explains it.
 
 **Any chart** — rendered or hand-drawn:
 

@@ -54,7 +54,7 @@ drew smaller charts and showed its working.
 ## The principles behind it
 
 What the skill knows is written down in [`docs/spec/principles.md`](docs/spec/principles.md) — *asciicharts
-principles v1.2*, for a person, an agent, or a port to another language:
+principles v1.3*, for a person, an agent, or a port to another language:
 
 - **The medium** (§1–3): a grid of equal cells; which glyphs survive every font (WGL4, not "Unicode");
   ink density; how series stay distinct without color.

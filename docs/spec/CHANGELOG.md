@@ -4,6 +4,16 @@ Versions of the principles (`principles.md`) and of the conformance suite (`conf
 how any chart is drawn is a change to the principles: it gets an entry here and regenerated conformance
 outputs, never a silent edit.
 
+## v1.3 — 2026-09-27
+
+From a second review by the same agent.
+
+- **Numbers shown together share their decimals, everywhere** (§4.13). v1.2 applied the rule to value
+  columns only, so a heatmap legend still read `66..85.50` and a pie legend `Edge: 5` next to `2.38`. It
+  now covers every group of numbers: axes (`30.00` above `26.40`), sparkline ranges, histogram bin edges,
+  heatmap and pie legends, dotplot and scatter ranges. Conformance: 152 corpus cases (line, area,
+  dual_axis, sparkline, histogram, heatmap, pie, dotplot), 21 curated cases, 203 MCP answers, the gallery.
+
 ## v1.2 — 2026-09-26
 
 From an agent's review of the skill: it drew twelve charts of browser shares and reported what it had to

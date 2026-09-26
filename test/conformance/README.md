@@ -1,4 +1,4 @@
-# Conformance suite — asciicharts principles v1.2
+# Conformance suite — asciicharts principles v1.3
 
 Specs with their exact expected output. An implementation of the principles — in any language — conforms
 when it produces these outputs **byte for byte**, including the text of every error message. The suite is

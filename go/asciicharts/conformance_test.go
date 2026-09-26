@@ -1,6 +1,6 @@
 package asciicharts
 
-// The conformance suite of asciicharts principles v1.2 (test/conformance/), byte for byte.
+// The conformance suite of asciicharts principles v1.3 (test/conformance/), byte for byte.
 
 import (
 	"bytes"
@@ -148,4 +148,16 @@ func TestDifferential(t *testing.T) {
 		}
 	}
 	t.Logf("%d of %d random specs agree", len(cases)-failed, len(cases))
+}
+
+// PrinciplesVersion must name the version the principles themselves carry in their title.
+func TestPrinciplesVersionMatchesTheDocument(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("..", "..", "docs", "spec", "principles.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	title, _, _ := strings.Cut(string(data), "\n")
+	if want := "# asciicharts principles v" + PrinciplesVersion; title != want {
+		t.Errorf("principles.md starts %q, want %q", title, want)
+	}
 }

@@ -29,6 +29,15 @@ func renderSparkline(in *input) (string, error) {
 		}
 		nameW, ticksN = max(nameW, width(s.name)), max(ticksN, len(s.values))
 	}
+	var bounds []float64
+	for _, s := range in.series {
+		lo, hi := s.values[0], s.values[0]
+		for _, v := range s.values[1:] {
+			lo, hi = pyMin(lo, v), pyMax(hi, v)
+		}
+		bounds = append(bounds, lo, hi)
+	}
+	ends := fmtColumn(bounds)
 	lines := make([]string, 0, len(in.series))
 	for i, s := range in.series {
 		vals := s.values
@@ -47,9 +56,9 @@ func renderSparkline(in *input) (string, error) {
 		}
 		spark := colorize(b.String(), seriesColor(i), in.color) + repeat(" ", ticksN-len(vals))
 		// each series has its own scale (§4.2), so each prints its own range
-		rng := fmtValue(lo)
+		rng := ends[2*i]
 		if span > 0 {
-			rng += ".." + fmtValue(hi)
+			rng += ".." + ends[2*i+1]
 		}
 		name := ""
 		if nameW > 0 {
@@ -469,7 +478,8 @@ func renderDotplot(in *input) (string, error) {
 		}
 		lines[c] = line
 	}
-	body := strings.Join(lines, "\n") + "\nvalue axis: [" + fmtValue(dataMin) + ", " + fmtValue(dataMax) + "]"
+	axis := fmtColumn([]float64{dataMin, dataMax})
+	body := strings.Join(lines, "\n") + "\nvalue axis: [" + axis[0] + ", " + axis[1] + "]"
 	if numSeries > 1 {
 		body += "\n" + namedLegend(names, colorOn, markers)
 		if overlap {
@@ -527,7 +537,8 @@ func renderScatter(in *input) (string, error) {
 		}
 	}
 	body := strings.Join(c.render(colorOn), "\n")
-	body += "\nx: [" + fmtValue(dxMin) + ", " + fmtValue(dxMax) + "]  y: [" + fmtValue(dyMin) + ", " + fmtValue(dyMax) + "]"
+	xr, yr := fmtColumn([]float64{dxMin, dxMax}), fmtColumn([]float64{dyMin, dyMax})
+	body += "\nx: [" + xr[0] + ", " + xr[1] + "]  y: [" + yr[0] + ", " + yr[1] + "]"
 	if len(ss) > 1 {
 		names := make([]string, len(ss))
 		for i, s := range ss {
