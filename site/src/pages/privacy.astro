@@ -1,0 +1,87 @@
+---
+// The privacy policy: for the asciicharts plugin/skill (what Anthropic's directory links to) and this site.
+import Base from "../layouts/Base.astro";
+import Footer from "../components/Footer.astro";
+
+const updated = "2026-09-27";
+---
+
+<Base
+  title="Privacy — asciicharts"
+  description="What the asciicharts plugin, skill, command line, MCP server and website collect: nothing about you."
+>
+  <main class="wrap privacy">
+    <p><a href="/">← asciicharts.online</a></p>
+    <h1>Privacy</h1>
+    <p class="privacy-updated">Last updated {updated}</p>
+
+    <p>
+      asciicharts collects no personal data. It has no accounts, no analytics, no tracking and no advertising,
+      and it does not sell or share anything, because it has nothing to share.
+    </p>
+
+    <h2>The plugin and skill</h2>
+    <p>
+      The asciicharts plugin for Claude (the skill in <code>skills/asciicharts</code>) is instructions plus a
+      Python script. It runs inside your Claude session. When a chart can be rendered exactly, the skill runs
+      the bundled script, <code>scripts/asciicharts.py</code>, on your machine or in your session's sandbox, or
+      the <code>achart</code> command if you installed it. The script reads only the chart spec or the CSV file it
+      is given, prints the chart, and exits. It makes no network requests, writes no files and keeps nothing.
+    </p>
+    <p>
+      The numbers you chart go to Claude as part of your conversation, like anything else you type. How Anthropic
+      handles your conversations is set by{" "}
+      <a href="https://www.anthropic.com/legal/privacy">Anthropic's privacy policy</a>, not by this one.
+    </p>
+
+    <h2>The command line and the MCP server</h2>
+    <p>
+      <code>achart</code> and <code>asciicharts-mcp</code> are programs you run yourself. They render charts from
+      the input they receive and send nothing anywhere. An MCP server you deploy is operated by you; we run
+      no public instance.
+    </p>
+
+    <h2>This website</h2>
+    <p>
+      asciicharts.online is a static site served by Cloudflare. It sets no cookies and loads no third-party
+      scripts or fonts. Your browser's local storage keeps two display preferences, the color theme and whether
+      charts are shown in color; they never leave your browser. As the host, Cloudflare processes the technical
+      data every web request carries, such as your IP address, under{" "}
+      <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare's privacy policy</a>.
+    </p>
+
+    <h2>Source code</h2>
+    <p>
+      Everything above can be checked in the open source code at{" "}
+      <a href="https://github.com/boligolov/asciicharts">github.com/boligolov/asciicharts</a>.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Questions about this policy:{" "}
+      <a href="https://github.com/boligolov/asciicharts/issues">open an issue on GitHub</a>. If this policy
+      changes, the new version is published on this page with a new date.
+    </p>
+  </main>
+  <Footer />
+</Base>
+
+<style>
+  .privacy {
+    max-width: 760px;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    line-height: 1.65;
+  }
+  .privacy h1 {
+    margin: 24px 0 4px;
+  }
+  .privacy h2 {
+    margin: 32px 0 8px;
+    font-size: 1.05rem;
+  }
+  .privacy-updated {
+    color: var(--fg-muted);
+    margin-top: 0;
+  }
+</style>
