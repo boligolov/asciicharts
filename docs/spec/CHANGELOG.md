@@ -38,6 +38,11 @@ work around.
   50 columns next to a 40-column plot, so a boxplot could not fit in the 80 columns the skill asks for
   (the review got 101 at `width` 40); it now takes about 25 for such numbers. Conformance: the 23 boxplot
   corpus cases, 54 MCP answers, the gallery, two curated cases.
+- **A column of values shares its decimals** (§4.13): values printed one under another (hbar values and
+  totals, the vbar value row, dotplot values, each boxplot column) print integers as `5.00` when another
+  value of the column has decimals, so `5` no longer stands above `3.59`. Axis labels keep their form.
+  Conformance: 48 corpus cases (hbar, vbar, dotplot, boxplot), 97 MCP answers, three curated cases; a
+  new one pins it (`number/a column shares its decimals`).
 
 ## v1.1, moved into docs — 2026-09-26
 

@@ -169,6 +169,15 @@ def _fmt(v: float) -> str:
     return format(v, f".{digits}f") if digits <= 8 else format(v, ".2g")
 
 
+def _fmt_column(values) -> list:
+    """_fmt for values printed one under another (after bars, in a table): when any of them prints
+    with decimals, the integers print with two as well, so 5 next to 3.59 is 5.00."""
+    texts = [_fmt(v) for v in values]
+    if any("." in t for t in texts):
+        texts = [t if "." in t or "e" in t else format(float(t), ".2f") for t in texts]
+    return texts
+
+
 def _sum(xs) -> float:
     """Left-to-right float sum, like Go (3.12's sum() is compensated and can differ by 1ulp)."""
     t = 0.0
@@ -883,8 +892,8 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
     max_label_w = max(_width(l) for l in labels)
     # one bar per group (a single series, or a stack): its value (a stack's total) goes under it,
     # since a row of the grid is too coarse to read it from
-    value_texts = ([_fmt(_sum(matrix[s][c] for s in range(num_series))) for c in range(num_cat)]
-              if bars_per_group == 1 else [])
+    value_texts = (_fmt_column([_sum(matrix[s][c] for s in range(num_series)) for c in range(num_cat)])
+                   if bars_per_group == 1 else [])
     group_w = max([bars_per_group * bar_width, max_label_w] + [_width(v) for v in value_texts])
     bars_offset = (group_w - bars_per_group * bar_width) // 2
     total_w = max(num_cat * group_w + (num_cat - 1) * gap, 1)
@@ -1121,6 +1130,7 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=Fals
     diverging = min_val < 0
     zero_col, unit = _diverging_scale(min_val, max_val, width) if diverging else (0, 0.0)
     max_name_w = max(_width(n) for n in names)
+    texts = _fmt_column([matrix[s][c] for c in range(len(labels)) for s in range(len(names))])
 
     blocks = []
     for c, lbl in enumerate(labels):
@@ -1133,7 +1143,7 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=Fals
             else:
                 bar = _render_bar_run(v / max_val * width, width, fill, fine, track, ascii_style)
             color = _series_color(s) if color_on else -1
-            lines.append(f"  {_pad(name, max_name_w)} {_sep(ramp)} {_colorize(bar, color, color_on)} {_fmt(v)}")
+            lines.append(f"  {_pad(name, max_name_w)} {_sep(ramp)} {_colorize(bar, color, color_on)} {texts[c * len(names) + s]}")
         blocks.append("\n".join(lines))
     return "\n\n".join(blocks)
 
@@ -1151,10 +1161,10 @@ def _render_hbar_stacked_diverging(labels, names, matrix, width, color_on, ramp,
         color = _series_color(s) if color_on else -1
         return _colorize(seg_ramp[s % len(seg_ramp)] * w, color, color_on)
 
+    nets = _fmt_column([_sum(matrix[s][c] for s in range(len(names))) for c in range(len(labels))])
     lines = []
     for c, lbl in enumerate(labels):
         values = [matrix[s][c] for s in range(len(names))]
-        net = _sum(values)
         up, down = _split_stack(values, max_pos, max_neg, pos_cols, neg_cols, keep_nonzero=True)
         bar = " " * (neg_cols - sum(down))
         for s in range(len(down) - 1, -1, -1):
@@ -1163,7 +1173,7 @@ def _render_hbar_stacked_diverging(labels, names, matrix, width, color_on, ramp,
         for s, w in enumerate(up):
             bar += seg(s, w)
         bar += " " * (pos_cols - sum(up))
-        lines.append(f"{_pad(lbl, max_label_w)} {_sep(ramp)} {bar} {_fmt(net)}")
+        lines.append(f"{_pad(lbl, max_label_w)} {_sep(ramp)} {bar} {nets[c]}")
 
     legend = _named_legend(names, color_on, ramp) if ramp else _named_legend(names, color_on)
     return "\n".join(lines) + "\n\n" + legend
@@ -1180,6 +1190,7 @@ def _render_hbar_stacked(labels, names, matrix, width, color_on, ramp):
         max_sum = 1
     max_label_w = max(_width(l) for l in labels)
     seg_ramp = ramp or FILLS
+    totals = _fmt_column([_sum(matrix[s][c] for s in range(len(names))) for c in range(len(labels))])
 
     lines = []
     for c, lbl in enumerate(labels):
@@ -1192,7 +1203,7 @@ def _render_hbar_stacked(labels, names, matrix, width, color_on, ramp):
             bar += _colorize(seg_ramp[s % len(seg_ramp)] * w, color, color_on)
             used += w
         label = _pad(lbl, max_label_w)
-        lines.append(f"{label} {_sep(ramp)} {bar}{' ' * (width - used)} {_fmt(col_sum)}")
+        lines.append(f"{label} {_sep(ramp)} {bar}{' ' * (width - used)} {totals[c]}")
 
     legend = _named_legend(names, color_on, ramp) if ramp else _named_legend(names, color_on)
     return "\n".join(lines) + "\n\n" + legend
@@ -1209,17 +1220,18 @@ def _render_horizontal_bars(labels, values, width, ramp, fine=False, track=False
     if max_val == min_val:
         max_val = min_val + 1
 
+    texts = _fmt_column(values)
     lines = []
     if min_val < 0:
         zc, unit = _diverging_scale(min_val, max_val, width)
         for i, v in enumerate(values):
             pad = " " * (max_label - _width(labels[i]))
             bar = _diverging_bar_run(v, zc, unit, width, fill or "█", _axis_glyph(ramp))
-            lines.append(f"{labels[i]}{pad} {_sep(ramp)} {bar} {_fmt(v)}")
+            lines.append(f"{labels[i]}{pad} {_sep(ramp)} {bar} {texts[i]}")
         return "\n".join(lines)
     for i, v in enumerate(values):
         pad = " " * (max_label - _width(labels[i]))
-        lines.append(f"{labels[i]}{pad} {_sep(ramp)} {_render_bar_run(v / max_val * width, width, fill, fine, track, ascii_style)} {_fmt(v)}")
+        lines.append(f"{labels[i]}{pad} {_sep(ramp)} {_render_bar_run(v / max_val * width, width, fill, fine, track, ascii_style)} {texts[i]}")
     return "\n".join(lines)
 
 
@@ -1455,6 +1467,7 @@ def _render_dotplot(inp):
     min_val, max_val = _scale_range(data_min, data_max)
     max_label = max(_width(l) for l in labels)
 
+    texts = _fmt_column(matrix[0]) if num_series == 1 else []
     lines = []
     overlap = False
     for c, lbl in enumerate(labels):
@@ -1474,7 +1487,7 @@ def _render_dotplot(inp):
         cells = "".join(_colorize(ch, crow[i], color_on) for i, ch in enumerate(row))
         line = f"{_pad(lbl, max_label)} │ {cells}"
         if num_series == 1:
-            line += " " + _fmt(matrix[0][c])
+            line += " " + texts[c]
         lines.append(line)
 
     body = "\n".join(lines) + f"\nvalue axis: [{_fmt(data_min)}, {_fmt(data_max)}]"
@@ -1764,7 +1777,8 @@ def _render_boxplot(inp):
         return _clamp(_round((v - g_min) / (g_max - g_min) * (width - 1)), 0, width - 1)
 
     # the five numbers as a table: a header row names the columns once, each column right-aligned
-    stats = [[_fmt(v) for v in fn] for fn in summaries]
+    cols = [_fmt_column([fn[k] for fn in summaries]) for k in range(len(BOX_STATS))]
+    stats = [[col[i] for col in cols] for i in range(len(summaries))]
     col_w = [max([len(h)] + [len(r[k]) for r in stats]) for k, h in enumerate(BOX_STATS)]
     lines = [f"{' ' * max_name_w} │ {' ' * width} " + " ".join(h.rjust(w) for h, w in zip(BOX_STATS, col_w))]
     for i, (mn, q1, med, q3, mx) in enumerate(summaries):

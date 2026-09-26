@@ -308,9 +308,15 @@ func renderBoxplot(in *input) (string, error) {
 	for k, h := range boxStats {
 		colW[k] = len(h)
 	}
-	for i, fn := range summaries {
-		stats[i] = []string{fmtValue(fn.min), fmtValue(fn.q1), fmtValue(fn.med), fmtValue(fn.q3), fmtValue(fn.max)}
-		for k, s := range stats[i] {
+	cols := make([][]float64, len(boxStats))
+	for _, fn := range summaries {
+		for k, v := range []float64{fn.min, fn.q1, fn.med, fn.q3, fn.max} {
+			cols[k] = append(cols[k], v)
+		}
+	}
+	for k := range cols {
+		for i, s := range fmtColumn(cols[k]) {
+			stats[i] = append(stats[i], s)
 			colW[k] = maxInt(colW[k], len(s))
 		}
 	}

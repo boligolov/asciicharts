@@ -412,6 +412,10 @@ func renderDotplot(in *input) (string, error) {
 	for _, l := range labels {
 		maxLabel = maxInt(maxLabel, width(l))
 	}
+	var texts []string
+	if numSeries == 1 {
+		texts = fmtColumn(matrix[0])
+	}
 	lines := make([]string, len(labels))
 	overlap := false
 	for c, lbl := range labels {
@@ -440,7 +444,7 @@ func renderDotplot(in *input) (string, error) {
 		}
 		line := pad(lbl, maxLabel) + " │ " + b.String()
 		if numSeries == 1 {
-			line += " " + fmtValue(matrix[0][c])
+			line += " " + texts[c]
 		}
 		lines[c] = line
 	}

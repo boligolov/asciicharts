@@ -71,6 +71,26 @@ func fmtValue(v float64) string {
 	return pyFormatG(v, 2)
 }
 
+// fmtColumn is fmtValue for values printed one under another (after bars, in a table): when any of
+// them prints with decimals, the integers print with two as well, so 5 next to 3.59 is 5.00.
+func fmtColumn(values []float64) []string {
+	texts := make([]string, len(values))
+	decimals := false
+	for i, v := range values {
+		texts[i] = fmtValue(v)
+		decimals = decimals || strings.Contains(texts[i], ".")
+	}
+	if decimals {
+		for i, t := range texts {
+			if !strings.ContainsAny(t, ".e") {
+				f, _ := strconv.ParseFloat(t, 64)
+				texts[i] = strconv.FormatFloat(f, 'f', 2, 64)
+			}
+		}
+	}
+	return texts
+}
+
 // pyFormatG is Python's format(v, ".<prec>g").
 func pyFormatG(v float64, prec int) string {
 	if prec == 0 {

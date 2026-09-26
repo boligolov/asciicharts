@@ -495,6 +495,11 @@ bottom fifth of every heatmap empty, and a heatmap of equal values entirely empt
   print `0.001` and `0.004` both as `0.00`. log10 is the correctly rounded one (C's): right under a power
   of ten it decides the digits — log10 0.09999999999999996 is −1.0000000000000002, so a histogram edge
   computed as that prints `-0.100`; a log10 that is off by an ulp (Go's `math.Log10`) prints `-0.10`.
+- **A column of values shares its decimals.** Values printed one under another — after bars (and a
+  stack's totals), under vbars, after a dotplot's dots, in a boxplot's table — print integers with two
+  decimals when another value of the column has decimals: `5.00` above `3.59`, not `5`. (v1.1 printed
+  each value on its own, and a column mixed `5` with `3.59`.) Axis labels are right-aligned and keep
+  their own form.
 - Pie percentages: one decimal.
 - **Axis labels are the exact values of their rows**, `lo + (1 − r / (H − 1)) × (hi − lo)`, rounded to
   12 significant digits first (float noise would print `−27.999999999` as `−28.00`), right-aligned to the

@@ -216,13 +216,17 @@ func renderVbar(labels, names []string, matrix [][]float64, w, height int, stack
 	// since a row of the grid is too coarse to read it from
 	var valueTexts []string
 	if barsPerGroup == 1 {
-		for c := 0; c < numCat; c++ {
+		totals := make([]float64, numCat)
+		for c := range totals {
 			col := make([]float64, numSeries)
 			for s := range col {
 				col[s] = matrix[s][c]
 			}
-			valueTexts = append(valueTexts, fmtValue(sum(col)))
-			groupW = maxInt(groupW, width(valueTexts[c]))
+			totals[c] = sum(col)
+		}
+		valueTexts = fmtColumn(totals)
+		for _, t := range valueTexts {
+			groupW = maxInt(groupW, width(t))
 		}
 	}
 	barsOffset := (groupW - barsPerGroup*barWidth) / 2
@@ -572,6 +576,13 @@ func renderHbarGrouped(labels, names []string, matrix [][]float64, w int, colorO
 	for _, n := range names {
 		maxNameW = maxInt(maxNameW, width(n))
 	}
+	all := make([]float64, 0, len(labels)*len(names))
+	for c := range labels {
+		for s := range names {
+			all = append(all, matrix[s][c])
+		}
+	}
+	texts := fmtColumn(all)
 	blocks := make([]string, len(labels))
 	for c, lbl := range labels {
 		lines := []string{lbl}
@@ -591,7 +602,7 @@ func renderHbarGrouped(labels, names []string, matrix [][]float64, w int, colorO
 			} else {
 				bar = renderBarRun(v/maxVal*float64(w), w, fill, fine, track, asciiStyle)
 			}
-			lines = append(lines, "  "+pad(name, maxNameW)+" "+sep(r)+" "+colorize(bar, colorOf(s, colorOn), colorOn)+" "+fmtValue(v))
+			lines = append(lines, "  "+pad(name, maxNameW)+" "+sep(r)+" "+colorize(bar, colorOf(s, colorOn), colorOn)+" "+texts[c*len(names)+s])
 		}
 		blocks[c] = strings.Join(lines, "\n")
 	}
@@ -619,13 +630,21 @@ func renderHbarStackedDiverging(labels, names []string, matrix [][]float64, w in
 	seg := func(s, n int) string {
 		return colorize(repeat(segRamp[s%len(segRamp)], n), colorOf(s, colorOn), colorOn)
 	}
+	nets := make([]float64, len(labels))
+	for c := range labels {
+		values := make([]float64, len(names))
+		for s := range names {
+			values[s] = matrix[s][c]
+		}
+		nets[c] = sum(values)
+	}
+	netTexts := fmtColumn(nets)
 	lines := make([]string, len(labels))
 	for c, lbl := range labels {
 		values := make([]float64, len(names))
 		for s := range names {
 			values[s] = matrix[s][c]
 		}
-		net := sum(values)
 		up, down := splitStack(values, maxPos, maxNeg, posCols, negCols, true)
 		var b strings.Builder
 		b.WriteString(repeat(" ", negCols-sumInts(down)))
@@ -637,7 +656,7 @@ func renderHbarStackedDiverging(labels, names []string, matrix [][]float64, w in
 			b.WriteString(seg(s, n))
 		}
 		b.WriteString(repeat(" ", posCols-sumInts(up)))
-		lines[c] = pad(lbl, maxLabelW) + " " + sep(r) + " " + b.String() + " " + fmtValue(net)
+		lines[c] = pad(lbl, maxLabelW) + " " + sep(r) + " " + b.String() + " " + netTexts[c]
 	}
 	legendRamp := r
 	if legendRamp == nil {
@@ -673,6 +692,11 @@ func renderHbarStacked(labels, names []string, matrix [][]float64, w int, colorO
 	if segRamp == nil {
 		segRamp = fills
 	}
+	totals := make([]float64, len(labels))
+	for c := range labels {
+		totals[c] = sum(column(c))
+	}
+	totalTexts := fmtColumn(totals)
 	lines := make([]string, len(labels))
 	for c, lbl := range labels {
 		values := column(c)
@@ -684,7 +708,7 @@ func renderHbarStacked(labels, names []string, matrix [][]float64, w int, colorO
 			b.WriteString(colorize(repeat(segRamp[s%len(segRamp)], n), colorOf(s, colorOn), colorOn))
 			used += n
 		}
-		lines[c] = pad(lbl, maxLabelW) + " " + sep(r) + " " + b.String() + repeat(" ", w-used) + " " + fmtValue(colSum)
+		lines[c] = pad(lbl, maxLabelW) + " " + sep(r) + " " + b.String() + repeat(" ", w-used) + " " + totalTexts[c]
 	}
 	legendRamp := r
 	if legendRamp == nil {
@@ -712,6 +736,7 @@ func renderHorizontalBars(labels []string, values []float64, w int, r ramp, fine
 	if maxVal == minVal {
 		maxVal = minVal + 1
 	}
+	texts := fmtColumn(values)
 	lines := make([]string, len(values))
 	if minVal < 0 {
 		zc, unit := divergingScale(minVal, maxVal, w)
@@ -721,13 +746,13 @@ func renderHorizontalBars(labels []string, values []float64, w int, r ramp, fine
 				f = "█"
 			}
 			bar := divergingBarRun(v, zc, unit, w, f, axisGlyph(r))
-			lines[i] = labels[i] + repeat(" ", maxLabel-width(labels[i])) + " " + sep(r) + " " + bar + " " + fmtValue(v)
+			lines[i] = labels[i] + repeat(" ", maxLabel-width(labels[i])) + " " + sep(r) + " " + bar + " " + texts[i]
 		}
 		return strings.Join(lines, "\n")
 	}
 	for i, v := range values {
 		lines[i] = labels[i] + repeat(" ", maxLabel-width(labels[i])) + " " + sep(r) + " " +
-			renderBarRun(v/maxVal*float64(w), w, fill, fine, track, asciiStyle) + " " + fmtValue(v)
+			renderBarRun(v/maxVal*float64(w), w, fill, fine, track, asciiStyle) + " " + texts[i]
 	}
 	return strings.Join(lines, "\n")
 }
