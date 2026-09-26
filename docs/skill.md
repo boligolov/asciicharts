@@ -22,6 +22,7 @@ skill.
 
 The same from a shell: `claude plugin marketplace add boligolov/asciicharts`, then
 `claude plugin install asciicharts@asciicharts`. Remove it with `/plugin uninstall asciicharts@asciicharts`.
+Only a person can type `/plugin` into a session; an agent asked to install the skill runs the shell form.
 
 **As a folder**, if you prefer to manage the files yourself — pick one:
 
@@ -29,6 +30,22 @@ The same from a shell: `claude plugin marketplace add boligolov/asciicharts`, th
 |---|---|---|
 | personal — every project on this machine | `~/.claude/skills/asciicharts/` (Windows: `%USERPROFILE%\.claude\skills\asciicharts\`) | you want it everywhere |
 | project — everyone who works on one repository | `<project>/.claude/skills/asciicharts/` | commit it so the team gets it too |
+
+Without a checkout, unpack the package from the site (a zip with the folder `asciicharts/` inside):
+
+```sh
+# personal, macOS / Linux
+curl -fsSL https://asciicharts.online/asciicharts.skill -o /tmp/asciicharts.zip
+mkdir -p ~/.claude/skills && unzip -o /tmp/asciicharts.zip -d ~/.claude/skills
+```
+
+```powershell
+# personal, Windows (PowerShell; Expand-Archive wants the .zip extension)
+Invoke-WebRequest https://asciicharts.online/asciicharts.skill -OutFile $env:TEMP\asciicharts.zip
+Expand-Archive $env:TEMP\asciicharts.zip $env:USERPROFILE\.claude\skills -Force
+```
+
+From a checkout:
 
 ```sh
 # personal, macOS / Linux

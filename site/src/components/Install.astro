@@ -1,10 +1,16 @@
 ---
-// Installing the skill, right in the hero: the main product, three ways in.
-const ways = [
+// Installing the skill, right in the hero: the main product, three ways in. Every command block is one
+// an agent can run itself, except the /plugin ones, which only a person types into a session.
+type Block = { label?: string; lines: string[] };
+type Way = { title: string; note: string; blocks?: Block[]; download?: { href: string; label: string } };
+const ways: Way[] = [
   {
     title: "Claude Code",
-    note: "a plugin, from the repository's own marketplace",
-    lines: ["/plugin marketplace add boligolov/asciicharts", "/plugin install asciicharts@asciicharts"],
+    note: "a plugin, from the repository's own marketplace; it updates itself",
+    blocks: [
+      { label: "in a session", lines: ["/plugin marketplace add boligolov/asciicharts", "/plugin install asciicharts@asciicharts"] },
+      { label: "from a shell — an agent can run it", lines: ["claude plugin marketplace add boligolov/asciicharts", "claude plugin install asciicharts@asciicharts"] },
+    ],
   },
   {
     title: "Claude.ai · Claude Desktop",
@@ -13,8 +19,23 @@ const ways = [
   },
   {
     title: "Any agent that reads skill folders",
-    note: "copy the folder",
-    lines: ["git clone https://github.com/boligolov/asciicharts", "cp -r asciicharts/skills/asciicharts ~/.claude/skills/"],
+    note: "unpack the folder into ~/.claude/skills (or the agent's own skills folder)",
+    blocks: [
+      {
+        label: "macOS · Linux",
+        lines: [
+          "curl -fsSL https://asciicharts.online/asciicharts.skill -o /tmp/asciicharts.zip",
+          "mkdir -p ~/.claude/skills && unzip -o /tmp/asciicharts.zip -d ~/.claude/skills",
+        ],
+      },
+      {
+        label: "Windows · PowerShell",
+        lines: [
+          "Invoke-WebRequest https://asciicharts.online/asciicharts.skill -OutFile $env:TEMP\\asciicharts.zip",
+          "Expand-Archive $env:TEMP\\asciicharts.zip $env:USERPROFILE\\.claude\\skills -Force",
+        ],
+      },
+    ],
   },
 ];
 ---
@@ -26,14 +47,17 @@ const ways = [
           <span class="install-title">{w.title}</span>
           <span class="install-note">{w.note}</span>
         </div>
-        {w.lines && (
+        {w.blocks?.map((b) => (
           <div class="install-code">
-            <pre>{w.lines.join("\n")}</pre>
-            <button class="install-copy" type="button" data-copy={w.lines.join("\n")} aria-label={`Copy the ${w.title} commands`}>
+            <div class="install-block">
+              {b.label && <span class="install-label">{b.label}</span>}
+              <pre>{b.lines.join("\n")}</pre>
+            </div>
+            <button class="install-copy" type="button" data-copy={b.lines.join("\n")} aria-label={`Copy the ${w.title} commands${b.label ? `, ${b.label}` : ""}`}>
               COPY
             </button>
           </div>
-        )}
+        ))}
         {w.download && (
           <div class="install-code install-download">
             <a class="btn btn-primary pixel-corners" href={w.download.href} download>
@@ -95,8 +119,17 @@ const ways = [
     gap: 12px;
     padding: 8px 16px 14px;
   }
-  .install-code pre {
+  .install-block {
     flex: 1;
+    min-width: 0;
+  }
+  .install-label {
+    display: block;
+    color: var(--fg-muted);
+    font-size: 11.5px;
+    margin-bottom: 2px;
+  }
+  .install-code pre {
     margin: 0;
     font-size: 13px;
     line-height: 1.6;
