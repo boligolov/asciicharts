@@ -60,7 +60,9 @@ work everywhere (bars grow both ways from a zero axis).
   trend needs the eighth blocks `▁▂▃▄▅▆▇█`, which some fonts (Consolas) lack.
 - **Series told apart without color**: one glyph per series, densest first, and a legend with those
   glyphs (`█ 2025   ▓ 2026`) — or the series named on every row.
-- **Print the numbers** where the grid is approximate: after bars, in legends, on axes.
+- **Print the numbers** where the grid is approximate: after hbars, under vbars, a sparkline's `lo..hi`,
+  a heatmap's key (`░ 3..18   ▒ 18..34 …`), in legends, on axes. A column of numbers shares its
+  decimals: `5.00` above `3.59`.
 - **Small and even**: 60–80 columns; by hand, bars of 10–20 cells. Every line the same display width:
   pad labels to the longest, count CJK and most emoji as two columns. Frame only when asked.
 - **Sort and trim** before plotting (top 10, not 40 bars); give a title; round or scale noisy values.
