@@ -161,12 +161,21 @@ def _round(x: float) -> int:
 def _fmt(v: float) -> str:
     """Integers without decimals; other values from 1 up with two decimals; smaller ones with two
     significant digits, so 0.001 and 0.004 don't both print as 0.00 (0.5 stays 0.50)."""
-    if abs(v - math.trunc(v)) < 1e-9:
+    if abs(v - round(v)) < 1e-9:  # either side of the integer: 99.99999999999999 is 100
         return format(v, ".0f").replace("-0", "0") if abs(v) < 1 else format(v, ".0f")
     if abs(v) >= 1:
         return format(v, ".2f")
     digits = max(2, 1 - math.floor(math.log10(abs(v))))
     return format(v, f".{digits}f") if digits <= 8 else format(v, ".2g")
+
+
+def _fmt_column(values) -> list:
+    """_fmt for values printed one under another (after bars, in a table): when any of them prints
+    with decimals, the integers print with two as well, so 5 next to 3.59 is 5.00."""
+    texts = [_fmt(v) for v in values]
+    if any("." in t for t in texts):
+        texts = [t if "." in t or "e" in t else format(float(t), ".2f") for t in texts]
+    return texts
 
 
 def _sum(xs) -> float:
@@ -298,6 +307,7 @@ MARKERS = ["●", "○", "▲", "■", "□", "▼", "♦", "◊", "►", "◄"]
 # hide the other: the cell shows this glyph, and the legend explains it.
 OVERLAP_MARKER = "*"
 OVERLAP_NOTE = f"{OVERLAP_MARKER} overlap"
+ASCII_OVERLAP_MARKER = "#"  # "*" is one of the ascii style's own markers
 PALETTE256 = [39, 208, 40, 201, 51, 226]
 THRESHOLD_COLOR = 244
 HEAT_RAMP = [21, 27, 33, 39, 45, 51, 87, 123, 159, 195, 226, 220, 214, 208, 202, 196]
@@ -716,17 +726,25 @@ def _normalize(spec: dict) -> dict:
 # --------------------------------------------------------------------------
 
 def _render_sparkline(inp):
-    lines = []
-    for i, s in enumerate(inp["series"]):
-        vals = s["values"]
-        if not vals:
+    series = inp["series"]
+    for i, s in enumerate(series):
+        if not s["values"]:
             raise ChartError(f"series {i} {_q(s['name'])} must contain at least one value")
+    # names padded to the widest and ticks to the longest series, so the ranges line up
+    name_w = max(_width(s["name"]) for s in series)
+    ticks_n = max(len(s["values"]) for s in series)
+    lines = []
+    for i, s in enumerate(series):
+        vals = s["values"]
         lo, hi = min(vals), max(vals)
         span = hi - lo
         # a flat series is a flat line at half height, not on the floor
         spark = "".join(SPARK_TICKS[_level((v - lo) / span, len(SPARK_TICKS)) if span > 0 else 3] for v in vals)
-        spark = _colorize(spark, _series_color(i), inp["color"])
-        lines.append(f"{s['name']} {spark}" if s["name"] else spark)
+        spark = _colorize(spark, _series_color(i), inp["color"]) + " " * (ticks_n - len(vals))
+        # each series has its own scale (§4.2), so each prints its own range
+        rng = f"{_fmt(lo)}..{_fmt(hi)}" if span > 0 else _fmt(lo)
+        name = _pad(s["name"], name_w) + " " if name_w else ""
+        lines.append(f"{name}{spark} {rng}")
     return "\n".join(lines)
 
 
@@ -873,7 +891,11 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
                 bar_width = bw
 
     max_label_w = max(_width(l) for l in labels)
-    group_w = max(bars_per_group * bar_width, max_label_w)
+    # one bar per group (a single series, or a stack): its value (a stack's total) goes under it,
+    # since a row of the grid is too coarse to read it from
+    value_texts = (_fmt_column([_sum(matrix[s][c] for s in range(num_series)) for c in range(num_cat)])
+                   if bars_per_group == 1 else [])
+    group_w = max([bars_per_group * bar_width, max_label_w] + [_width(v) for v in value_texts])
     bars_offset = (group_w - bars_per_group * bar_width) // 2
     total_w = max(num_cat * group_w + (num_cat - 1) * gap, 1)
 
@@ -1025,18 +1047,25 @@ def _render_vbar(labels, names, matrix, width, height, stacked, color_on, ramp, 
     out = []
     for r in range(height):
         out.append("".join(_colorize(grid[r][x], cgrid[r][x], color_on) for x in range(total_w)))
-    label_row = [" "] * total_w
-    for c, lbl in enumerate(labels):
-        start = c * (group_w + gap) + (group_w - _width(lbl)) // 2
-        for j, ch in enumerate(_cells(lbl)):
-            if 0 <= start + j < total_w:
-                label_row[start + j] = ch
-    out.append("".join(label_row).rstrip(" "))
+    if value_texts:
+        out.append(_centred_row(value_texts, group_w, gap, total_w))
+    out.append(_centred_row(labels, group_w, gap, total_w))
     body = "\n".join(out)
 
     if num_series > 1:
         body += "\n\n" + (_named_legend(names, color_on, ramp) if ramp else _named_legend(names, color_on))
     return body
+
+
+def _centred_row(texts, group_w, gap, total_w) -> str:
+    """One text centred under each vbar group, right-trimmed."""
+    row = [" "] * total_w
+    for c, text in enumerate(texts):
+        start = c * (group_w + gap) + (group_w - _width(text)) // 2
+        for j, ch in enumerate(_cells(text)):
+            if 0 <= start + j < total_w:
+                row[start + j] = ch
+    return "".join(row).rstrip(" ")
 
 
 def _diverging_scale(min_val, max_val, width):
@@ -1102,6 +1131,7 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=Fals
     diverging = min_val < 0
     zero_col, unit = _diverging_scale(min_val, max_val, width) if diverging else (0, 0.0)
     max_name_w = max(_width(n) for n in names)
+    texts = _fmt_column([matrix[s][c] for c in range(len(labels)) for s in range(len(names))])
 
     blocks = []
     for c, lbl in enumerate(labels):
@@ -1114,7 +1144,7 @@ def _render_hbar_grouped(labels, names, matrix, width, color_on, ramp, fine=Fals
             else:
                 bar = _render_bar_run(v / max_val * width, width, fill, fine, track, ascii_style)
             color = _series_color(s) if color_on else -1
-            lines.append(f"  {_pad(name, max_name_w)} {_sep(ramp)} {_colorize(bar, color, color_on)} {_fmt(v)}")
+            lines.append(f"  {_pad(name, max_name_w)} {_sep(ramp)} {_colorize(bar, color, color_on)} {texts[c * len(names) + s]}")
         blocks.append("\n".join(lines))
     return "\n\n".join(blocks)
 
@@ -1132,10 +1162,10 @@ def _render_hbar_stacked_diverging(labels, names, matrix, width, color_on, ramp,
         color = _series_color(s) if color_on else -1
         return _colorize(seg_ramp[s % len(seg_ramp)] * w, color, color_on)
 
+    nets = _fmt_column([_sum(matrix[s][c] for s in range(len(names))) for c in range(len(labels))])
     lines = []
     for c, lbl in enumerate(labels):
         values = [matrix[s][c] for s in range(len(names))]
-        net = _sum(values)
         up, down = _split_stack(values, max_pos, max_neg, pos_cols, neg_cols, keep_nonzero=True)
         bar = " " * (neg_cols - sum(down))
         for s in range(len(down) - 1, -1, -1):
@@ -1144,7 +1174,7 @@ def _render_hbar_stacked_diverging(labels, names, matrix, width, color_on, ramp,
         for s, w in enumerate(up):
             bar += seg(s, w)
         bar += " " * (pos_cols - sum(up))
-        lines.append(f"{_pad(lbl, max_label_w)} {_sep(ramp)} {bar} {_fmt(net)}")
+        lines.append(f"{_pad(lbl, max_label_w)} {_sep(ramp)} {bar} {nets[c]}")
 
     legend = _named_legend(names, color_on, ramp) if ramp else _named_legend(names, color_on)
     return "\n".join(lines) + "\n\n" + legend
@@ -1161,6 +1191,7 @@ def _render_hbar_stacked(labels, names, matrix, width, color_on, ramp):
         max_sum = 1
     max_label_w = max(_width(l) for l in labels)
     seg_ramp = ramp or FILLS
+    totals = _fmt_column([_sum(matrix[s][c] for s in range(len(names))) for c in range(len(labels))])
 
     lines = []
     for c, lbl in enumerate(labels):
@@ -1173,7 +1204,7 @@ def _render_hbar_stacked(labels, names, matrix, width, color_on, ramp):
             bar += _colorize(seg_ramp[s % len(seg_ramp)] * w, color, color_on)
             used += w
         label = _pad(lbl, max_label_w)
-        lines.append(f"{label} {_sep(ramp)} {bar}{' ' * (width - used)} {_fmt(col_sum)}")
+        lines.append(f"{label} {_sep(ramp)} {bar}{' ' * (width - used)} {totals[c]}")
 
     legend = _named_legend(names, color_on, ramp) if ramp else _named_legend(names, color_on)
     return "\n".join(lines) + "\n\n" + legend
@@ -1190,17 +1221,18 @@ def _render_horizontal_bars(labels, values, width, ramp, fine=False, track=False
     if max_val == min_val:
         max_val = min_val + 1
 
+    texts = _fmt_column(values)
     lines = []
     if min_val < 0:
         zc, unit = _diverging_scale(min_val, max_val, width)
         for i, v in enumerate(values):
             pad = " " * (max_label - _width(labels[i]))
             bar = _diverging_bar_run(v, zc, unit, width, fill or "█", _axis_glyph(ramp))
-            lines.append(f"{labels[i]}{pad} {_sep(ramp)} {bar} {_fmt(v)}")
+            lines.append(f"{labels[i]}{pad} {_sep(ramp)} {bar} {texts[i]}")
         return "\n".join(lines)
     for i, v in enumerate(values):
         pad = " " * (max_label - _width(labels[i]))
-        lines.append(f"{labels[i]}{pad} {_sep(ramp)} {_render_bar_run(v / max_val * width, width, fill, fine, track, ascii_style)} {_fmt(v)}")
+        lines.append(f"{labels[i]}{pad} {_sep(ramp)} {_render_bar_run(v / max_val * width, width, fill, fine, track, ascii_style)} {texts[i]}")
     return "\n".join(lines)
 
 
@@ -1209,6 +1241,14 @@ def _line_legend(series, show_points, color_on, ascii_style=False):
     if show_points:
         return _named_legend(names, color_on, ASCII_MARKERS if ascii_style else MARKERS)
     return _named_legend(names, color_on, ASCII_FILLS if ascii_style else FILLS)
+
+
+_NUMBER_IN_TEXT = re.compile(r"-?[0-9]+(?:\.[0-9]+)?")
+
+
+def _states_value(label: str, v: float) -> bool:
+    """Does the label already give the value ("5%" for 5)? Then `5%: 5` would say it twice."""
+    return any(float(t) == v for t in _NUMBER_IN_TEXT.findall(label))
 
 
 def _render_line(inp):
@@ -1267,10 +1307,16 @@ def _render_line(inp):
     # lines that land on the same row share it.
     notes = {}
     for v, label in inp["thresholds"]:
-        notes.setdefault(_y_pixel(v, lo, hi, height), []).append(f"{label}: {_fmt(v)}" if label else _fmt(v))
+        notes.setdefault(_y_pixel(v, lo, hi, height), []).append(
+            label if _states_value(label, v) else f"{label}: {_fmt(v)}" if label else _fmt(v))
 
+    # points of different series on one cell show the overlap marker, as in scatter: equal values
+    # of two series must not look like one series
+    overlap_marker = ASCII_OVERLAP_MARKER if ascii_style else OVERLAP_MARKER
+    overlap = False
     if inp["showPoints"]:
         custom = inp["pointChar"][0] if inp["pointChar"] else ""
+        owner = {}
         for si, s in enumerate(series):
             color = _series_color(si) if color_on else -1
             marker_set = ASCII_MARKERS if ascii_style else MARKERS
@@ -1278,7 +1324,11 @@ def _render_line(inp):
             n = len(s["values"])
             for i, v in enumerate(s["values"]):
                 x, y = _x_pixel(i, n, pw), _y_pixel(v, lo, hi, ph)
-                c.set_marker(x, y, marker, color)
+                if owner.setdefault((x, y), si) != si:
+                    c.cell_char[y][x], c.cell_color[y][x] = overlap_marker, -1
+                    overlap = True
+                elif c.cell_char[y][x] != overlap_marker:
+                    c.set_marker(x, y, marker, color)
 
     axis_labels, axis_w = _left_axis_labels(lo, hi, height)
     rows = c.render(color_on)
@@ -1292,6 +1342,8 @@ def _render_line(inp):
         body += "\n" + x
     if multi:
         body += "\n\n" + _line_legend(series, inp["showPoints"], color_on, ascii_style)
+        if overlap:
+            body += f"   {overlap_marker} overlap"
     if threshold is not None:
         note = f"- - threshold: {_fmt(threshold)}"
         body += ("   " + note) if len(series) > 1 else ("\n\n" + note)
@@ -1427,6 +1479,7 @@ def _render_dotplot(inp):
     min_val, max_val = _scale_range(data_min, data_max)
     max_label = max(_width(l) for l in labels)
 
+    texts = _fmt_column(matrix[0]) if num_series == 1 else []
     lines = []
     overlap = False
     for c, lbl in enumerate(labels):
@@ -1446,7 +1499,7 @@ def _render_dotplot(inp):
         cells = "".join(_colorize(ch, crow[i], color_on) for i, ch in enumerate(row))
         line = f"{_pad(lbl, max_label)} │ {cells}"
         if num_series == 1:
-            line += " " + _fmt(matrix[0][c])
+            line += " " + texts[c]
         lines.append(line)
 
     body = "\n".join(lines) + f"\nvalue axis: [{_fmt(data_min)}, {_fmt(data_max)}]"
@@ -1662,7 +1715,8 @@ def _render_heatmap(inp):
         raise ChartError(f"labels length ({len(labels)}) must match each row's values length ({num_cols})")
 
     all_vals = [v for s in series for v in s["values"]]
-    lo, hi = _scale_range(min(all_vals), max(all_vals))
+    data_lo, data_hi = min(all_vals), max(all_vals)
+    lo, hi = _scale_range(data_lo, data_hi)
     color_on = inp["color"]
     row_label_w = max(_width(s["name"]) for s in series)
     # width is the grid's width (row labels excluded), 60 by default like line/area: cells widen
@@ -1683,7 +1737,25 @@ def _render_heatmap(inp):
                 cell = SHADES[1 + _level(norm, len(SHADES) - 1)] * cell_w
             line += cell + " "
         out.append(line)
+    out += ["", _heat_legend(data_lo, data_hi, lo, hi, color_on)]
     return "\n".join(out)
+
+
+def _heat_legend(data_lo, data_hi, lo, hi, color_on) -> str:
+    """What each shade stands for: the four equal buckets of the data's range (the color ramp and
+    its range with color; the one shade and its value when all values are equal)."""
+    if data_lo == data_hi:
+        norm = (data_lo - lo) / (hi - lo)
+        swatch = (_colorize("█", HEAT_RAMP[_level(norm, len(HEAT_RAMP))], True) if color_on
+                  else SHADES[1 + _level(norm, len(SHADES) - 1)])
+        return f"{swatch} {_fmt(data_lo)}"
+    if color_on:
+        ramp = "".join(_colorize("█", c, True) for c in HEAT_RAMP)
+        return f"{ramp} {_fmt(data_lo)}..{_fmt(data_hi)}"
+    n = len(SHADES) - 1
+    # inner edges rounded to 12 significant digits, like axis labels, to drop float noise
+    edges = [data_lo] + [float(f"{data_lo + k / n * (data_hi - data_lo):.12g}") for k in range(1, n)] + [data_hi]
+    return _join_legend(f"{SHADES[1 + k]} {_fmt(edges[k])}..{_fmt(edges[k + 1])}" for k in range(n))
 
 
 def _quantile(sorted_vals, q: float) -> float:
@@ -1716,7 +1788,11 @@ def _render_boxplot(inp):
     def pos(v):
         return _clamp(_round((v - g_min) / (g_max - g_min) * (width - 1)), 0, width - 1)
 
-    lines = []
+    # the five numbers as a table: a header row names the columns once, each column right-aligned
+    cols = [_fmt_column([fn[k] for fn in summaries]) for k in range(len(BOX_STATS))]
+    stats = [[col[i] for col in cols] for i in range(len(summaries))]
+    col_w = [max([len(h)] + [len(r[k]) for r in stats]) for k, h in enumerate(BOX_STATS)]
+    lines = [f"{' ' * max_name_w} │ {' ' * width} " + " ".join(h.rjust(w) for h, w in zip(BOX_STATS, col_w))]
     for i, (mn, q1, med, q3, mx) in enumerate(summaries):
         row = [" "] * width
         min_p, q1_p, med_p, q3_p, max_p = pos(mn), pos(q1), pos(med), pos(q3), pos(mx)
@@ -1728,9 +1804,11 @@ def _render_boxplot(inp):
         row[min_p], row[max_p], row[med_p] = "├", "┤", "║"
         body = _colorize("".join(row), _series_color(i), color_on)
         name = _pad(names[i], max_name_w)
-        lines.append(f"{name} │ {body}  min={_fmt(mn)} q1={_fmt(q1)} med={_fmt(med)} "
-                     f"q3={_fmt(q3)} max={_fmt(mx)}")
+        lines.append(f"{name} │ {body} " + " ".join(s.rjust(w) for s, w in zip(stats[i], col_w)))
     return "\n".join(lines)
+
+
+BOX_STATS = ("min", "q1", "med", "q3", "max")
 
 
 _RENDERERS = {
@@ -1965,6 +2043,15 @@ def _parse_set(pairs):
     return out
 
 
+def _read_stdin() -> str:
+    """stdin as UTF-8 whatever the console code page, without a BOM (PowerShell's pipe adds one), with
+    CRLF and CR read as LF, as text mode would."""
+    buf = getattr(sys.stdin, "buffer", None)
+    text = buf.read().decode("utf-8") if buf is not None else sys.stdin.read()
+    text = text.removeprefix("\ufeff")
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def _csv_main(argv) -> int:
     p = argparse.ArgumentParser(
         prog="asciicharts.py --csv", add_help=True,
@@ -1997,7 +2084,7 @@ def _csv_main(argv) -> int:
     args = p.parse_args(glued)
     try:
         if args.csv == "-":
-            text = sys.stdin.read()
+            text = _read_stdin()
         else:
             with open(args.csv, encoding="utf-8-sig", newline="") as f:
                 text = f.read()
@@ -2618,7 +2705,7 @@ def main(argv=None) -> int:
                 raise ChartError("--json needs a JSON string argument")
             raw = argv[1]
         elif argv[0] == "-":
-            raw = sys.stdin.read()
+            raw = _read_stdin()
         else:
             with open(argv[0], encoding="utf-8-sig") as f:
                 raw = f.read()

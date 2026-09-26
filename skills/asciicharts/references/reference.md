@@ -20,7 +20,7 @@ Everything below applies equally to the tool arguments, to the dict you pass to 
 | `bins`      | int               | histogram                             | default 10                                                              |
 | `useColor`  | string            | all                                   | `auto` (default, same as off — output goes to an agent, not a terminal), `on`, `off` |
 | `threshold` | number            | line                                  | draws a dashed horizontal reference line at this y-value                |
-| `thresholds`| array             | line                                  | several reference lines, each a number or `{"value": 106, "label": "target"}`; each is dashed and named with its value right of the plot. At most 20, labels up to 40 characters |
+| `thresholds`| array             | line                                  | several reference lines, each a number or `{"value": 106, "label": "target"}`; each is dashed and named with its value right of the plot (the label alone when it already states the value, like `"5%"`). At most 20, labels up to 40 characters |
 | `showPoints`| bool              | line                                  | marks each data point with a glyph on top of the line (and switches the connector to a thin dot) |
 | `pointChar` | string            | line, with showPoints                 | override the point glyph for every series (default: a large circle `●`, with a distinct shape per additional series) |
 
@@ -30,7 +30,8 @@ Each entry in `series` has `name`, `values`, and `points` — which ones you fil
 - `vbar`, `hbar`, `dotplot`: `values` holds one number per category (aligned with `labels`) — vbar/hbar draw multiple series grouped or stacked, dotplot always overlays them on the same row
 - `scatter`, `dual_axis` (as points): `points` holds `{x, y}` samples — `dual_axis` actually takes two `values` series, one per axis
 - `pie`: `values` sums to the slice's magnitude, `name` is its label
-- `heatmap`: `values` is one matrix row, `name` is the row label, `labels` are column headers
+- `line`: series that may share values hide each other's line; `"showPoints": true` marks a shared point `*`
+- `heatmap`: `values` is one matrix row, `name` is the row label, `labels` are column headers; the scale is linear, with a legend of four equal buckets — if one row dwarfs the rest, chart an index (first year = 100) or a logarithm instead
 - `boxplot`: `values` is the raw sample population — min/Q1/median/Q3/max are computed for you
 
 ## Diverging bars

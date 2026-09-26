@@ -140,7 +140,7 @@ def test_decimal_comma_in_a_semicolon_file():
 
 
 def test_bom_blank_lines_and_short_rows():
-    text = "﻿name,a,b\n\nx,1,2\ny,3\n"
+    text = "\ufeffname,a,b\n\nx,1,2\ny,3\n"
     with pytest.raises(ChartError, match='row 3, column "b" is empty'):
         spec_from_csv(text, "hbar", values="a,b")
 
@@ -210,6 +210,17 @@ def test_cli_reads_stdin_and_can_print_the_spec():
     r = run(["--csv", "-", "--chart", "sparkline", "--values", "p50", "--print-spec"], stdin=LATENCY)
     assert r.returncode == 0
     assert json.loads(r.stdout) == {"chartType": "sparkline", "series": [{"name": "p50", "values": [120, 340, 210, 5, 800]}]}
+
+
+def test_cli_stdin_may_start_with_a_bom():
+    """PowerShell's pipe puts a BOM in front of what it sends."""
+    spec = '{"chartType":"hbar","border":"none","labels":["Хром"],"series":[{"values":[1]}]}'
+    r = run(["-"], stdin="\ufeff" + spec)
+    assert r.returncode == 0, r.stderr
+    assert r.stdout.startswith("Хром")
+    r = run(["--csv", "-", "--chart", "hbar", "--print-spec"], stdin="\ufeffname,v\r\nХром,1\r\n")
+    assert r.returncode == 0, r.stderr
+    assert json.loads(r.stdout)["labels"] == ["Хром"]
 
 
 def test_cli_set_values_are_json_typed(csv_file):

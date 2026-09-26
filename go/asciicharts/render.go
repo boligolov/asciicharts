@@ -1,5 +1,5 @@
 // Package asciicharts renders numbers as text charts: the Go reference implementation of
-// asciicharts principles v1.1 (docs/spec/principles.md in https://github.com/boligolov/asciicharts).
+// asciicharts principles v1.2 (docs/spec/principles.md in https://github.com/boligolov/asciicharts).
 //
 // A spec is the JSON object of the principles (§9.1). The output is deterministic and matches the
 // conformance suite (test/conformance/) byte for byte, error messages included.
@@ -101,15 +101,16 @@ var (
 )
 
 const (
-	trackFill      = "░"
-	trackFillAlt   = "▒"
-	asciiTrackFill = ","
-	overlapMarker  = "*"
-	overlapNote    = overlapMarker + " overlap"
-	thresholdColor = 244
-	heatCellWidth  = 3
-	pieAspect      = 2.0
-	maxLegendWidth = 100
+	trackFill          = "░"
+	trackFillAlt       = "▒"
+	asciiTrackFill     = ","
+	overlapMarker      = "*"
+	overlapNote        = overlapMarker + " overlap"
+	asciiOverlapMarker = "#" // "*" is one of the ascii style's own markers
+	thresholdColor     = 244
+	heatCellWidth      = 3
+	pieAspect          = 2.0
+	maxLegendWidth     = 100
 )
 
 // A ramp is identified by its first slices element, as Python compares list identity.

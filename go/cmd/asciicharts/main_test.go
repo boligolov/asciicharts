@@ -40,6 +40,8 @@ func TestRun(t *testing.T) {
 		{"list", "", []string{"--list"}, 0, "Every chart also accepts: title, border, useColor.\n", ""},
 		{"json", "", []string{"--json", spec}, 0, chart + "\n", ""},
 		{"stdin", spec, []string{"-"}, 0, chart + "\n", ""},
+		{"stdin bom", "\ufeff" + spec, []string{"-"}, 0, chart + "\n", ""},
+		{"csv stdin bom", "\ufeffa,b\nx,1\n", []string{"--csv", "-", "--chart", "vbar", "--print-spec"}, 0, `"labels": ["x"]`, ""},
 		{"json missing", "", []string{"--json"}, 1, "", "error: --json needs a JSON string argument\n"},
 		{"invalid json", "", []string{"--json", "{"}, 1, "", "error: invalid JSON: "},
 		{"trailing data", "", []string{"--json", spec + " x"}, 1, "", "error: invalid JSON: "},

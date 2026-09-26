@@ -8,7 +8,8 @@ deliberate change to how charts are drawn, and only after reading what it report
 The report counts the changed corpus cases by chart type and style, names the changed curated cases, and prints the first few before/after, so a
 change can be checked to touch only the charts it is about. corpus.json keeps each case's spec and
 replaces its "out" (or "err"); gallery.txt is rebuilt from gallery.json. The files keep their exact
-formatting (see test/conformance/README.md).
+formatting (see test/conformance/README.md). The MCP server's recorded answers
+(go/cmd/asciicharts-mcp/testdata/render_chart.json) are charts too, and are refreshed with them.
 """
 import collections
 import json
@@ -20,6 +21,7 @@ sys.path.insert(0, str(ROOT / "python"))
 from asciicharts import ChartError, render_chart  # noqa: E402
 
 CONFORMANCE = ROOT / "test" / "conformance"
+MCP_ANSWERS = ROOT / "go" / "cmd" / "asciicharts-mcp" / "testdata" / "render_chart.json"
 
 
 def main(argv):
@@ -65,7 +67,25 @@ def main(argv):
     gallery_stale = gallery_txt.read_bytes().decode("utf-8") != text
     print(f"gallery.txt: {'changes' if gallery_stale else 'unchanged'}")
 
+    answers = json.loads(MCP_ANSWERS.read_text(encoding="utf-8"))
+    answers_changed = collections.Counter()
+    for case in answers:
+        if case.get("rejected"):  # refused by the server's argument schema, before any chart
+            continue
+        try:
+            new = {"out": render_chart(case["args"])}
+        except ChartError as e:
+            new = {"err": f"Error executing tool render_chart: {e}"}
+        if {k: case[k] for k in ("out", "err") if k in case} != new:
+            answers_changed[case["args"].get("chartType")] += 1
+            case.pop("out", None)
+            case.pop("err", None)
+            case.update(new)
+    print(f"MCP render_chart.json: {sum(answers_changed.values())} of {len(answers)} answers change"
+          + (f" {dict(answers_changed)}" if answers_changed else ""))
+
     if write:
+        MCP_ANSWERS.write_text(json.dumps(answers, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
         corpus_path.write_text(json.dumps(corpus, ensure_ascii=False, separators=(",", ":")), encoding="utf-8", newline="\n")
         curated_path.write_text(json.dumps(curated, ensure_ascii=False, indent=1), encoding="utf-8", newline="\n")
         gallery_txt.write_bytes(text.encode("utf-8"))

@@ -4,6 +4,51 @@ Versions of the principles (`principles.md`) and of the conformance suite (`conf
 how any chart is drawn is a change to the principles: it gets an entry here and regenerated conformance
 outputs, never a silent edit.
 
+## v1.2 — 2026-09-26
+
+From an agent's review of the skill: it drew twelve charts of browser shares and reported what it had to
+work around.
+
+- **A number within 1e−9 of the nearest integer prints as that integer** (§4.13). v1.1 compared with
+  `trunc(v)`, so float noise *below* an integer was not absorbed: a stacked bar whose shares add up to
+  `99.99999999999999` printed its total as `100.00`, next to rows that printed `100`. Conformance: 4
+  corpus cases (histogram edges such as `84.00`, now `84`), one MCP answer, and a curated case pins it
+  (`number/an integer reached from below`).
+- **A threshold label that states its value prints alone** (§5.6): `5%`, not `5%: 5`. A label states
+  the value when a number in it equals the value; `p99 goal` for 9 still prints `p99 goal: 9`.
+  Conformance: no corpus case has such a label; a curated case pins it
+  (`rule/a threshold label that states its value`).
+- **A sparkline prints its range** (§7): `p99 ▃▅▄█▂▆▇▁▅█▃ 2..9`, one number for a flat series. Each
+  series has its own scale, and without the range the ticks said nothing about the values — the agent
+  wrote min and max into the title by hand. Names are padded to the widest and ticks to the longest
+  series, so the ranges line up. Conformance: the 30 sparkline corpus cases, 54 MCP answers, the gallery
+  example, two curated cases, and a new one pins the alignment (`rule/sparkline ranges line up`).
+- **A heatmap has a legend** (§7): after a blank line, `░ 3.50..18.88   ▒ 18.88..34.25   ▓ …   █ …`, the
+  four equal buckets of the data's range; with color, the ramp and `lo..hi`; all values equal, the one
+  shade and the value. The shades had no key at all, against "print the numbers". Conformance: the 30
+  heatmap corpus cases, 47 MCP answers, the gallery example, three curated cases; two new ones pin it
+  (`rule/heatmap legend`, `rule/heatmap legend in color`).
+- **A vbar with one bar per category prints its values** (§5.4): a row under the bars, each value (a
+  stack's total) centred under its bar; a value wider than its group widens the group, as a label does.
+  A row is too coarse to read a value from: 5 and 1.93 next to 65 were both one row high. Grouped bars
+  still print none. Conformance: 10 vbar corpus cases, 6 MCP answers, the gallery, five curated cases;
+  a new one pins the widening (`rule/vbar values widen the group`).
+- **A boxplot's five numbers are a table** (§4.11): a header row `min q1 med q3 max`, each column
+  right-aligned, instead of `min=55 q1=62.75 med=71 q3=78.75 max=95` on every row. The labels took about
+  50 columns next to a 40-column plot, so a boxplot could not fit in the 80 columns the skill asks for
+  (the review got 101 at `width` 40); it now takes about 25 for such numbers. Conformance: the 23 boxplot
+  corpus cases, 54 MCP answers, the gallery, two curated cases.
+- **A column of values shares its decimals** (§4.13): values printed one under another (hbar values and
+  totals, the vbar value row, dotplot values, each boxplot column) print integers as `5.00` when another
+  value of the column has decimals, so `5` no longer stands above `3.59`. Axis labels keep their form.
+  Conformance: 48 corpus cases (hbar, vbar, dotplot, boxplot), 97 MCP answers, three curated cases; a
+  new one pins it (`number/a column shares its decimals`).
+- **Line points of different series on one cell show the overlap marker** (§7, R9): `*` and `* overlap`
+  in the legend, as scatter and dotplot already did — `#` in the ascii style, where `*` is a series
+  marker. Two series with an equal value showed only the later one's point. Conformance: 3 line corpus
+  cases, 2 MCP answers; two curated cases pin it (`rule/line points of two series on one cell`,
+  `rule/line points overlap, ascii`).
+
 ## v1.1, moved into docs — 2026-09-26
 
 No rule changed. The principles, this changelog and their licence moved from `spec/` to `docs/spec/`, with

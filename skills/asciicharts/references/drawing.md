@@ -31,11 +31,13 @@ label separator `│`. Pure ASCII: series `# @ % & $ W M N H`, track `,`, separa
 
 ### sparkline
 
-A one-line trend: one glyph per value, 8 heights.
+A one-line trend: one glyph per value, 8 heights, then the series' range — the ticks alone don't say
+what the heights mean.
 
 ```
 index = min(7, floor((v − lo) / (hi − lo) × 8))       lo, hi = min and max of the series
 glyph = "▁▂▃▄▅▆▇█"[index]                              all values equal: every glyph is ▄
+after the glyphs: " lo..hi"                            all values equal: " lo"
 ```
 
 ```json
@@ -43,7 +45,7 @@ glyph = "▁▂▃▄▅▆▇█"[index]                              all value
 ```
 
 ```
-p99 ▃▅▄█▂▆▇▁▅█▃
+p99 ▃▅▄█▂▆▇▁▅█▃ 2..9
 ```
 
 Working: lo = 2, hi = 9, so `(v − 2) / 7 × 8`: 4 → 2.29 → 2 `▃`; 6 → 4.57 → 4 `▅`; 5 → 3.43 → 3 `▄`;
@@ -184,7 +186,8 @@ H       = rows (4–8)
 rows    = round(v / max × H)        (≥ 1 if v ≠ 0)
 b       = bar width in columns (2–4); 1 space between categories
 row r (r = H at the top … 1 at the bottom): each bar shows "█" × b if rows ≥ r, else "░" × b
-label   = centred under its bar
+value   = centred under its bar (one series; a stack: its total); widen b if a value is wider
+label   = centred under its value
 ```
 
 ```json
@@ -197,6 +200,7 @@ label   = centred under its bar
 ███ ███ ███
 ███ ███ ███
 ███ ███ ███
+30  45  60
 Q1  Q2  Q3
 ```
 
@@ -204,7 +208,8 @@ Working: max = 60, H = 5: 30 → 2.5 → **3**; 45 → 3.75 → 4; 60 → 5. Row
 Q2 and Q3; rows 3–1: all.
 
 **Several series side by side**: each category holds one bar per series (`█`, `▓`, …) with no gap
-between them; the category label is centred under the group; legend below.
+between them; the category label is centred under the group; legend below. No value row: put the
+numbers in the reply, or use grouped hbar.
 
 ```json
 { "chartType": "vbar", "border": "none", "height": 5, "width": 14, "labels": ["Q1", "Q2", "Q3"], "series": [{ "name": "2025", "values": [30, 45, 40] }, { "name": "2026", "values": [35, 50, 60] }] }
@@ -358,6 +363,7 @@ Q(q) = s[a] + (s[b] − s[a]) × (p − a),  p = q × (n − 1), a = floor(p), b
 min, Q(0.25), median Q(0.5), Q(0.75), max
 col(v) = round((v − min) / (max − min) × (W − 1))
 row: ─ from min to max, █ from Q1 to Q3, then ├ at min, ┤ at max, ║ at the median; the numbers after it
+numbers: a table — a header row "min q1 med q3 max" above them, each column right-aligned
 ```
 
 ```json
@@ -365,7 +371,8 @@ row: ─ from min to max, █ from Q1 to Q3, then ├ at min, ┤ at max, ║ at
 ```
 
 ```
-api │ ├──███║██───────────┤  min=12 q1=16.50 med=20 q3=23.50 max=40
+    │                       min    q1 med    q3 max
+api │ ├──███║██───────────┤  12 16.50  20 23.50  40
 ```
 
 Working: n = 7. Q1: p = 1.5 → 15 + (18 − 15) × 0.5 = 16.5; median: p = 3 → 20; Q3: p = 4.5 → 22 + 3 × 0.5 =
@@ -379,6 +386,7 @@ A grid of shaded cells, one row per series.
 norm  = (v − min) / (max − min)
 shade = "░▒▓█"[min(3, floor(norm × 4))]         every value is visible: never a blank cell
 cell  = the shade × 3 (or wider), one space between cells; column headers centred over the cells
+legend, after a blank line: ░ min..e1   ▒ e1..e2   ▓ e2..e3   █ e3..max    e_k = min + k × (max − min) / 4
 ```
 
 ```json
@@ -389,10 +397,12 @@ cell  = the shade × 3 (or wider), one space between cells; column headers centr
    Mon Tue Wed Thu 
 am ░░░ ▒▒▒ ▓▓▓ ███ 
 pm ███ ▓▓▓ ▒▒▒ ░░░ 
+
+░ 2..3.75   ▒ 3.75..5.50   ▓ 5.50..7.25   █ 7.25..9
 ```
 
 Working: min 2, max 9: 2 → 0 `░`; 4 → 1.14 → 1 `▒`; 6 → 2.29 → 2 `▓`; 8 → 3.43 → 3 `█`; 9 → 4 → 3 `█`;
-7 → 2.86 → 2 `▓`; 5 → 1.71 → 1 `▒`; 3 → 0.57 → 0 `░`.
+7 → 2.86 → 2 `▓`; 5 → 1.71 → 1 `▒`; 3 → 0.57 → 0 `░`. Legend edges: 2 + 1.75k → 3.75, 5.50, 7.25.
 
 ### scatter (a few points)
 

@@ -1,6 +1,6 @@
 # asciicharts — Python
 
-The Python reference implementation of [asciicharts principles v1.1](../docs/spec/principles.md): numbers in, a
+The Python reference implementation of [asciicharts principles v1.2](../docs/spec/principles.md): numbers in, a
 text chart out. It passes the [conformance suite](../test/conformance/) byte for byte.
 
 - **`asciicharts.py`** — the renderer and CLI: one file, standard library only (Python 3.10+). Copy it

@@ -187,6 +187,7 @@ func renderHeatmap(in *input) (string, error) {
 			lo, hi = pyMin(lo, v), pyMax(hi, v)
 		}
 	}
+	dataLo, dataHi := lo, hi
 	lo, hi = scaleRange(lo, hi)
 	colorOn := in.color
 	rowLabelW := 0
@@ -222,7 +223,40 @@ func renderHeatmap(in *input) (string, error) {
 		}
 		out = append(out, b.String())
 	}
+	out = append(out, "", heatLegend(dataLo, dataHi, lo, hi, colorOn))
 	return strings.Join(out, "\n"), nil
+}
+
+// heatLegend says what each shade stands for: the four equal buckets of the data's range (the color
+// ramp and its range with color; the one shade and its value when all values are equal).
+func heatLegend(dataLo, dataHi, lo, hi float64, colorOn bool) string {
+	if dataLo == dataHi {
+		norm := (dataLo - lo) / (hi - lo)
+		swatch := shades[1+level(norm, len(shades)-1)]
+		if colorOn {
+			swatch = colorize("█", heatRamp[level(norm, len(heatRamp))], true)
+		}
+		return swatch + " " + fmtValue(dataLo)
+	}
+	if colorOn {
+		var ramp strings.Builder
+		for _, c := range heatRamp {
+			ramp.WriteString(colorize("█", c, true))
+		}
+		return ramp.String() + " " + fmtValue(dataLo) + ".." + fmtValue(dataHi)
+	}
+	n := len(shades) - 1
+	// inner edges rounded to 12 significant digits, like axis labels, to drop float noise
+	edges := []float64{dataLo}
+	for k := 1; k < n; k++ {
+		edges = append(edges, roundSig12(dataLo+float64(k)/float64(n)*(dataHi-dataLo)))
+	}
+	edges = append(edges, dataHi)
+	parts := make([]string, n)
+	for k := range n {
+		parts[k] = shades[1+k] + " " + fmtValue(edges[k]) + ".." + fmtValue(edges[k+1])
+	}
+	return joinLegend(parts)
 }
 
 // quantile interpolates linearly between order statistics (type 7).
@@ -268,7 +302,33 @@ func renderBoxplot(in *input) (string, error) {
 	pos := func(v float64) int {
 		return clamp(round((v-gMin)/(gMax-gMin)*float64(w-1)), 0, w-1)
 	}
-	lines := make([]string, len(summaries))
+	// the five numbers as a table: a header row names the columns once, each column right-aligned
+	stats := make([][]string, len(summaries))
+	colW := make([]int, len(boxStats))
+	for k, h := range boxStats {
+		colW[k] = len(h)
+	}
+	cols := make([][]float64, len(boxStats))
+	for _, fn := range summaries {
+		for k, v := range []float64{fn.min, fn.q1, fn.med, fn.q3, fn.max} {
+			cols[k] = append(cols[k], v)
+		}
+	}
+	for k := range cols {
+		for i, s := range fmtColumn(cols[k]) {
+			stats[i] = append(stats[i], s)
+			colW[k] = maxInt(colW[k], len(s))
+		}
+	}
+	table := func(cols []string) string {
+		out := make([]string, len(cols))
+		for k, s := range cols {
+			out[k] = repeat(" ", colW[k]-len(s)) + s
+		}
+		return strings.Join(out, " ")
+	}
+	lines := make([]string, len(summaries)+1)
+	lines[0] = repeat(" ", maxNameW) + " │ " + repeat(" ", w) + " " + table(boxStats)
 	for i, fn := range summaries {
 		row := make([]string, w)
 		for x := range row {
@@ -283,8 +343,9 @@ func renderBoxplot(in *input) (string, error) {
 		}
 		row[minP], row[maxP], row[medP] = "├", "┤", "║" // ║, not the heavy ┃: not in Consolas
 		body := colorize(strings.Join(row, ""), seriesColor(i), colorOn)
-		lines[i] = pad(names[i], maxNameW) + " │ " + body + "  min=" + fmtValue(fn.min) + " q1=" + fmtValue(fn.q1) +
-			" med=" + fmtValue(fn.med) + " q3=" + fmtValue(fn.q3) + " max=" + fmtValue(fn.max)
+		lines[i+1] = pad(names[i], maxNameW) + " │ " + body + " " + table(stats[i])
 	}
 	return strings.Join(lines, "\n"), nil
 }
+
+var boxStats = []string{"min", "q1", "med", "q3", "max"}

@@ -91,7 +91,7 @@ def test_stacked_vbar_and_area_use_ascii_glyphs_only():
     area = render_chart({"chartType": "area", "style": "ascii", "border": "none", "stacked": True,
                          "width": 40, "height": N * 2, "series": series})
     for out, ramp in ((vbar, ASCII_FILLS), (area, AREA_ASCII_FILLS)):
-        body = "\n".join(out.split("\n\n")[0].split("\n")[:-1])  # drop the label/axis row
+        body = "\n".join(out.split("\n\n")[0].split("\n")[:-2 if out is vbar else -1])  # drop value/label/axis rows
         body = re.sub(r"^.*?[┤+]", "", body, flags=re.M)              # area: drop the axis labels
         assert set(body) - {" ", "\n"} == set(ramp)
 

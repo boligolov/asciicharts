@@ -1,6 +1,6 @@
-# asciicharts principles v1.1
+# asciicharts principles v1.2
 
-*The principles of text charts* — version 1.0, 2026-09-24. Licensed under CC BY 4.0.
+*The principles of text charts* — version 1.2, 2026-09-26. Licensed under CC BY 4.0.
 
 This document is the distilled knowledge behind `asciicharts`: how to turn numbers into a chart made of
 characters, what every rule is for, which calculations produce which cells, and which mistakes we made on
@@ -23,13 +23,13 @@ errors · 10 Other media · 11 Mistakes we made · 12 Limitations and choices ·
 
 ## 0. Status and conformance
 
-**Version.** asciicharts principles **v1.1**, published 2026-09-24. Every change to how a chart is drawn is
+**Version.** asciicharts principles **v1.2**, published 2026-09-26. Every change to how a chart is drawn is
 a new version, recorded in `docs/spec/CHANGELOG.md` of the asciicharts repository
 (https://github.com/boligolov/asciicharts), together with regenerated conformance outputs.
 
 **Licence.** The principles and the conformance suite are licensed under the Creative Commons Attribution
 4.0 International License (CC BY 4.0, https://creativecommons.org/licenses/by/4.0/): copy, adapt and build
-on them, commercially too, with credit — *"asciicharts principles v1.1" by asciicharts contributors*. The
+on them, commercially too, with credit — *"asciicharts principles v1.2" by asciicharts contributors*. The
 reference implementations are MIT-licensed code.
 
 **Key words.** "MUST", "MUST NOT", "SHOULD", "SHOULD NOT" and "MAY" in section 15 are to be interpreted as
@@ -38,7 +38,7 @@ informative: they explain, derive and illustrate; section 15 and the conformance
 
 **Two kinds of conformance.**
 
-1. **A renderer** conforms to v1.1 when it reproduces the conformance suite — `test/conformance/` in the
+1. **A renderer** conforms to v1.2 when it reproduces the conformance suite — `test/conformance/` in the
    repository: 317 specs with their exact output or error message, and the 31 documented examples —
    **byte for byte**. Sections 4–9 describe the arithmetic and layout the suite pins down; where prose
    and suite disagree, the suite wins and the prose is a bug.
@@ -160,7 +160,7 @@ A reader decodes a chart by glyph. If one glyph means two things, the chart lies
 | label / plot separator | `│` | `\|` | |
 | y-axis tick | `┤` (left), `├` (right axis) | `+` | |
 | dotplot background | `·` | | |
-| markers of different series in one cell (scatter, dotplot) | `*` | | legend adds `* overlap` |
+| markers of different series in one cell (scatter, dotplot, line points) | `*` | `#` (line; `*` is an ascii marker) | legend adds `* overlap` |
 | boxplot | `─` whisker, `█` box, `├` min, `┤` max, `║` median | | |
 
 The ASCII track glyph is a comma precisely because a comma is used nowhere else — not in the ramp, not
@@ -462,7 +462,9 @@ Q(q) = s[a] + (s[b] − s[a]) × (pos − a)
 Five numbers: min, Q(0.25), median Q(0.5), Q(0.75), max — computed from raw samples, never asked of the
 caller. Positions: `clamp(round((v − gmin) / (gmax − gmin) × (W − 1)), 0, W − 1)`; draw `─` from min to
 max, `█` from Q1 to Q3, then `├` at min, `┤` at max, `║` at the median (later writes win). The exact
-statistics follow as text.
+statistics follow as a table: a header row `min q1 med q3 max` over the plot's right, each column
+right-aligned to its widest entry, one space between columns. (v1.1 wrote `min=55 q1=62.75 …` on every
+row, about 50 columns next to a 40-column plot; a boxplot could not fit in 80 columns.)
 
 ### 4.12 Quantising to a small set of levels
 
@@ -483,14 +485,21 @@ bottom fifth of every heatmap empty, and a heatmap of equal values entirely empt
 
 ### 4.13 Numbers as text
 
-- Integers print without decimals (`|v − trunc(v)| < 1e−9` counts as one, which absorbs float noise
-  like `2.0000000001`): `62`.
+- Integers print without decimals: `62`. A value within 1e−9 of the **nearest** integer counts as one
+  (`|v − round(v)| < 1e−9`), which absorbs float noise on either side — `2.0000000001`, and the
+  `99.99999999999999` that shares adding up to 100 give. v1.1 compared with `trunc(v)`, so noise below
+  an integer printed `100.00` next to rows that printed `100`.
 - From 1 up, two decimals: `26.40`, `123456789.50`.
 - Below 1, **two significant digits**, so small values stay apart: `0.50`, `0.050`, `0.0010`, `0.0042`
   (digits = max(2, 1 − floor(log10 |v|))); below 1e−7, exponent form `3e-09`. Two fixed decimals would
   print `0.001` and `0.004` both as `0.00`. log10 is the correctly rounded one (C's): right under a power
   of ten it decides the digits — log10 0.09999999999999996 is −1.0000000000000002, so a histogram edge
   computed as that prints `-0.100`; a log10 that is off by an ulp (Go's `math.Log10`) prints `-0.10`.
+- **A column of values shares its decimals.** Values printed one under another — after bars (and a
+  stack's totals), under vbars, after a dotplot's dots, in a boxplot's table — print integers with two
+  decimals when another value of the column has decimals: `5.00` above `3.59`, not `5`. (v1.1 printed
+  each value on its own, and a column mixed `5` with `3.59`.) Axis labels are right-aligned and keep
+  their own form.
 - Pie percentages: one decimal.
 - **Axis labels are the exact values of their rows**, `lo + (1 − r / (H − 1)) × (hi − lo)`, rounded to
   12 significant digits first (float noise would print `−27.999999999` as `−28.00`), right-aligned to the
@@ -563,9 +572,11 @@ Q2
 gap        = 1 column between categories
 k          = number of series side by side (1 if stacked)
 bar_w      = max(1, (W − (n − 1) × gap) // (n × k))        # W default 60
-group_w    = max(k × bar_w, widest label)
+values     = one bar per group (k = 1): its value, a stack's total, as text; none when grouped
+group_w    = max(k × bar_w, widest label, widest value)
 bars start = (group_w − k × bar_w) // 2 inside each group
-labels     = centred under their group; the label row is right-trimmed
+values     = centred under their group, in a row between the bars and the labels
+labels     = centred under their group; both rows are right-trimmed
 ```
 
 Floor division means the chart can be a few columns narrower than `W` (asked 23, got 19 below). Heights:
@@ -619,7 +630,9 @@ dual_axis adds the second axis on the right, `├ {value}` left-aligned, and a t
 - A single unnamed `threshold` is explained in a footnote: `- - threshold: 50` (on a new paragraph, or
   on the legend line with several series).
 - Named `thresholds` are labelled **to the right of the plot, on their own row**: `target: 25`. The label
-  never covers data; lines that snap to the same row share it (`a: 5, b: 5.01`).
+  never covers data; lines that snap to the same row share it (`a: 5, b: 5.01`). A label that already
+  states the value — a number in it (`-?[0-9]+(.[0-9]+)?`) equal to the value — prints alone: `5%`, not
+  `5%: 5`.
 
 ```
    30 ┤                     ●·       
@@ -717,11 +730,13 @@ Pick by the question, not by the data shape:
 
 ### sparkline
 
-One row per series, `name ▁▂▃…`, each series scaled to its own range (4.12). No axes; use
-`border: "none"` to put it inline in a sentence or a log line. Needs eighth-height glyphs (tier 2).
+One row per series, `name ▁▂▃… lo..hi`, each series scaled to its own range (4.12) — so each prints
+that range after its ticks (one number for a flat series). Names are padded to the widest and ticks to
+the longest series, so the ranges line up. No axes; use `border: "none"` to put it inline in a sentence
+or a log line. Needs eighth-height glyphs (tier 2).
 
 ```
-p99 ▃▅▄█▂▆▇▁▅█▃
+p99 ▃▅▄█▂▆▇▁▅█▃ 2..9
 ```
 
 ### hbar
@@ -732,13 +747,16 @@ visual variable.
 
 ### vbar
 
-Single, grouped side by side, stacked, diverging (5.4). No value labels, so the value is only as precise
-as a row; prefer hbar when exact values matter.
+Single, grouped side by side, stacked, diverging (5.4). A single series prints each value under its bar,
+a stack its total: a row of the grid is too coarse to read a value from (5 and 1.93 of 65 are both one
+row). Grouped bars print no values; prefer hbar when their exact values matter.
 
 ### line
 
 Several series on a shared axis (4.7), optional `showPoints`, `pointChar`, `threshold`, `thresholds`,
-x-axis `labels` (5.5). At least two values per series.
+x-axis `labels` (5.5). At least two values per series. With `showPoints`, points of different series on
+one cell show `*` (`#` in the ascii style) and the legend adds `* overlap`, as in scatter: two series
+with an equal value must not look like one.
 
 ### area
 
@@ -821,12 +839,19 @@ Exactly one series of **raw samples**; bins are computed (4.10).
 ### heatmap
 
 One series per row (`name` = row label), `labels` = column headers, shade or color per cell (4.12).
-Cell width `max(3, (W + 1) // columns − 1)`, one space between cells, headers centred over cells.
+Cell width `max(3, (W + 1) // columns − 1)`, one space between cells, headers centred over cells. After
+a blank line, a legend says what each shade stands for: the four equal buckets of the data's range,
+`░ lo..e1   ▒ e1..e2   ▓ e2..e3   █ e3..hi` (inner edges rounded to 12 significant digits, as axis labels
+are); with color, the 16-color ramp and `lo..hi`; with all values equal, the one shade and the value.
+The scale is linear: when one row dwarfs the others and they all fall in `░`, chart an index or a
+logarithm of the values instead, and say so.
 
 ```
     Mon Tue Wed Thu Fri 
 9am ░░░ ░░░ ░░░ ▒▒▒ ░░░ 
 5pm ███ ▓▓▓ ███ ███ ███ 
+
+░ 10..30   ▒ 30..50   ▓ 50..70   █ 70..90
 ```
 
 ### boxplot
@@ -834,8 +859,9 @@ Cell width `max(3, (W + 1) // columns − 1)`, one space between cells, headers 
 One series of raw samples per group (4.11).
 
 ```
-A │       ├──███║███─────┤    min=55 q1=62.75 med=71 q3=78.75 max=95
-B │ ├──────██║███──────────┤  min=40 q1=58.50 med=64 q3=69.50 max=99
+  │                          min    q1 med    q3 max
+A │       ├──███║███─────┤    55 62.75  71 78.75  95
+B │ ├──────██║███──────────┤  40 58.50  64 69.50  99
 ```
 
 ### dotplot (Cleveland)
@@ -1013,13 +1039,14 @@ a port should know these, and may improve on them:
 1. **Axis labels are exact row values, not "nice" numbers.** Rows read `26.40, 22.80` rather than
    `25, 20`. Zero is always on a row (4.2), but a nice-number domain (steps of 1, 2, 2.5, 5 × 10ⁿ) would
    widen the data's range and leave rows unused; the reference keeps the plot filled instead.
-2. **vbar prints no values.** Its value is only as precise as a row, and the one-cell minimum makes a
-   tiny value look bigger than it is (`0.1` next to `10` fills one of four rows). Use hbar when exact
-   values matter — it prints every one.
+2. **Grouped vbar prints no values** (one bar per category prints them under the bars, 5.4). Its value is
+   only as precise as a row, and the one-cell minimum makes a tiny value look bigger than it is (`0.1`
+   next to `10` fills one of four rows). Use hbar when exact values matter — it prints every one.
 3. **`width` is approximate for vbar** (floor division, 5.4: asked 23, got 19), and **hbar's default bar
    is 40** long while other plots default to 60 — with labels and values an hbar ends up about as wide.
-4. **Crossing lines overwrite each other.** Where two line series cross, the later series is drawn on
-   top; lines crossing is ordinary, so there is no overlap glyph for them (unlike markers, section 7).
+4. **Crossing lines overwrite each other.** Where two line series cross or run together, the later
+   series is drawn on top; lines crossing is ordinary, so there is no overlap glyph for them. Turn on
+   `showPoints` when series may share values: points do get one (section 7).
 5. **Boxplot marks on one cell:** the median `║` wins over `├`/`┤` when they coincide; the statistics
    printed after the row always give the exact five numbers.
 6. **Emoji built with zero-width joiners** have no reliable width (6.1).
@@ -1067,7 +1094,8 @@ Several series: series 1 `█`, series 2 `▓`, series 3 `▒`, series 4 `░`; 
 1. H rows (6–10). rows(v) = round(v / max × H), at least 1 for a non-zero value
 2. bar width b columns (2–6); one space between categories
 3. build the grid top row first: a cell at row r (r = 1 at the bottom … H at the top) is filled if r ≤ rows(v)
-4. the label row: each label centred under its bar
+4. one series: the value row, each value centred under its bar (a stack: its total)
+5. the label row: each label centred under its bar
 ```
 
 Example, `H = 6`, `max = 70`, 2025 = `30 45 40 60` → rows `3 4 3 5`; 2026 = `35 50 55 70` → rows
@@ -1078,9 +1106,10 @@ Example, `H = 6`, `max = 70`, 2025 = `30 45 40 60` → rows `3 4 3 5`; 2026 = `3
 ```
 1. lo, hi = min, max
 2. for each value: index = min(7, floor((v − lo) / (hi − lo) × 8)); glyph = "▁▂▃▄▅▆▇█"[index]
+3. after the ticks, a space and the range: lo..hi
 ```
 
-`4 6 5 9 3 7 8 2 6 9 4` (lo 2, hi 9) → `▃▅▄█▂▆▇▁▅█▃`.
+`4 6 5 9 3 7 8 2 6 9 4` (lo 2, hi 9) → `▃▅▄█▂▆▇▁▅█▃ 2..9`.
 
 ### 13.5 line recipe
 
@@ -1157,7 +1186,7 @@ handful of glyphs); build rows as arrays and join once.
 
 ## 15. The requirements
 
-Normative for v1.1 (section 0). Each requirement names the section that explains it.
+Normative for v1.2 (section 0). Each requirement names the section that explains it.
 
 **Any chart** — rendered or hand-drawn:
 
