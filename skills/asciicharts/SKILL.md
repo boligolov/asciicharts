@@ -3,7 +3,7 @@ name: asciicharts
 description: Use this skill to draw a chart out of text characters (Unicode/ASCII) in the reply — bar, line, area, sparkline, histogram, pie, heatmap, boxplot, scatter, dot plot — from numbers given inline, a CSV file, or an ExCSV file's own #chart suggestion. Trigger on any request to plot, chart, graph, visualize or draw a histogram or distribution of numbers, e.g. "quick histogram of these response times", rankings, trends over time, shares of a whole, benchmark results, "top N by X", and whenever a chart would help in a terminal, README, commit message, PR description or code comment, even if the user never says "chart". It teaches drawing such charts correctly by hand and uses an exact renderer when available (MCP server, achart command or bundled Python script), so prefer it to describing numbers in prose or eyeballing ASCII bars. Not for PNG/SVG/image files, interactive dashboards, plotting-library code (matplotlib, seaborn, pandas), explanations of chart concepts, or stats calculations without a chart.
 license: MIT
 metadata:
-  version: "0.1.3"
+  version: "0.1.4"
 compatibility: Works without any tool (the charts are drawn by hand from references/drawing.md); a connected asciicharts MCP server, the achart command (a single binary), or Python 3 (standard library only) makes them exact.
 ---
 
@@ -19,7 +19,7 @@ Hand-drawn text charts go wrong in one way: characters are eyeballed, not counte
 2. **Pick how to draw it** — the first that works:
    - MCP server `asciicharts` connected → its `render_chart` tool (the JSON spec below; `list_charts` is the catalogue);
    - `achart --version` works → the `achart` command: same arguments and output as the script, except ExCSV;
-   - Python 3 → `python scripts/asciicharts.py` ([below](#with-the-script));
+   - Python 3 → `python "${CLAUDE_SKILL_DIR}/scripts/asciicharts.py"` ([below](#with-the-script));
    - nothing → **draw by hand** with [references/drawing.md](references/drawing.md) and
      [references/glyphs.md](references/glyphs.md). That is all you need to read; open
      [references/principles.md](references/principles.md) only for *why* a rule exists.
@@ -72,7 +72,9 @@ work everywhere (bars grow both ways from a zero axis).
 
 ## With the script
 
-`scripts/asciicharts.py` — one file, standard library only (`python3` if `python` isn't found). Chart on
+`scripts/asciicharts.py` in this skill's folder — one file, standard library only (`python3` if `python`
+isn't found). Call it by its full path, as below: Claude Code fills in `${CLAUDE_SKILL_DIR}`; elsewhere
+put the folder holding this SKILL.md in its place. Chart on
 stdout; on bad input, exit 1 and a one-line error on stderr. `--list` prints every chart type with how to
 fill `series` and a working example. As a library: `print_chart(spec)` prints it as UTF-8 whatever the console's
 code page (plain `print` of a chart fails on a Windows pipe); `render_chart(spec)` returns the string.
@@ -80,13 +82,13 @@ code page (plain `print` of a chart fails on a Windows pipe); `render_chart(spec
 A JSON spec on stdin (no shell-quoting trouble):
 
 ```sh
-echo '{"chartType":"hbar","title":"Browser share","labels":["Chrome","Firefox","Safari"],"series":[{"values":[62,21,12]}]}' | python scripts/asciicharts.py -
+echo '{"chartType":"hbar","title":"Browser share","labels":["Chrome","Firefox","Safari"],"series":[{"values":[62,21,12]}]}' | python "${CLAUDE_SKILL_DIR}/scripts/asciicharts.py" -
 ```
 
 Straight from a CSV:
 
 ```sh
-python scripts/asciicharts.py --csv latency.csv --chart hbar --values p99 --sort -p99 --limit 3 --set title="Slowest endpoints, p99 ms"
+python "${CLAUDE_SKILL_DIR}/scripts/asciicharts.py" --csv latency.csv --chart hbar --values p99 --sort -p99 --limit 3 --set title="Slowest endpoints, p99 ms"
 ```
 
 ```
@@ -130,8 +132,8 @@ the rows: column roles (`#column`) and chart suggestions (`#chart type=bar x=cat
 script (not the `achart` command yet) renders a suggestion directly:
 
 ```sh
-python scripts/asciicharts.py --csv sales.excsv --list-charts                # the file's suggestions
-python scripts/asciicharts.py --csv sales.excsv --chart-name top_categories   # one by name (the only one if omitted)
+python "${CLAUDE_SKILL_DIR}/scripts/asciicharts.py" --csv sales.excsv --list-charts                # the file's suggestions
+python "${CLAUDE_SKILL_DIR}/scripts/asciicharts.py" --csv sales.excsv --chart-name top_categories   # one by name (the only one if omitted)
 ```
 
 `sort=`, `limit=`, `aggregate=`, `color=`, `stack=` are honored; `bin=N` makes a histogram; `tick`/`text`

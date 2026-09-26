@@ -185,3 +185,11 @@ def test_the_sites_download_is_the_current_skill():
     assert (ROOT / "site" / "public" / "asciicharts.skill").read_bytes() == package_skill.build(), \
         "the site's asciicharts.skill is stale: run python scripts/package_skill.py --site"
 
+
+
+def test_the_script_is_called_by_the_skills_own_folder():
+    """An installed skill runs with the user's project as its working directory, not the skill's folder:
+    `python scripts/asciicharts.py` would not be found. Claude Code fills in ${CLAUDE_SKILL_DIR}."""
+    text = (SKILL / "SKILL.md").read_text(encoding="utf-8")
+    assert "python scripts/" not in text and "python3 scripts/" not in text
+    assert 'python "${CLAUDE_SKILL_DIR}/scripts/asciicharts.py"' in text
