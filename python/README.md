@@ -16,8 +16,9 @@ pip install -e ".[dev]" && pytest            # from this directory
 ```
 
 ```python
-from asciicharts import render_chart
-print(render_chart({"chartType": "sparkline", "series": [{"values": [4, 6, 5, 9, 3]}]}))
+from asciicharts import print_chart, render_chart
+print_chart({"chartType": "sparkline", "series": [{"values": [4, 6, 5, 9, 3]}]})   # as UTF-8, on any console
+text = render_chart({"chartType": "sparkline", "series": [{"values": [4, 6, 5, 9, 3]}]})
 ```
 
 The MCP server and a single-binary command line are in [Go](../go/). The project, the skill and the

@@ -107,8 +107,8 @@ copy it anywhere. The same command line (`python asciicharts.py …`, plus
 [ExCSV](https://github.com/boligolov/excsv) files with their own `#chart` suggestions), and a library:
 
 ```python
-from asciicharts import render_chart            # raises ChartError, a ValueError, with a one-line message
-print(render_chart({"chartType": "sparkline", "series": [{"values": [4, 6, 5, 9, 3]}]}))
+from asciicharts import print_chart, render_chart   # both raise ChartError, a ValueError, with a one-line message
+print_chart({"chartType": "sparkline", "series": [{"values": [4, 6, 5, 9, 3]}]})   # as UTF-8, on any console
 ```
 
 **Go library** — `github.com/boligolov/asciicharts/go/asciicharts`, standard library only:

@@ -6,13 +6,14 @@ the MCP server in server/ and can be copied and used on its own.
 
 Library use::
 
-    from asciicharts import render_chart
-    print(render_chart({
+    from asciicharts import print_chart, render_chart
+    print_chart({                      # prints as UTF-8, whatever the console's code page
         "chartType": "hbar",
         "title": "Browser share",
         "labels": ["Chrome", "Firefox", "Safari"],
         "series": [{"values": [62, 21, 12]}],
-    }))
+    })
+    text = render_chart(spec)          # the chart as a string
 
 Command line (JSON spec from a file, stdin, or --json)::
 
@@ -45,7 +46,7 @@ import sys
 import unicodedata
 
 __version__ = "1.0.0"
-__all__ = ["render_chart", "list_charts", "spec_from_csv", "ChartError", "CHART_TYPES", "CHARTS", "__version__",
+__all__ = ["render_chart", "print_chart", "list_charts", "spec_from_csv", "ChartError", "CHART_TYPES", "CHARTS", "__version__",
            "parse_excsv", "resolve_excsv_chart", "spec_from_excsv", "list_excsv_charts"]
 
 # The catalogue of chart types: what each draws, how to fill `series`, which
@@ -1864,6 +1865,23 @@ def render_chart(spec: dict) -> str:
     if renderer is None:
         raise ChartError(f"unknown chartType {_q(inp['chartType'])} (expected one of: {', '.join(CHART_TYPES)})")
     return _wrap_border(renderer(inp), inp["title"], inp["border"])
+
+
+def print_chart(spec: dict, file=None) -> None:
+    """Render a chart spec and print it, as UTF-8 whatever the stream's own encoding: print() of a chart
+    on a Windows pipe or console in a legacy code page fails, or turns the frame into question marks.
+
+    Raises ChartError on invalid input, before anything is written.
+    """
+    text = render_chart(spec) + "\n"
+    out = sys.stdout if file is None else file
+    buf = getattr(out, "buffer", None)
+    if buf is None:  # a text stream without bytes underneath (io.StringIO): nothing to encode
+        out.write(text)
+        return
+    out.flush()
+    buf.write(text.encode("utf-8"))
+    buf.flush()
 
 
 # --------------------------------------------------------------------------

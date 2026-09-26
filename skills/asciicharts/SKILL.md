@@ -71,9 +71,8 @@ work everywhere (bars grow both ways from a zero axis).
 
 `scripts/asciicharts.py` — one file, standard library only (`python3` if `python` isn't found). Chart on
 stdout; on bad input, exit 1 and a one-line error on stderr. `--list` prints every chart type with how to
-fill `series` and a working example. As a library: `from asciicharts import render_chart` — it returns a
-string; on Windows print it after `sys.stdout.reconfigure(encoding="utf-8")`, or the frame and any
-non-Latin text come out wrong (the command line does this itself).
+fill `series` and a working example. As a library: `print_chart(spec)` prints it as UTF-8 whatever the console's
+code page (plain `print` of a chart fails on a Windows pipe); `render_chart(spec)` returns the string.
 
 A JSON spec on stdin (no shell-quoting trouble):
 
