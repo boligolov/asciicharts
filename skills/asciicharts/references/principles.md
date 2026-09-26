@@ -621,7 +621,9 @@ dual_axis adds the second axis on the right, `├ {value}` left-aligned, and a t
 - A single unnamed `threshold` is explained in a footnote: `- - threshold: 50` (on a new paragraph, or
   on the legend line with several series).
 - Named `thresholds` are labelled **to the right of the plot, on their own row**: `target: 25`. The label
-  never covers data; lines that snap to the same row share it (`a: 5, b: 5.01`).
+  never covers data; lines that snap to the same row share it (`a: 5, b: 5.01`). A label that already
+  states the value — a number in it (`-?[0-9]+(.[0-9]+)?`) equal to the value — prints alone: `5%`, not
+  `5%: 5`.
 
 ```
    30 ┤                     ●·       

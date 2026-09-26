@@ -1211,6 +1211,14 @@ def _line_legend(series, show_points, color_on, ascii_style=False):
     return _named_legend(names, color_on, ASCII_FILLS if ascii_style else FILLS)
 
 
+_NUMBER_IN_TEXT = re.compile(r"-?[0-9]+(?:\.[0-9]+)?")
+
+
+def _states_value(label: str, v: float) -> bool:
+    """Does the label already give the value ("5%" for 5)? Then `5%: 5` would say it twice."""
+    return any(float(t) == v for t in _NUMBER_IN_TEXT.findall(label))
+
+
 def _render_line(inp):
     height = inp["height"] or 10
     width = inp["width"] or 60
@@ -1267,7 +1275,8 @@ def _render_line(inp):
     # lines that land on the same row share it.
     notes = {}
     for v, label in inp["thresholds"]:
-        notes.setdefault(_y_pixel(v, lo, hi, height), []).append(f"{label}: {_fmt(v)}" if label else _fmt(v))
+        notes.setdefault(_y_pixel(v, lo, hi, height), []).append(
+            label if _states_value(label, v) else f"{label}: {_fmt(v)}" if label else _fmt(v))
 
     if inp["showPoints"]:
         custom = inp["pointChar"][0] if inp["pointChar"] else ""

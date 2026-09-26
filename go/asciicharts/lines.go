@@ -3,8 +3,22 @@ package asciicharts
 // Sparkline, line, area, scatter, dual_axis and dotplot (docs/spec/principles.md §4.7–§4.8, §5.5–§5.6, §7).
 
 import (
+	"regexp"
+	"strconv"
 	"strings"
 )
+
+var numberInText = regexp.MustCompile(`-?[0-9]+(?:\.[0-9]+)?`)
+
+// statesValue: does the label already give the value ("5%" for 5)? Then "5%: 5" would say it twice.
+func statesValue(label string, v float64) bool {
+	for _, t := range numberInText.FindAllString(label, -1) {
+		if f, _ := strconv.ParseFloat(t, 64); f == v {
+			return true
+		}
+	}
+	return false
+}
 
 func renderSparkline(in *input) (string, error) {
 	lines := make([]string, 0, len(in.series))
@@ -133,7 +147,9 @@ func renderLine(in *input) (string, error) {
 	for _, t := range in.thresholds {
 		row := yPixel(t.value, lo, hi, height)
 		note := fmtValue(t.value)
-		if t.label != "" {
+		if statesValue(t.label, t.value) {
+			note = t.label
+		} else if t.label != "" {
 			note = t.label + ": " + note
 		}
 		notes[row] = append(notes[row], note)

@@ -2916,5 +2916,41 @@
    ]
   },
   "out": "2024 │ ███████▓▒░▌▌▌▌▌▌▌▌▌▄ 100\n\n█ a   ▓ b   ▒ c   ░ d   ▌ e   ▄ f"
+ },
+ {
+  "name": "rule/a threshold label that states its value",
+  "spec": {
+   "chartType": "line",
+   "border": "none",
+   "width": 20,
+   "height": 5,
+   "thresholds": [
+    {
+     "value": 5,
+     "label": "5%"
+    },
+    {
+     "value": 9,
+     "label": "p99 goal"
+    },
+    {
+     "value": 1.5,
+     "label": "floor 1.50"
+    }
+   ],
+   "series": [
+    {
+     "name": "Edge",
+     "values": [
+      4,
+      5,
+      6,
+      8,
+      10
+     ]
+    }
+   ]
+  },
+  "out": "  10 ┤- - - - - - - - -███  p99 goal: 9\n7.88 ┤            █████   \n5.75 ┤- ██████████- - - -   5%\n3.62 ┤██                  \n1.50 ┤- - - - - - - - - -   floor 1.50"
  }
 ]

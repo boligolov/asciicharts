@@ -14,6 +14,10 @@ work around.
   `99.99999999999999` printed its total as `100.00`, next to rows that printed `100`. Conformance: 4
   corpus cases (histogram edges such as `84.00`, now `84`), one MCP answer, and a curated case pins it
   (`number/an integer reached from below`).
+- **A threshold label that states its value prints alone** (§5.6): `5%`, not `5%: 5`. A label states
+  the value when a number in it equals the value; `p99 goal` for 9 still prints `p99 goal: 9`.
+  Conformance: no corpus case has such a label; a curated case pins it
+  (`rule/a threshold label that states its value`).
 
 ## v1.1, moved into docs — 2026-09-26
 
