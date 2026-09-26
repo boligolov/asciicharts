@@ -72,6 +72,7 @@ func renderSpec(argv []string, stdin io.Reader) (string, error) {
 		raw = []byte(argv[1])
 	case "-":
 		raw, err = io.ReadAll(stdin)
+		raw = []byte(strings.TrimPrefix(string(raw), bom)) // PowerShell's pipe adds one
 	default:
 		raw, err = os.ReadFile(argv[0])
 		raw = []byte(strings.TrimPrefix(string(raw), bom))
@@ -245,8 +246,9 @@ func csvRender(a *csvArgs, stdin io.Reader) (string, error) {
 	var err error
 	if a.csv == "-" {
 		raw, err = io.ReadAll(stdin)
-		// Python reads stdin in text mode, which turns \r\n and \r into \n
+		// Python turns \r\n and \r into \n, and drops a BOM (PowerShell's pipe adds one)
 		raw = []byte(strings.ReplaceAll(strings.ReplaceAll(string(raw), "\r\n", "\n"), "\r", "\n"))
+		raw = []byte(strings.TrimPrefix(string(raw), bom))
 	} else {
 		raw, err = os.ReadFile(a.csv)
 		raw = []byte(strings.TrimPrefix(string(raw), bom))

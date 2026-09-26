@@ -1965,6 +1965,15 @@ def _parse_set(pairs):
     return out
 
 
+def _read_stdin() -> str:
+    """stdin as UTF-8 whatever the console code page, without a BOM (PowerShell's pipe adds one), with
+    CRLF and CR read as LF, as text mode would."""
+    buf = getattr(sys.stdin, "buffer", None)
+    text = buf.read().decode("utf-8") if buf is not None else sys.stdin.read()
+    text = text.removeprefix("\ufeff")
+    return text.replace("\r\n", "\n").replace("\r", "\n")
+
+
 def _csv_main(argv) -> int:
     p = argparse.ArgumentParser(
         prog="asciicharts.py --csv", add_help=True,
@@ -1997,7 +2006,7 @@ def _csv_main(argv) -> int:
     args = p.parse_args(glued)
     try:
         if args.csv == "-":
-            text = sys.stdin.read()
+            text = _read_stdin()
         else:
             with open(args.csv, encoding="utf-8-sig", newline="") as f:
                 text = f.read()
@@ -2618,7 +2627,7 @@ def main(argv=None) -> int:
                 raise ChartError("--json needs a JSON string argument")
             raw = argv[1]
         elif argv[0] == "-":
-            raw = sys.stdin.read()
+            raw = _read_stdin()
         else:
             with open(argv[0], encoding="utf-8-sig") as f:
                 raw = f.read()

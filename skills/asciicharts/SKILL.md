@@ -3,7 +3,7 @@ name: asciicharts
 description: Use this skill to draw a chart out of text characters (Unicode/ASCII) in the reply — bar, line, area, sparkline, histogram, pie, heatmap, boxplot, scatter, dot plot — from numbers given inline, a CSV file, or an ExCSV file's own #chart suggestion. Trigger on any request to plot, chart, graph, visualize or draw a histogram or distribution of numbers, e.g. "quick histogram of these response times", rankings, trends over time, shares of a whole, benchmark results, "top N by X", and whenever a chart would help in a terminal, README, commit message, PR description or code comment, even if the user never says "chart". It teaches drawing such charts correctly by hand and uses an exact renderer when available (MCP server, asciicharts command or bundled Python script), so prefer it to describing numbers in prose or eyeballing ASCII bars. Not for PNG/SVG/image files, interactive dashboards, plotting-library code (matplotlib, seaborn, pandas), explanations of chart concepts, or stats calculations without a chart.
 license: MIT
 metadata:
-  version: "0.0.2"
+  version: "0.0.3"
 compatibility: Works without any tool (the charts are drawn by hand from references/drawing.md); a connected asciicharts MCP server, the asciicharts command (a single binary), or Python 3 (standard library only) makes them exact.
 ---
 
@@ -56,7 +56,8 @@ work everywhere (bars grow both ways from a zero axis).
   then print the range.
 - **Font-safe glyphs only**: `█ ▓ ▒ ░ ▌ ▄ ▐ ▀`, `─ │ ┌ ┐ └ ┘ ├ ┤`, `● ○ ▲ ■`. A missing glyph comes from
   another font and breaks the alignment. Unsure where it will be shown: `"style": "ascii"` and
-  `"border": "ascii"` (by hand: `# @ % &`, `|`, `+`).
+  `"border": "ascii"` (by hand: `# @ % &`, `|`, `+`). The one exception is the sparkline: a one-line
+  trend needs the eighth blocks `▁▂▃▄▅▆▇█`, which some fonts (Consolas) lack.
 - **Series told apart without color**: one glyph per series, densest first, and a legend with those
   glyphs (`█ 2025   ▓ 2026`) — or the series named on every row.
 - **Print the numbers** where the grid is approximate: after bars, in legends, on axes.
@@ -68,7 +69,9 @@ work everywhere (bars grow both ways from a zero axis).
 
 `scripts/asciicharts.py` — one file, standard library only (`python3` if `python` isn't found). Chart on
 stdout; on bad input, exit 1 and a one-line error on stderr. `--list` prints every chart type with how to
-fill `series` and a working example. As a library: `from asciicharts import render_chart`.
+fill `series` and a working example. As a library: `from asciicharts import render_chart` — it returns a
+string; on Windows print it after `sys.stdout.reconfigure(encoding="utf-8")`, or the frame and any
+non-Latin text come out wrong (the command line does this itself).
 
 A JSON spec on stdin (no shell-quoting trouble):
 
