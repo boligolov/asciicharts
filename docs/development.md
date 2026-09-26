@@ -160,11 +160,13 @@ the parity checks on every push to `master` and every pull request.
 
 ### Listing it in Claude's plugin directories
 
-Anthropic runs two public marketplaces: `claude-plugins-official` (curated by Anthropic, no application) and
-`claude-community` (third-party plugins, after review). To submit this plugin to the community one, the
-repository must be public on GitHub and pass `claude plugin validate .` (a test runs it); then submit the
-repository link through the Console form, [platform.claude.com/plugins/submit](https://platform.claude.com/plugins/submit)
-(or, for a Team or Enterprise organization, the claude.ai directory form). Once approved it is pinned to a
-commit in [anthropics/claude-plugins-community](https://github.com/anthropics/claude-plugins-community) and
-follows new commits automatically; users then install it with
-`/plugin install asciicharts@claude-community`.
+Anthropic's directory is the catalogue people browse on claude.ai and in Cowork; a plugin listed there also
+loads in Claude Code (as `asciicharts@synced`). Submit from the developer portal,
+[claude.ai/directory/manage](https://claude.ai/directory/manage) (a paid claude.ai plan): **Submit new** →
+**Plugin bundle**, repository `boligolov/asciicharts`, plugin path `skills/asciicharts`, then **Validate**.
+The listing is read from the plugin folder: its name and short description from `plugin.json`, its page
+from `skills/asciicharts/README.md` (at least 40 words outside code blocks, a blocking check), plus the
+licence. The README must say everything the plugin runs, sends or fetches — the security scan checks it.
+The repository must be public before the listing goes live; after that, pushes to the tracked branch are
+checked and published as new versions (raise `version` with each). The checks:
+[pre-submission checklist](https://claude.com/docs/plugins/pre-submission-checklist).

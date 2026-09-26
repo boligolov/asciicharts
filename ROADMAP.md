@@ -17,8 +17,8 @@ The skill (`skills/asciicharts/`) is the main product; the principles (`docs/spe
       real run of `.github/workflows/release-go.yml` — check that the six `achart-<os>-<arch>.zip` and
       `SHA256SUMS.txt` appear on the release page, then the install instructions in `go/README.md` are
       true (on a Mac: downloaded with `curl` it runs; from a browser it needs the `xattr` step).
-- [ ] **Submit the plugin to the community directory** (`claude-community`): after the merge, with the
-      repository public, submit its link at [platform.claude.com/plugins/submit](https://platform.claude.com/plugins/submit)
+- [ ] **Submit the plugin to Anthropic's directory**: in the developer portal,
+      [claude.ai/directory/manage](https://claude.ai/directory/manage), plugin path `skills/asciicharts`
       (see [docs/development.md](docs/development.md#listing-it-in-claudes-plugin-directories)). The owner's step.
 
 ## Open work

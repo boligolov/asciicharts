@@ -8,7 +8,9 @@ from pathlib import Path
 
 import pytest
 
-ROOT = Path(__file__).resolve().parents[1]  # the repository
+from asciicharts import render_chart
+
+ROOT =Path(__file__).resolve().parents[1]  # the repository
 SKILL = ROOT / "skills" / "asciicharts"
 ALLOWED_KEYS = {"name", "description", "license", "compatibility", "allowed-tools", "metadata"}
 
@@ -78,8 +80,19 @@ def test_references_do_not_link_outside_the_skill():
 
 def test_skill_folder_has_only_expected_parts():
     names = {p.name for p in SKILL.iterdir()}
-    assert names == {"SKILL.md", "LICENSE", "scripts", "references", ".claude-plugin"}, names
+    assert names == {"SKILL.md", "README.md", "LICENSE", "scripts", "references", ".claude-plugin"}, names
     assert {p.name for p in (SKILL / "scripts").iterdir()} == {"asciicharts.py"}
+
+
+def test_readme_is_a_directory_listing():
+    """Anthropic's directory shows the plugin folder's README as the listing page: it blocks one with
+    fewer than 40 words outside code blocks. Its example chart must be real output."""
+    text = (SKILL / "README.md").read_text(encoding="utf-8")
+    prose = re.sub(r"```.*?```", "", text, flags=re.S)
+    assert len(prose.split()) >= 40
+    chart = render_chart({"chartType": "hbar", "title": "Slowest endpoints, p99 ms",
+                          "labels": ["/upload", "/search", "/checkout"], "series": [{"values": [4200, 1900, 950]}]})
+    assert "```\n" + chart + "\n```" in text, "the example chart in README.md is stale"
 
 
 # --- the commands SKILL.md shows actually work when run from the skill folder ---
