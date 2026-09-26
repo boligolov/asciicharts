@@ -64,7 +64,7 @@ the same files. Neither runs the other's tests; `test/parity/` compares them dir
 
 `python/tests/` — the Python implementation:
 
-- `test_charts.py` — the renderers against the conformance suite: the gallery, 317 random specs and 109
+- `test_charts.py` — the renderers against the conformance suite: the gallery, 317 random specs and 110
   curated cases with their exact output, so every chart is pinned byte-for-byte. If you change how
   something is drawn on purpose, that is a new version of the principles: `python scripts/conformance_refresh.py`
   reports which cases change (by chart type), `--write` writes them; review the diff and add an entry to

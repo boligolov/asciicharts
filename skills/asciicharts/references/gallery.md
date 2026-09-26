@@ -55,7 +55,7 @@ Each spec is printed above its output: save it as `spec.json` and run `python as
 ```
 
 ```
-latency ▃▅▄█▂▆▇▁▅█▃
+latency ▃▅▄█▂▆▇▁▅█▃ 2..9
 ```
 
 ### vbar (grouped)

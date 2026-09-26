@@ -727,7 +727,7 @@
     }
    ]
   },
-  "out": "▄▄▄"
+  "out": "▄▄▄ 4"
  },
  {
   "name": "rule/flat heatmap",
@@ -805,7 +805,7 @@
     }
    ]
   },
-  "out": "▁██"
+  "out": "▁██ 0..100"
  },
  {
   "name": "rule/zero on a row line",
@@ -2952,5 +2952,42 @@
    ]
   },
   "out": "  10 ┤- - - - - - - - -███  p99 goal: 9\n7.88 ┤            █████   \n5.75 ┤- ██████████- - - -   5%\n3.62 ┤██                  \n1.50 ┤- - - - - - - - - -   floor 1.50"
+ },
+ {
+  "name": "rule/sparkline ranges line up",
+  "spec": {
+   "chartType": "sparkline",
+   "border": "none",
+   "series": [
+    {
+     "name": "p50",
+     "values": [
+      4,
+      6,
+      5,
+      9,
+      3
+     ]
+    },
+    {
+     "name": "東京 p99",
+     "values": [
+      120,
+      340,
+      210
+     ]
+    },
+    {
+     "name": "",
+     "values": [
+      7,
+      7,
+      7,
+      7
+     ]
+    }
+   ]
+  },
+  "out": "p50      ▂▅▃█▁ 3..9\n東京 p99 ▁█▄   120..340\n         ▄▄▄▄  7"
  }
 ]

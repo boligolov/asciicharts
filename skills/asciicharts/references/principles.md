@@ -721,11 +721,13 @@ Pick by the question, not by the data shape:
 
 ### sparkline
 
-One row per series, `name ▁▂▃…`, each series scaled to its own range (4.12). No axes; use
-`border: "none"` to put it inline in a sentence or a log line. Needs eighth-height glyphs (tier 2).
+One row per series, `name ▁▂▃… lo..hi`, each series scaled to its own range (4.12) — so each prints
+that range after its ticks (one number for a flat series). Names are padded to the widest and ticks to
+the longest series, so the ranges line up. No axes; use `border: "none"` to put it inline in a sentence
+or a log line. Needs eighth-height glyphs (tier 2).
 
 ```
-p99 ▃▅▄█▂▆▇▁▅█▃
+p99 ▃▅▄█▂▆▇▁▅█▃ 2..9
 ```
 
 ### hbar
@@ -1082,9 +1084,10 @@ Example, `H = 6`, `max = 70`, 2025 = `30 45 40 60` → rows `3 4 3 5`; 2026 = `3
 ```
 1. lo, hi = min, max
 2. for each value: index = min(7, floor((v − lo) / (hi − lo) × 8)); glyph = "▁▂▃▄▅▆▇█"[index]
+3. after the ticks, a space and the range: lo..hi
 ```
 
-`4 6 5 9 3 7 8 2 6 9 4` (lo 2, hi 9) → `▃▅▄█▂▆▇▁▅█▃`.
+`4 6 5 9 3 7 8 2 6 9 4` (lo 2, hi 9) → `▃▅▄█▂▆▇▁▅█▃ 2..9`.
 
 ### 13.5 line recipe
 

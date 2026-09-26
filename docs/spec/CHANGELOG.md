@@ -18,6 +18,11 @@ work around.
   the value when a number in it equals the value; `p99 goal` for 9 still prints `p99 goal: 9`.
   Conformance: no corpus case has such a label; a curated case pins it
   (`rule/a threshold label that states its value`).
+- **A sparkline prints its range** (§7): `p99 ▃▅▄█▂▆▇▁▅█▃ 2..9`, one number for a flat series. Each
+  series has its own scale, and without the range the ticks said nothing about the values — the agent
+  wrote min and max into the title by hand. Names are padded to the widest and ticks to the longest
+  series, so the ranges line up. Conformance: the 30 sparkline corpus cases, 54 MCP answers, the gallery
+  example, two curated cases, and a new one pins the alignment (`rule/sparkline ranges line up`).
 
 ## v1.1, moved into docs — 2026-09-26
 

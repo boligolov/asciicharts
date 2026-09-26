@@ -716,17 +716,25 @@ def _normalize(spec: dict) -> dict:
 # --------------------------------------------------------------------------
 
 def _render_sparkline(inp):
-    lines = []
-    for i, s in enumerate(inp["series"]):
-        vals = s["values"]
-        if not vals:
+    series = inp["series"]
+    for i, s in enumerate(series):
+        if not s["values"]:
             raise ChartError(f"series {i} {_q(s['name'])} must contain at least one value")
+    # names padded to the widest and ticks to the longest series, so the ranges line up
+    name_w = max(_width(s["name"]) for s in series)
+    ticks_n = max(len(s["values"]) for s in series)
+    lines = []
+    for i, s in enumerate(series):
+        vals = s["values"]
         lo, hi = min(vals), max(vals)
         span = hi - lo
         # a flat series is a flat line at half height, not on the floor
         spark = "".join(SPARK_TICKS[_level((v - lo) / span, len(SPARK_TICKS)) if span > 0 else 3] for v in vals)
-        spark = _colorize(spark, _series_color(i), inp["color"])
-        lines.append(f"{s['name']} {spark}" if s["name"] else spark)
+        spark = _colorize(spark, _series_color(i), inp["color"]) + " " * (ticks_n - len(vals))
+        # each series has its own scale (§4.2), so each prints its own range
+        rng = f"{_fmt(lo)}..{_fmt(hi)}" if span > 0 else _fmt(lo)
+        name = _pad(s["name"], name_w) + " " if name_w else ""
+        lines.append(f"{name}{spark} {rng}")
     return "\n".join(lines)
 
 

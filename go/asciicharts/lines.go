@@ -21,12 +21,17 @@ func statesValue(label string, v float64) bool {
 }
 
 func renderSparkline(in *input) (string, error) {
+	// names padded to the widest and ticks to the longest series, so the ranges line up
+	nameW, ticksN := 0, 0
+	for i, s := range in.series {
+		if len(s.values) == 0 {
+			return "", errorf("series %d %s must contain at least one value", i, quote(s.name))
+		}
+		nameW, ticksN = max(nameW, width(s.name)), max(ticksN, len(s.values))
+	}
 	lines := make([]string, 0, len(in.series))
 	for i, s := range in.series {
 		vals := s.values
-		if len(vals) == 0 {
-			return "", errorf("series %d %s must contain at least one value", i, quote(s.name))
-		}
 		lo, hi := vals[0], vals[0]
 		for _, v := range vals[1:] {
 			lo, hi = pyMin(lo, v), pyMax(hi, v)
@@ -40,12 +45,17 @@ func renderSparkline(in *input) (string, error) {
 			}
 			b.WriteString(sparkTicks[idx])
 		}
-		spark := colorize(b.String(), seriesColor(i), in.color)
-		if s.name != "" {
-			lines = append(lines, s.name+" "+spark)
-		} else {
-			lines = append(lines, spark)
+		spark := colorize(b.String(), seriesColor(i), in.color) + repeat(" ", ticksN-len(vals))
+		// each series has its own scale (§4.2), so each prints its own range
+		rng := fmtValue(lo)
+		if span > 0 {
+			rng += ".." + fmtValue(hi)
 		}
+		name := ""
+		if nameW > 0 {
+			name = pad(s.name, nameW) + " "
+		}
+		lines = append(lines, name+spark+" "+rng)
 	}
 	return strings.Join(lines, "\n"), nil
 }

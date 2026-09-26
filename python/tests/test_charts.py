@@ -142,7 +142,7 @@ def test_levels_are_equal_buckets_and_blank_is_never_a_value():
     flat = render_chart({"chartType": "heatmap", "border": "none", "series": [{"name": "r", "values": [7, 7]}]})
     assert set(flat.split(" ", 1)[1].replace(" ", "")) == {"▓"}  # equal values: one mid-range shade, never blank
     spark = render_chart({"chartType": "sparkline", "border": "none", "series": [{"values": [0, 90, 100]}]})
-    assert spark == "▁██"
+    assert spark == "▁██ 0..100"
 
 
 def test_diverging_bars_leave_the_zero_line_to_the_axis():
@@ -284,7 +284,7 @@ def test_a_flat_series_sits_mid_plot_and_reports_its_real_range():
     scatter = render_chart({"chartType": "scatter", "border": "none", "width": 9, "height": 3,
                             "series": [{"points": [{"x": 2, "y": 3}]}]})
     assert rows(scatter)[1] == "    ●    " and "x: [2, 2]  y: [3, 3]" in scatter
-    assert render_chart({"chartType": "sparkline", "border": "none", "series": [{"values": [4, 4]}]}) == "▄▄"
+    assert render_chart({"chartType": "sparkline", "border": "none", "series": [{"values": [4, 4]}]}) == "▄▄ 4"
 
 
 def test_overlapping_markers_of_different_series_are_shown_not_hidden():

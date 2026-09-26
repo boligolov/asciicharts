@@ -31,11 +31,13 @@ label separator `│`. Pure ASCII: series `# @ % & $ W M N H`, track `,`, separa
 
 ### sparkline
 
-A one-line trend: one glyph per value, 8 heights.
+A one-line trend: one glyph per value, 8 heights, then the series' range — the ticks alone don't say
+what the heights mean.
 
 ```
 index = min(7, floor((v − lo) / (hi − lo) × 8))       lo, hi = min and max of the series
 glyph = "▁▂▃▄▅▆▇█"[index]                              all values equal: every glyph is ▄
+after the glyphs: " lo..hi"                            all values equal: " lo"
 ```
 
 ```json
@@ -43,7 +45,7 @@ glyph = "▁▂▃▄▅▆▇█"[index]                              all value
 ```
 
 ```
-p99 ▃▅▄█▂▆▇▁▅█▃
+p99 ▃▅▄█▂▆▇▁▅█▃ 2..9
 ```
 
 Working: lo = 2, hi = 9, so `(v − 2) / 7 × 8`: 4 → 2.29 → 2 `▃`; 6 → 4.57 → 4 `▅`; 5 → 3.43 → 3 `▄`;
