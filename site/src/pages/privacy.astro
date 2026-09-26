@@ -8,7 +8,7 @@ const updated = "2026-09-27";
 
 <Base
   title="Privacy — asciicharts"
-  description="What the asciicharts plugin, skill, command line, MCP server and website collect: nothing about you."
+  description="What the asciicharts plugin, skill, command line, MCP server and website collect: no personal data."
 >
   <main class="wrap privacy">
     <p><a href="/">← asciicharts.online</a></p>
@@ -16,8 +16,10 @@ const updated = "2026-09-27";
     <p class="privacy-updated">Last updated {updated}</p>
 
     <p>
-      asciicharts collects no personal data. It has no accounts, no analytics, no tracking and no advertising,
-      and it does not sell or share anything, because it has nothing to share.
+      asciicharts collects no personal data. The plugin, the skill, the command line and the MCP server collect
+      nothing at all. This website counts visits with Cloudflare Web Analytics, without cookies or personal data
+      (see <a href="#website">This website</a>). There are no accounts and no advertising, and nothing is sold or
+      shared.
     </p>
 
     <h2>The plugin and skill</h2>
@@ -41,13 +43,25 @@ const updated = "2026-09-27";
       no public instance.
     </p>
 
-    <h2>This website</h2>
+    <h2 id="website">This website</h2>
     <p>
-      asciicharts.online is a static site served by Cloudflare. It sets no cookies and loads no third-party
-      scripts or fonts. Your browser's local storage keeps two display preferences, the color theme and whether
-      charts are shown in color; they never leave your browser. As the host, Cloudflare processes the technical
+      asciicharts.online is a static site served by Cloudflare. As the host, Cloudflare processes the technical
       data every web request carries, such as your IP address, under{" "}
       <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare's privacy policy</a>.
+    </p>
+    <p>
+      To see how many people visit and which pages they read, the site uses{" "}
+      <a href="https://developers.cloudflare.com/web-analytics/about/">Cloudflare Web Analytics</a>. Its script,
+      loaded from <code>static.cloudflareinsights.com</code>, reports page views and page load times; the reports
+      we see are aggregate counts by page, referring site, country, browser, operating system and device type.
+      As{" "}
+      <a href="https://www.cloudflare.com/web-analytics/">Cloudflare describes it</a>, it uses no cookies or other
+      client-side state, does not fingerprint visitors, and does not collect or use their personal data. It is
+      the only third-party script on the site; the fonts are served from the site itself.
+    </p>
+    <p>
+      Your browser's local storage keeps two display preferences, the color theme and whether charts are shown
+      in color. They never leave your browser.
     </p>
 
     <h2>Source code</h2>
