@@ -23,6 +23,11 @@ work around.
   wrote min and max into the title by hand. Names are padded to the widest and ticks to the longest
   series, so the ranges line up. Conformance: the 30 sparkline corpus cases, 54 MCP answers, the gallery
   example, two curated cases, and a new one pins the alignment (`rule/sparkline ranges line up`).
+- **A heatmap has a legend** (§7): after a blank line, `░ 3.50..18.88   ▒ 18.88..34.25   ▓ …   █ …`, the
+  four equal buckets of the data's range; with color, the ramp and `lo..hi`; all values equal, the one
+  shade and the value. The shades had no key at all, against "print the numbers". Conformance: the 30
+  heatmap corpus cases, 47 MCP answers, the gallery example, three curated cases; two new ones pin it
+  (`rule/heatmap legend`, `rule/heatmap legend in color`).
 
 ## v1.1, moved into docs — 2026-09-26
 

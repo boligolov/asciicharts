@@ -827,7 +827,12 @@ Exactly one series of **raw samples**; bins are computed (4.10).
 ### heatmap
 
 One series per row (`name` = row label), `labels` = column headers, shade or color per cell (4.12).
-Cell width `max(3, (W + 1) // columns − 1)`, one space between cells, headers centred over cells.
+Cell width `max(3, (W + 1) // columns − 1)`, one space between cells, headers centred over cells. After
+a blank line, a legend says what each shade stands for: the four equal buckets of the data's range,
+`░ lo..e1   ▒ e1..e2   ▓ e2..e3   █ e3..hi` (inner edges rounded to 12 significant digits, as axis labels
+are); with color, the 16-color ramp and `lo..hi`; with all values equal, the one shade and the value.
+The scale is linear: when one row dwarfs the others and they all fall in `░`, chart an index or a
+logarithm of the values instead, and say so.
 
 ```
     Mon Tue Wed Thu Fri 

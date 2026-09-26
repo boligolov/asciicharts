@@ -6,7 +6,7 @@ conformance suite from here.
 
 | folder / file | what it checks | how to run |
 |---|---|---|
-| [`conformance/`](conformance/) | the renderers' output, byte for byte: 317 random specs, 110 curated cases and 31 documented examples with their exact expected output — the language-neutral suite of the [principles](../docs/spec/principles.md) (CC BY 4.0) | read by `python/tests/test_charts.py` and `go/asciicharts/conformance_test.go` |
+| [`conformance/`](conformance/) | the renderers' output, byte for byte: 317 random specs, 112 curated cases and 31 documented examples with their exact expected output — the language-neutral suite of the [principles](../docs/spec/principles.md) (CC BY 4.0) | read by `python/tests/test_charts.py` and `go/asciicharts/conformance_test.go` |
 | [`evals/`](evals/) | the skill: does an agent draw charts right with it, and how much better than without it — prompts, programmatic graders, recorded runs and their results | by hand: independent agents answer the prompts, then `python test/evals/hand_grade.py <run> <eval>`; see its [README](evals/README.md) |
 | [`parity/`](parity/) | Go against Python: `differential.py` (random specs), `differential_csv.py` (random CSV files), `cli_parity.py` (both command lines: stdout, stderr, exit code) | `python test/parity/differential.py 10000` — each needs Go and Python |
 | `test_skill.py` | the skill folder: frontmatter, links, the commands `SKILL.md` shows, its version, the plugin manifests (`claude plugin validate` when the CLI is installed), the site's `asciicharts.skill` is current | `pytest` |

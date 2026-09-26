@@ -66,7 +66,7 @@ principles v1.2*, for a person, an agent, or a port to another language:
   (§13), a **porting checklist** (§14) and **the requirements** (§15, MUST/SHOULD).
 
 A chart conforms when it meets §15; a renderer conforms when it reproduces the
-[conformance suite](test/conformance/) — 317 random specs, 110 curated cases, 31 documented examples —
+[conformance suite](test/conformance/) — 317 random specs, 112 curated cases, 31 documented examples —
 byte for byte. Changes are versioned in [`docs/spec/CHANGELOG.md`](docs/spec/CHANGELOG.md). The principles and the
 suite are CC BY 4.0: use them, adapt them, build on them — with credit.
 

@@ -381,6 +381,7 @@ A grid of shaded cells, one row per series.
 norm  = (v − min) / (max − min)
 shade = "░▒▓█"[min(3, floor(norm × 4))]         every value is visible: never a blank cell
 cell  = the shade × 3 (or wider), one space between cells; column headers centred over the cells
+legend, after a blank line: ░ min..e1   ▒ e1..e2   ▓ e2..e3   █ e3..max    e_k = min + k × (max − min) / 4
 ```
 
 ```json
@@ -391,10 +392,12 @@ cell  = the shade × 3 (or wider), one space between cells; column headers centr
    Mon Tue Wed Thu 
 am ░░░ ▒▒▒ ▓▓▓ ███ 
 pm ███ ▓▓▓ ▒▒▒ ░░░ 
+
+░ 2..3.75   ▒ 3.75..5.50   ▓ 5.50..7.25   █ 7.25..9
 ```
 
 Working: min 2, max 9: 2 → 0 `░`; 4 → 1.14 → 1 `▒`; 6 → 2.29 → 2 `▓`; 8 → 3.43 → 3 `█`; 9 → 4 → 3 `█`;
-7 → 2.86 → 2 `▓`; 5 → 1.71 → 1 `▒`; 3 → 0.57 → 0 `░`.
+7 → 2.86 → 2 `▓`; 5 → 1.71 → 1 `▒`; 3 → 0.57 → 0 `░`. Legend edges: 2 + 1.75k → 3.75, 5.50, 7.25.
 
 ### scatter (a few points)
 

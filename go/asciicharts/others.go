@@ -187,6 +187,7 @@ func renderHeatmap(in *input) (string, error) {
 			lo, hi = pyMin(lo, v), pyMax(hi, v)
 		}
 	}
+	dataLo, dataHi := lo, hi
 	lo, hi = scaleRange(lo, hi)
 	colorOn := in.color
 	rowLabelW := 0
@@ -222,7 +223,40 @@ func renderHeatmap(in *input) (string, error) {
 		}
 		out = append(out, b.String())
 	}
+	out = append(out, "", heatLegend(dataLo, dataHi, lo, hi, colorOn))
 	return strings.Join(out, "\n"), nil
+}
+
+// heatLegend says what each shade stands for: the four equal buckets of the data's range (the color
+// ramp and its range with color; the one shade and its value when all values are equal).
+func heatLegend(dataLo, dataHi, lo, hi float64, colorOn bool) string {
+	if dataLo == dataHi {
+		norm := (dataLo - lo) / (hi - lo)
+		swatch := shades[1+level(norm, len(shades)-1)]
+		if colorOn {
+			swatch = colorize("█", heatRamp[level(norm, len(heatRamp))], true)
+		}
+		return swatch + " " + fmtValue(dataLo)
+	}
+	if colorOn {
+		var ramp strings.Builder
+		for _, c := range heatRamp {
+			ramp.WriteString(colorize("█", c, true))
+		}
+		return ramp.String() + " " + fmtValue(dataLo) + ".." + fmtValue(dataHi)
+	}
+	n := len(shades) - 1
+	// inner edges rounded to 12 significant digits, like axis labels, to drop float noise
+	edges := []float64{dataLo}
+	for k := 1; k < n; k++ {
+		edges = append(edges, roundSig12(dataLo+float64(k)/float64(n)*(dataHi-dataLo)))
+	}
+	edges = append(edges, dataHi)
+	parts := make([]string, n)
+	for k := range n {
+		parts[k] = shades[1+k] + " " + fmtValue(edges[k]) + ".." + fmtValue(edges[k+1])
+	}
+	return joinLegend(parts)
 }
 
 // quantile interpolates linearly between order statistics (type 7).

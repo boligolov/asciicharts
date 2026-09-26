@@ -1679,7 +1679,8 @@ def _render_heatmap(inp):
         raise ChartError(f"labels length ({len(labels)}) must match each row's values length ({num_cols})")
 
     all_vals = [v for s in series for v in s["values"]]
-    lo, hi = _scale_range(min(all_vals), max(all_vals))
+    data_lo, data_hi = min(all_vals), max(all_vals)
+    lo, hi = _scale_range(data_lo, data_hi)
     color_on = inp["color"]
     row_label_w = max(_width(s["name"]) for s in series)
     # width is the grid's width (row labels excluded), 60 by default like line/area: cells widen
@@ -1700,7 +1701,25 @@ def _render_heatmap(inp):
                 cell = SHADES[1 + _level(norm, len(SHADES) - 1)] * cell_w
             line += cell + " "
         out.append(line)
+    out += ["", _heat_legend(data_lo, data_hi, lo, hi, color_on)]
     return "\n".join(out)
+
+
+def _heat_legend(data_lo, data_hi, lo, hi, color_on) -> str:
+    """What each shade stands for: the four equal buckets of the data's range (the color ramp and
+    its range with color; the one shade and its value when all values are equal)."""
+    if data_lo == data_hi:
+        norm = (data_lo - lo) / (hi - lo)
+        swatch = (_colorize("█", HEAT_RAMP[_level(norm, len(HEAT_RAMP))], True) if color_on
+                  else SHADES[1 + _level(norm, len(SHADES) - 1)])
+        return f"{swatch} {_fmt(data_lo)}"
+    if color_on:
+        ramp = "".join(_colorize("█", c, True) for c in HEAT_RAMP)
+        return f"{ramp} {_fmt(data_lo)}..{_fmt(data_hi)}"
+    n = len(SHADES) - 1
+    # inner edges rounded to 12 significant digits, like axis labels, to drop float noise
+    edges = [data_lo] + [float(f"{data_lo + k / n * (data_hi - data_lo):.12g}") for k in range(1, n)] + [data_hi]
+    return _join_legend(f"{SHADES[1 + k]} {_fmt(edges[k])}..{_fmt(edges[k + 1])}" for k in range(n))
 
 
 def _quantile(sorted_vals, q: float) -> float:
