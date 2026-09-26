@@ -30,6 +30,7 @@ Each entry in `series` has `name`, `values`, and `points` — which ones you fil
 - `vbar`, `hbar`, `dotplot`: `values` holds one number per category (aligned with `labels`) — vbar/hbar draw multiple series grouped or stacked, dotplot always overlays them on the same row
 - `scatter`, `dual_axis` (as points): `points` holds `{x, y}` samples — `dual_axis` actually takes two `values` series, one per axis
 - `pie`: `values` sums to the slice's magnitude, `name` is its label
+- `line`: series that may share values hide each other's line; `"showPoints": true` marks a shared point `*`
 - `heatmap`: `values` is one matrix row, `name` is the row label, `labels` are column headers; the scale is linear, with a legend of four equal buckets — if one row dwarfs the rest, chart an index (first year = 100) or a logarithm instead
 - `boxplot`: `values` is the raw sample population — min/Q1/median/Q3/max are computed for you
 

@@ -3093,5 +3093,72 @@
    ]
   },
   "out": "Edge  │ ██████████ 5.00\nOpera │ ███████░░░ 3.59\nzero  │ ░░░░░░░░░░ 0.00"
+ },
+ {
+  "name": "rule/line points of two series on one cell",
+  "spec": {
+   "chartType": "line",
+   "border": "none",
+   "height": 5,
+   "width": 20,
+   "showPoints": true,
+   "series": [
+    {
+     "name": "Edge",
+     "values": [
+      4,
+      5,
+      6
+     ]
+    },
+    {
+     "name": "Firefox",
+     "values": [
+      4,
+      3,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "6 ┤              ·····●\n5 ┤     ····●····      \n4 ┤*····               \n3 ┤     ····○····      \n2 ┤              ·····○\n\n● Edge   ○ Firefox   * overlap"
+ },
+ {
+  "name": "rule/line points overlap, ascii",
+  "spec": {
+   "chartType": "line",
+   "border": "none",
+   "style": "ascii",
+   "height": 5,
+   "width": 20,
+   "showPoints": true,
+   "series": [
+    {
+     "name": "a",
+     "values": [
+      1,
+      2,
+      3
+     ]
+    },
+    {
+     "name": "b",
+     "values": [
+      3,
+      2,
+      1
+     ]
+    },
+    {
+     "name": "c",
+     "values": [
+      2,
+      2,
+      2
+     ]
+    }
+   ]
+  },
+  "out": "   3 +x..              ..o\n2.50 +   ....     .....   \n   2 +*........#.........*\n1.50 +   ....     .....   \n   1 +o..              ..x\n\no a   x b   * c   # overlap"
  }
 ]

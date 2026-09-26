@@ -165,8 +165,16 @@ func renderLine(in *input) (string, error) {
 		notes[row] = append(notes[row], note)
 	}
 
+	// points of different series on one cell show the overlap marker, as in scatter: equal values
+	// of two series must not look like one series
+	overlapMark := overlapMarker
+	if asciiStyle {
+		overlapMark = asciiOverlapMarker
+	}
+	overlap := false
 	if in.showPoints {
 		custom := firstRune(in.pointChar)
+		owner := map[[2]int]int{}
 		for si, s := range ss {
 			color := colorOf(si, colorOn)
 			set := markers
@@ -179,7 +187,17 @@ func renderLine(in *input) (string, error) {
 			}
 			n := len(s.values)
 			for i, v := range s.values {
-				c.setMarker(xPixel(i, n, w), yPixel(v, lo, hi, height), marker, color)
+				x, y := xPixel(i, n, w), yPixel(v, lo, hi, height)
+				if first, ok := owner[[2]int{x, y}]; !ok {
+					owner[[2]int{x, y}] = si
+				} else if first != si {
+					c.char[y][x], c.color[y][x] = overlapMark, -1
+					overlap = true
+					continue
+				}
+				if c.char[y][x] != overlapMark {
+					c.setMarker(x, y, marker, color)
+				}
 			}
 		}
 	}
@@ -203,6 +221,9 @@ func renderLine(in *input) (string, error) {
 	}
 	if multi {
 		body += "\n\n" + lineLegend(ss, in.showPoints, colorOn, asciiStyle)
+		if overlap {
+			body += "   " + overlapMark + " overlap"
+		}
 	}
 	if in.threshold != nil {
 		note := "- - threshold: " + fmtValue(*in.threshold)

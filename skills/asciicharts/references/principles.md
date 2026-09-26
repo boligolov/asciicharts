@@ -160,7 +160,7 @@ A reader decodes a chart by glyph. If one glyph means two things, the chart lies
 | label / plot separator | `│` | `\|` | |
 | y-axis tick | `┤` (left), `├` (right axis) | `+` | |
 | dotplot background | `·` | | |
-| markers of different series in one cell (scatter, dotplot) | `*` | | legend adds `* overlap` |
+| markers of different series in one cell (scatter, dotplot, line points) | `*` | `#` (line; `*` is an ascii marker) | legend adds `* overlap` |
 | boxplot | `─` whisker, `█` box, `├` min, `┤` max, `║` median | | |
 
 The ASCII track glyph is a comma precisely because a comma is used nowhere else — not in the ramp, not
@@ -754,7 +754,9 @@ row). Grouped bars print no values; prefer hbar when their exact values matter.
 ### line
 
 Several series on a shared axis (4.7), optional `showPoints`, `pointChar`, `threshold`, `thresholds`,
-x-axis `labels` (5.5). At least two values per series.
+x-axis `labels` (5.5). At least two values per series. With `showPoints`, points of different series on
+one cell show `*` (`#` in the ascii style) and the legend adds `* overlap`, as in scatter: two series
+with an equal value must not look like one.
 
 ### area
 
@@ -1037,13 +1039,14 @@ a port should know these, and may improve on them:
 1. **Axis labels are exact row values, not "nice" numbers.** Rows read `26.40, 22.80` rather than
    `25, 20`. Zero is always on a row (4.2), but a nice-number domain (steps of 1, 2, 2.5, 5 × 10ⁿ) would
    widen the data's range and leave rows unused; the reference keeps the plot filled instead.
-2. **vbar prints no values.** Its value is only as precise as a row, and the one-cell minimum makes a
-   tiny value look bigger than it is (`0.1` next to `10` fills one of four rows). Use hbar when exact
-   values matter — it prints every one.
+2. **Grouped vbar prints no values** (one bar per category prints them under the bars, 5.4). Its value is
+   only as precise as a row, and the one-cell minimum makes a tiny value look bigger than it is (`0.1`
+   next to `10` fills one of four rows). Use hbar when exact values matter — it prints every one.
 3. **`width` is approximate for vbar** (floor division, 5.4: asked 23, got 19), and **hbar's default bar
    is 40** long while other plots default to 60 — with labels and values an hbar ends up about as wide.
-4. **Crossing lines overwrite each other.** Where two line series cross, the later series is drawn on
-   top; lines crossing is ordinary, so there is no overlap glyph for them (unlike markers, section 7).
+4. **Crossing lines overwrite each other.** Where two line series cross or run together, the later
+   series is drawn on top; lines crossing is ordinary, so there is no overlap glyph for them. Turn on
+   `showPoints` when series may share values: points do get one (section 7).
 5. **Boxplot marks on one cell:** the median `║` wins over `├`/`┤` when they coincide; the statistics
    printed after the row always give the exact five numbers.
 6. **Emoji built with zero-width joiners** have no reliable width (6.1).

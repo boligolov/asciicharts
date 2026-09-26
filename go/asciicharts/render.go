@@ -101,15 +101,16 @@ var (
 )
 
 const (
-	trackFill      = "░"
-	trackFillAlt   = "▒"
-	asciiTrackFill = ","
-	overlapMarker  = "*"
-	overlapNote    = overlapMarker + " overlap"
-	thresholdColor = 244
-	heatCellWidth  = 3
-	pieAspect      = 2.0
-	maxLegendWidth = 100
+	trackFill          = "░"
+	trackFillAlt       = "▒"
+	asciiTrackFill     = ","
+	overlapMarker      = "*"
+	overlapNote        = overlapMarker + " overlap"
+	asciiOverlapMarker = "#" // "*" is one of the ascii style's own markers
+	thresholdColor     = 244
+	heatCellWidth      = 3
+	pieAspect          = 2.0
+	maxLegendWidth     = 100
 )
 
 // A ramp is identified by its first slices element, as Python compares list identity.

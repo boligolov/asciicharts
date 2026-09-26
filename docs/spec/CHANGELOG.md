@@ -43,6 +43,11 @@ work around.
   value of the column has decimals, so `5` no longer stands above `3.59`. Axis labels keep their form.
   Conformance: 48 corpus cases (hbar, vbar, dotplot, boxplot), 97 MCP answers, three curated cases; a
   new one pins it (`number/a column shares its decimals`).
+- **Line points of different series on one cell show the overlap marker** (§7, R9): `*` and `* overlap`
+  in the legend, as scatter and dotplot already did — `#` in the ascii style, where `*` is a series
+  marker. Two series with an equal value showed only the later one's point. Conformance: 3 line corpus
+  cases, 2 MCP answers; two curated cases pin it (`rule/line points of two series on one cell`,
+  `rule/line points overlap, ascii`).
 
 ## v1.1, moved into docs — 2026-09-26
 

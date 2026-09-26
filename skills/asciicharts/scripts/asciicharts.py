@@ -307,6 +307,7 @@ MARKERS = ["●", "○", "▲", "■", "□", "▼", "♦", "◊", "►", "◄"]
 # hide the other: the cell shows this glyph, and the legend explains it.
 OVERLAP_MARKER = "*"
 OVERLAP_NOTE = f"{OVERLAP_MARKER} overlap"
+ASCII_OVERLAP_MARKER = "#"  # "*" is one of the ascii style's own markers
 PALETTE256 = [39, 208, 40, 201, 51, 226]
 THRESHOLD_COLOR = 244
 HEAT_RAMP = [21, 27, 33, 39, 45, 51, 87, 123, 159, 195, 226, 220, 214, 208, 202, 196]
@@ -1309,8 +1310,13 @@ def _render_line(inp):
         notes.setdefault(_y_pixel(v, lo, hi, height), []).append(
             label if _states_value(label, v) else f"{label}: {_fmt(v)}" if label else _fmt(v))
 
+    # points of different series on one cell show the overlap marker, as in scatter: equal values
+    # of two series must not look like one series
+    overlap_marker = ASCII_OVERLAP_MARKER if ascii_style else OVERLAP_MARKER
+    overlap = False
     if inp["showPoints"]:
         custom = inp["pointChar"][0] if inp["pointChar"] else ""
+        owner = {}
         for si, s in enumerate(series):
             color = _series_color(si) if color_on else -1
             marker_set = ASCII_MARKERS if ascii_style else MARKERS
@@ -1318,7 +1324,11 @@ def _render_line(inp):
             n = len(s["values"])
             for i, v in enumerate(s["values"]):
                 x, y = _x_pixel(i, n, pw), _y_pixel(v, lo, hi, ph)
-                c.set_marker(x, y, marker, color)
+                if owner.setdefault((x, y), si) != si:
+                    c.cell_char[y][x], c.cell_color[y][x] = overlap_marker, -1
+                    overlap = True
+                elif c.cell_char[y][x] != overlap_marker:
+                    c.set_marker(x, y, marker, color)
 
     axis_labels, axis_w = _left_axis_labels(lo, hi, height)
     rows = c.render(color_on)
@@ -1332,6 +1342,8 @@ def _render_line(inp):
         body += "\n" + x
     if multi:
         body += "\n\n" + _line_legend(series, inp["showPoints"], color_on, ascii_style)
+        if overlap:
+            body += f"   {overlap_marker} overlap"
     if threshold is not None:
         note = f"- - threshold: {_fmt(threshold)}"
         body += ("   " + note) if len(series) > 1 else ("\n\n" + note)
