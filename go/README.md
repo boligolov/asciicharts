@@ -39,16 +39,33 @@ fmt.Println(out)
 
 ## Command line
 
-Download a static binary for Linux, macOS or Windows (amd64/arm64) from the
-[releases](https://github.com/boligolov/asciicharts/releases) (tags `go/v…`), or build it:
+`achart` (`cmd/achart`) is the command line: a static binary for Linux, macOS or Windows (amd64/arm64) in
+the [releases](https://github.com/boligolov/asciicharts/releases) (tags `go/v…`), one zip per platform
+(`achart-<os>-<arch>.zip`, checksums in `SHA256SUMS.txt`):
 
 ```sh
-go install github.com/boligolov/asciicharts/go/cmd/asciicharts@latest
+# macOS / Linux: pick darwin-arm64, darwin-amd64, linux-amd64 or linux-arm64
+curl -LO https://github.com/boligolov/asciicharts/releases/latest/download/achart-darwin-arm64.zip
+unzip achart-darwin-arm64.zip achart && sudo mv achart /usr/local/bin/
+```
 
-asciicharts spec.json                      # a JSON spec from a file, - for stdin, or --json '{...}'
-asciicharts --list                         # every chart type, how to fill series, an example
-asciicharts --csv data.csv --chart hbar --sort -p99 --limit 10 --set title=Slowest
-asciicharts --csv data.csv --chart line --print-spec   # the JSON spec it built
+```powershell
+# Windows (amd64; arm64: achart-windows-arm64.zip)
+Invoke-WebRequest https://github.com/boligolov/asciicharts/releases/latest/download/achart-windows-amd64.zip -OutFile achart.zip
+Expand-Archive achart.zip $env:LOCALAPPDATA\achart; $env:PATH += ";$env:LOCALAPPDATA\achart"
+```
+
+On macOS the binary is not notarized: downloaded with `curl` it runs, but a copy downloaded in a browser is
+blocked by Gatekeeper ("cannot be opened", "damaged") until you clear the flag once,
+`xattr -d com.apple.quarantine achart`.
+
+Or build it: `go install github.com/boligolov/asciicharts/go/cmd/achart@latest`.
+
+```sh
+achart spec.json                      # a JSON spec from a file, - for stdin, or --json '{...}'
+achart --list                         # every chart type, how to fill series, an example
+achart --csv data.csv --chart hbar --sort -p99 --limit 10 --set title=Slowest
+achart --csv data.csv --chart line --print-spec   # the JSON spec it built
 ```
 
 It is the Python command line (`python asciicharts.py`) in one static binary: the same charts, error
@@ -57,7 +74,7 @@ differ. ExCSV files (`#!excsv`) are not read yet; the Python command line reads 
 
 ## MCP server
 
-`cmd/asciicharts-mcp` is the MCP server: the tools `list_charts` and `render_chart` over stdio, or over
+`cmd/asciicharts-mcp` is the MCP server (not in the releases; build it with `go install`): the tools `list_charts` and `render_chart` over stdio, or over
 stateless streamable HTTP at `/mcp` (with `/healthz`) when `PORT` is set.
 
 ```sh
@@ -83,8 +100,8 @@ python ../test/parity/cli_parity.py                        # both command lines:
 ## Releasing
 
 Set `Version` in `asciicharts/render.go`, then push a tag `go/vX.Y.Z` with the same version:
-`.github/workflows/release-go.yml` tests, checks the tag against `asciicharts --version`, builds the six
-binaries and publishes them with `checksums.txt` as a GitHub release.
+`.github/workflows/release-go.yml` tests, checks the tag against `achart --version`, builds `achart` for six
+platforms, each in its own zip, and publishes them with `SHA256SUMS.txt` as a GitHub release.
 
 ## Generated files
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """The Go command line against the Python one: the same arguments, the same stdout, stderr and exit code.
 
-Builds go/cmd/asciicharts, then runs both on JSON specs (file, stdin, --json), --list, --version and
+Builds go/cmd/achart, then runs both on JSON specs (file, stdin, --json), --list, --version and
 CSV files with every --csv option, errors included. Help texts and argparse usage errors may differ by
 design and are not compared.
 
@@ -82,8 +82,8 @@ def run(cmd, args, stdin, cwd):
 
 
 def main():
-    exe = Path(tempfile.gettempdir()) / ("asciicharts-parity" + (".exe" if os.name == "nt" else ""))
-    subprocess.run(["go", "build", "-o", str(exe), "./cmd/asciicharts"], cwd=ROOT / "go", check=True)
+    exe = Path(tempfile.gettempdir()) / ("achart-parity" + (".exe" if os.name == "nt" else ""))
+    subprocess.run(["go", "build", "-o", str(exe), "./cmd/achart"], cwd=ROOT / "go", check=True)
     python = [sys.executable, str(ROOT / "python" / "asciicharts.py")]
     failed = 0
     with tempfile.TemporaryDirectory() as tmp:

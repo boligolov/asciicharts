@@ -42,7 +42,7 @@ file. Scopes, the API, updating: [docs/skill.md](docs/skill.md).
 ```
 
 The skill picks the chart for the question, then uses an exact renderer if one is at hand — the
-`asciicharts` command, the bundled Python script or the MCP server — and otherwise **draws by hand** from a
+`achart` command, the bundled Python script or the MCP server — and otherwise **draws by hand** from a
 recipe per chart type: compute the lengths first, build each row from counted runs of glyphs, then check.
 It needs nothing installed.
 
@@ -76,14 +76,14 @@ Two reference implementations of the principles, byte for byte the same; the ski
 and they work on their own too.
 
 
-**The `asciicharts` command** — one static binary for Linux, macOS and Windows
-([releases](https://github.com/boligolov/asciicharts/releases), or
-`go install github.com/boligolov/asciicharts/go/cmd/asciicharts@latest`):
+**The `achart` command** — asciicharts' command line, one static binary for Linux, macOS and Windows
+([releases](https://github.com/boligolov/asciicharts/releases), how to install it in
+[go/README.md](go/README.md#command-line), or `go install github.com/boligolov/asciicharts/go/cmd/achart@latest`):
 
 ```sh
-asciicharts spec.json                             # a JSON spec from a file, - for stdin, or --json '{...}'
-asciicharts --csv latency.csv --chart hbar --values p99 --sort -p99 --limit 3 --set title="Slowest endpoints, p99 ms"
-asciicharts --list                                # every chart type, how to fill it, an example
+achart spec.json                             # a JSON spec from a file, - for stdin, or --json '{...}'
+achart --csv latency.csv --chart hbar --values p99 --sort -p99 --limit 3 --set title="Slowest endpoints, p99 ms"
+achart --list                                # every chart type, how to fill it, an example
 ```
 
 `--csv` reads a header row, detects `,` `;` tab or `|`, parses dirty numbers (`$1,200`, `12%`, decimal commas)

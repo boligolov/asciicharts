@@ -1,4 +1,4 @@
-// Command asciicharts renders numeric data as a text chart: a JSON spec from a file, stdin or --json,
+// Command achart renders numeric data as a text chart: a JSON spec from a file, stdin or --json,
 // or a CSV file straight away. It behaves as the Python reference's command line does: the same
 // charts, the same error messages, the same exit codes (0 ok, 1 error, 2 bad usage).
 package main
@@ -14,17 +14,17 @@ import (
 	"github.com/boligolov/asciicharts/go/asciicharts"
 )
 
-const help = `asciicharts — render numeric data as ASCII/Unicode text charts.
+const help = `achart (asciicharts) — render numeric data as ASCII/Unicode text charts.
 
 Command line (JSON spec from a file, stdin, or --json):
 
-    asciicharts spec.json
-    echo '{"chartType":"sparkline","series":[{"values":[1,3,2]}]}' | asciicharts -
-    asciicharts --json '{"chartType":"sparkline","series":[{"values":[1,3,2]}]}'
-    asciicharts --list         # every chart type, how to fill ` + "`series`" + `, an example
-    asciicharts --csv data.csv --chart hbar --sort -latency --limit 10 --set title="Slowest"
-                               # straight from a CSV; see --csv --help
-    asciicharts --version
+    achart spec.json
+    echo '{"chartType":"sparkline","series":[{"values":[1,3,2]}]}' | achart -
+    achart --json '{"chartType":"sparkline","series":[{"values":[1,3,2]}]}'
+    achart --list    # every chart type, how to fill ` + "`series`" + `, an example
+    achart --csv data.csv --chart hbar --sort -latency --limit 10 --set title="Slowest"
+                     # straight from a CSV; see --csv --help
+    achart --version
 
 Spec fields: chartType, series, labels, title, width, height, border, style, stacked, bins,
 useColor, threshold, thresholds, showPoints, pointChar.
@@ -89,8 +89,8 @@ func renderSpec(argv []string, stdin io.Reader) (string, error) {
 
 // --- --csv --------------------------------------------------------------------------------------
 
-const csvUsage = `usage: asciicharts --csv [-h] --csv FILE [--chart TYPE] [--label COL] [--values COLS]
-                      [--sort COL] [--limit N] [--set KEY=VALUE] [--print-spec]`
+const csvUsage = `usage: achart --csv [-h] --csv FILE [--chart TYPE] [--label COL] [--values COLS]
+                 [--sort COL] [--limit N] [--set KEY=VALUE] [--print-spec]`
 
 const csvHelp = csvUsage + `
 
@@ -225,7 +225,7 @@ func metavar(flag string) string {
 func csvMain(argv []string, stdin io.Reader, stdout, stderr io.Writer) int {
 	a, err := parseCSVArgs(argv)
 	if err != nil {
-		fmt.Fprintf(stderr, "%s\nasciicharts --csv: error: %v\n", csvUsage, err)
+		fmt.Fprintf(stderr, "%s\nachart --csv: error: %v\n", csvUsage, err)
 		return 2
 	}
 	if a.help {

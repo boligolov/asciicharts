@@ -36,7 +36,7 @@ func TestRun(t *testing.T) {
 		out, err    string // substrings
 	}{
 		{"version", "", []string{"--version"}, 0, asciicharts.Version + "\n", ""},
-		{"help", "", nil, 0, "asciicharts --list", ""},
+		{"help", "", nil, 0, "achart --list", ""},
 		{"list", "", []string{"--list"}, 0, "Every chart also accepts: title, border, useColor.\n", ""},
 		{"json", "", []string{"--json", spec}, 0, chart + "\n", ""},
 		{"stdin", spec, []string{"-"}, 0, chart + "\n", ""},
