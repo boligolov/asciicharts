@@ -3,7 +3,7 @@ name: asciicharts
 description: Use this skill to draw a chart out of text characters (Unicode/ASCII) in the reply — bar, line, area, sparkline, histogram, pie, heatmap, boxplot, scatter, dot plot — from numbers given inline, a CSV file, or an ExCSV file's own #chart suggestion. Trigger on any request to plot, chart, graph, visualize or draw a histogram or distribution of numbers, e.g. "quick histogram of these response times", rankings, trends over time, shares of a whole, benchmark results, "top N by X", and whenever a chart would help in a terminal, README, commit message, PR description or code comment, even if the user never says "chart". It teaches drawing such charts correctly by hand and uses an exact renderer when available (MCP server, achart command or bundled Python script), so prefer it to describing numbers in prose or eyeballing ASCII bars. Not for PNG/SVG/image files, interactive dashboards, plotting-library code (matplotlib, seaborn, pandas), explanations of chart concepts, or stats calculations without a chart.
 license: MIT
 metadata:
-  version: "0.1.2"
+  version: "0.1.3"
 compatibility: Works without any tool (the charts are drawn by hand from references/drawing.md); a connected asciicharts MCP server, the achart command (a single binary), or Python 3 (standard library only) makes them exact.
 ---
 
@@ -66,6 +66,9 @@ work everywhere (bars grow both ways from a zero axis).
 - **Small and even**: 60–80 columns; by hand, bars of 10–20 cells. Every line the same display width:
   pad labels to the longest, count CJK and most emoji as two columns. Frame only when asked.
 - **Sort and trim** before plotting (top 10, not 40 bars); give a title; round or scale noisy values.
+  A sparkline has one glyph per value: past ~60 values aggregate first (daily → weekly). A pie or a
+  stacked bar: at most 5 parts, the rest folded into "Other" — from the fifth part on the glyphs are
+  half blocks (`▌ ▄ ▐ ▀`) that a thin segment can't tell apart.
 
 ## With the script
 

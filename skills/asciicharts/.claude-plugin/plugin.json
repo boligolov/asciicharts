@@ -1,6 +1,6 @@
 {
   "name": "asciicharts",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Draw charts out of text characters in replies, terminals, PRs and commit messages — bars, lines, sparklines, histograms, pies, heatmaps — with lengths that match the values and frames that stay straight in any font. Draws by hand from the asciicharts principles, or renders exactly when the achart command, Python or MCP server is available.",
   "author": {
     "name": "asciicharts contributors",
