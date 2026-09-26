@@ -363,6 +363,7 @@ Q(q) = s[a] + (s[b] − s[a]) × (p − a),  p = q × (n − 1), a = floor(p), b
 min, Q(0.25), median Q(0.5), Q(0.75), max
 col(v) = round((v − min) / (max − min) × (W − 1))
 row: ─ from min to max, █ from Q1 to Q3, then ├ at min, ┤ at max, ║ at the median; the numbers after it
+numbers: a table — a header row "min q1 med q3 max" above them, each column right-aligned
 ```
 
 ```json
@@ -370,7 +371,8 @@ row: ─ from min to max, █ from Q1 to Q3, then ├ at min, ┤ at max, ║ at
 ```
 
 ```
-api │ ├──███║██───────────┤  min=12 q1=16.50 med=20 q3=23.50 max=40
+    │                       min    q1 med    q3 max
+api │ ├──███║██───────────┤  12 16.50  20 23.50  40
 ```
 
 Working: n = 7. Q1: p = 1.5 → 15 + (18 − 15) × 0.5 = 16.5; median: p = 3 → 20; Q3: p = 4.5 → 22 + 3 × 0.5 =

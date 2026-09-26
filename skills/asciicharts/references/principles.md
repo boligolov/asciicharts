@@ -462,7 +462,9 @@ Q(q) = s[a] + (s[b] − s[a]) × (pos − a)
 Five numbers: min, Q(0.25), median Q(0.5), Q(0.75), max — computed from raw samples, never asked of the
 caller. Positions: `clamp(round((v − gmin) / (gmax − gmin) × (W − 1)), 0, W − 1)`; draw `─` from min to
 max, `█` from Q1 to Q3, then `├` at min, `┤` at max, `║` at the median (later writes win). The exact
-statistics follow as text.
+statistics follow as a table: a header row `min q1 med q3 max` over the plot's right, each column
+right-aligned to its widest entry, one space between columns. (v1.1 wrote `min=55 q1=62.75 …` on every
+row, about 50 columns next to a 40-column plot; a boxplot could not fit in 80 columns.)
 
 ### 4.12 Quantising to a small set of levels
 
@@ -841,6 +843,8 @@ logarithm of the values instead, and say so.
     Mon Tue Wed Thu Fri 
 9am ░░░ ░░░ ░░░ ▒▒▒ ░░░ 
 5pm ███ ▓▓▓ ███ ███ ███ 
+
+░ 10..30   ▒ 30..50   ▓ 50..70   █ 70..90
 ```
 
 ### boxplot
@@ -848,8 +852,9 @@ logarithm of the values instead, and say so.
 One series of raw samples per group (4.11).
 
 ```
-A │       ├──███║███─────┤    min=55 q1=62.75 med=71 q3=78.75 max=95
-B │ ├──────██║███──────────┤  min=40 q1=58.50 med=64 q3=69.50 max=99
+  │                          min    q1 med    q3 max
+A │       ├──███║███─────┤    55 62.75  71 78.75  95
+B │ ├──────██║███──────────┤  40 58.50  64 69.50  99
 ```
 
 ### dotplot (Cleveland)

@@ -1763,7 +1763,10 @@ def _render_boxplot(inp):
     def pos(v):
         return _clamp(_round((v - g_min) / (g_max - g_min) * (width - 1)), 0, width - 1)
 
-    lines = []
+    # the five numbers as a table: a header row names the columns once, each column right-aligned
+    stats = [[_fmt(v) for v in fn] for fn in summaries]
+    col_w = [max([len(h)] + [len(r[k]) for r in stats]) for k, h in enumerate(BOX_STATS)]
+    lines = [f"{' ' * max_name_w} │ {' ' * width} " + " ".join(h.rjust(w) for h, w in zip(BOX_STATS, col_w))]
     for i, (mn, q1, med, q3, mx) in enumerate(summaries):
         row = [" "] * width
         min_p, q1_p, med_p, q3_p, max_p = pos(mn), pos(q1), pos(med), pos(q3), pos(mx)
@@ -1775,9 +1778,11 @@ def _render_boxplot(inp):
         row[min_p], row[max_p], row[med_p] = "├", "┤", "║"
         body = _colorize("".join(row), _series_color(i), color_on)
         name = _pad(names[i], max_name_w)
-        lines.append(f"{name} │ {body}  min={_fmt(mn)} q1={_fmt(q1)} med={_fmt(med)} "
-                     f"q3={_fmt(q3)} max={_fmt(mx)}")
+        lines.append(f"{name} │ {body} " + " ".join(s.rjust(w) for s, w in zip(stats[i], col_w)))
     return "\n".join(lines)
+
+
+BOX_STATS = ("min", "q1", "med", "q3", "max")
 
 
 _RENDERERS = {

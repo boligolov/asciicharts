@@ -302,7 +302,27 @@ func renderBoxplot(in *input) (string, error) {
 	pos := func(v float64) int {
 		return clamp(round((v-gMin)/(gMax-gMin)*float64(w-1)), 0, w-1)
 	}
-	lines := make([]string, len(summaries))
+	// the five numbers as a table: a header row names the columns once, each column right-aligned
+	stats := make([][]string, len(summaries))
+	colW := make([]int, len(boxStats))
+	for k, h := range boxStats {
+		colW[k] = len(h)
+	}
+	for i, fn := range summaries {
+		stats[i] = []string{fmtValue(fn.min), fmtValue(fn.q1), fmtValue(fn.med), fmtValue(fn.q3), fmtValue(fn.max)}
+		for k, s := range stats[i] {
+			colW[k] = maxInt(colW[k], len(s))
+		}
+	}
+	table := func(cols []string) string {
+		out := make([]string, len(cols))
+		for k, s := range cols {
+			out[k] = repeat(" ", colW[k]-len(s)) + s
+		}
+		return strings.Join(out, " ")
+	}
+	lines := make([]string, len(summaries)+1)
+	lines[0] = repeat(" ", maxNameW) + " │ " + repeat(" ", w) + " " + table(boxStats)
 	for i, fn := range summaries {
 		row := make([]string, w)
 		for x := range row {
@@ -317,8 +337,9 @@ func renderBoxplot(in *input) (string, error) {
 		}
 		row[minP], row[maxP], row[medP] = "├", "┤", "║" // ║, not the heavy ┃: not in Consolas
 		body := colorize(strings.Join(row, ""), seriesColor(i), colorOn)
-		lines[i] = pad(names[i], maxNameW) + " │ " + body + "  min=" + fmtValue(fn.min) + " q1=" + fmtValue(fn.q1) +
-			" med=" + fmtValue(fn.med) + " q3=" + fmtValue(fn.q3) + " max=" + fmtValue(fn.max)
+		lines[i+1] = pad(names[i], maxNameW) + " │ " + body + " " + table(stats[i])
 	}
 	return strings.Join(lines, "\n"), nil
 }
+
+var boxStats = []string{"min", "q1", "med", "q3", "max"}

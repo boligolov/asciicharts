@@ -33,6 +33,11 @@ work around.
   A row is too coarse to read a value from: 5 and 1.93 next to 65 were both one row high. Grouped bars
   still print none. Conformance: 10 vbar corpus cases, 6 MCP answers, the gallery, five curated cases;
   a new one pins the widening (`rule/vbar values widen the group`).
+- **A boxplot's five numbers are a table** (§4.11): a header row `min q1 med q3 max`, each column
+  right-aligned, instead of `min=55 q1=62.75 med=71 q3=78.75 max=95` on every row. The labels took about
+  50 columns next to a 40-column plot, so a boxplot could not fit in the 80 columns the skill asks for
+  (the review got 101 at `width` 40); it now takes about 25 for such numbers. Conformance: the 23 boxplot
+  corpus cases, 54 MCP answers, the gallery, two curated cases.
 
 ## v1.1, moved into docs — 2026-09-26
 
