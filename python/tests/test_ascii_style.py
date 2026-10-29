@@ -159,7 +159,7 @@ def specs_for_pure_ascii(border):
         "area overlay": {**base, "chartType": "area", "series": two},
         "area stacked": {**base, "chartType": "area", "stacked": True, "series": two},
         "area stacked+neg": {**base, "chartType": "area", "stacked": True, "series": signed},
-        "line": {**base, "chartType": "line", "series": [{"values": [1, 4, 2, 6]}]},
+        "line": {**base, "chartType": "line", "series": [{"values": [1, 4, 6]}]},
         "line multi": {**base, "chartType": "line", "series": two},
         "line points+threshold": {**base, "chartType": "line", "showPoints": True, "threshold": 3, "series": two},
     }

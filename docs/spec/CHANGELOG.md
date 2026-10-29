@@ -4,6 +4,20 @@ Versions of the principles (`principles.md`) and of the conformance suite (`conf
 how any chart is drawn is a change to the principles: it gets an entry here and regenerated conformance
 outputs, never a silent edit.
 
+## v1.4 — 2026-10-29
+
+From a code review of both implementations.
+
+- **A cut x-axis label says it was cut, and dropped ones are counted** (§5.5, R16). A label wider than
+  8 columns kept its first 8 (`April 20`), which reads as a whole label; it now keeps 7 and ends in `…`
+  (`April 2…`), `~` in the ascii style, and `…` joins the tier-1 alphabet (it is in WGL4). When labels
+  collide and middle ones are dropped, a line under them says so: `x: 8 labels, 4 shown`.
+  Conformance: 24 corpus cases (line, area), one curated case, 13 MCP answers; curated cases pin both
+  (`rule/x labels cut with an ellipsis, dropped ones counted`, `rule/x labels cut with a tilde, ascii`).
+- **line and area take one label per value, or none** (§5.5). Any other number of labels was silently
+  ignored, while vbar and hbar rejected it; now line and area reject it too: `labels length (3) must
+  match the number of values (5)`. Conformance: no corpus case had such labels; two curated cases.
+
 ## v1.3 — 2026-09-27
 
 From a second review by the same agent.

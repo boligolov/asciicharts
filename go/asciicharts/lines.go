@@ -100,6 +100,9 @@ func renderLine(in *input) (string, error) {
 			return "", errorf("series %d %s must contain at least two values", i, quote(s.name))
 		}
 	}
+	if err := checkXLabels(in.labels, seriesMaxLen(ss)); err != nil {
+		return "", err
+	}
 	lo, hi := seriesMinMax(ss)
 	var refs []float64
 	if in.threshold != nil {
@@ -225,7 +228,7 @@ func renderLine(in *input) (string, error) {
 		}
 	}
 	body := strings.Join(out, "\n")
-	if x := xAxisLabels(in.labels, seriesMaxLen(ss), w, axisW+2); x != "" {
+	if x := xAxisLabels(in.labels, seriesMaxLen(ss), w, axisW+2, asciiStyle); x != "" {
 		body += "\n" + x
 	}
 	if multi {
@@ -284,6 +287,9 @@ func renderArea(in *input) (string, error) {
 			return "", errorf("all series must have the same number of values (series 0 has %d, "+
 				"series %d has %d)", n, i, len(s.values))
 		}
+	}
+	if err := checkXLabels(in.labels, n); err != nil {
+		return "", err
 	}
 	height := in.height
 	if height == 0 {
@@ -411,7 +417,7 @@ func renderArea(in *input) (string, error) {
 		lines[y] = padLeft(axisLabels[y], axisW) + " " + tick + g.row(y, colorOn)
 	}
 	body := strings.Join(lines, "\n")
-	if x := xAxisLabels(in.labels, seriesMaxLen(ss), w, axisW+2); x != "" {
+	if x := xAxisLabels(in.labels, seriesMaxLen(ss), w, axisW+2, isASCIIRamp(r)); x != "" {
 		body += "\n" + x
 	}
 	if numSeries > 1 {

@@ -443,7 +443,23 @@ def _left_axis_labels(lo: float, hi: float, height: int):
     return labels, max([0] + [len(l) for l in labels])
 
 
-def _x_axis_labels(labels, n: int, plot_width: int, left_pad: int) -> str:
+X_LABEL_WIDTH = 8  # columns an x-axis label keeps, its ellipsis included
+
+
+def _shorten(s: str, n: int, mark: str) -> str:
+    """s if it fits in n columns, else its first n - 1 columns and the mark (… or ~) saying it was cut."""
+    if _width(s) <= n:
+        return s
+    return _truncate(s, n - 1).rstrip(" ") + mark
+
+
+def _check_x_labels(labels, n: int) -> None:
+    """line and area: one label per value, or none at all."""
+    if labels and len(labels) != n:
+        raise ChartError(f"labels length ({len(labels)}) must match the number of values ({n})")
+
+
+def _x_axis_labels(labels, n: int, plot_width: int, left_pad: int, ascii_style: bool = False) -> str:
     if len(labels) != n or n == 0 or plot_width <= 0:
         return ""
     row = [" "] * plot_width
@@ -451,7 +467,7 @@ def _x_axis_labels(labels, n: int, plot_width: int, left_pad: int) -> str:
     # the first and last are never cut off ("Jan" must not become "an").
     placed = []
     for i, lbl in enumerate(labels):
-        cell = _truncate(lbl, 8)
+        cell = _shorten(lbl, X_LABEL_WIDTH, "~" if ascii_style else "…")
         start = _clamp(_x_pixel(i, n, plot_width) - _width(cell) // 2, 0, max(plot_width - _width(cell), 0))
         placed.append((start, cell))
     # When labels don't all fit, drop the ones that would touch a neighbour rather
@@ -469,7 +485,10 @@ def _x_axis_labels(labels, n: int, plot_width: int, left_pad: int) -> str:
             for j, r in enumerate(_cells(cell)):
                 if start + j < plot_width:
                     row[start + j] = r
-    return " " * left_pad + "".join(row).rstrip(" ")
+    out = " " * left_pad + "".join(row).rstrip(" ")
+    if not all(keep):  # say so, rather than let the reader take the gaps for missing data
+        out += "\n" + " " * left_pad + f"x: {n} labels, {sum(keep)} shown"
+    return out
 
 
 def _is_ascii_ramp(ramp) -> bool:
@@ -1262,6 +1281,7 @@ def _render_line(inp):
     for i, s in enumerate(series):
         if len(s["values"]) < 2:
             raise ChartError(f"series {i} {_q(s['name'])} must contain at least two values")
+    _check_x_labels(inp["labels"], _series_max_len(series))
 
     lo, hi = _series_min_max(series)
     threshold = inp["threshold"]
@@ -1341,7 +1361,7 @@ def _render_line(inp):
                      + ("  " + _colorize(", ".join(notes[r]), tcolor, color_on) if r in notes else "")
                      for r, l in enumerate(rows))
 
-    x = _x_axis_labels(inp["labels"], _series_max_len(series), width, axis_w + 2)
+    x = _x_axis_labels(inp["labels"], _series_max_len(series), width, axis_w + 2, ascii_style)
     if x:
         body += "\n" + x
     if multi:
@@ -1382,6 +1402,7 @@ def _render_area(inp):
             raise ChartError(
                 f"all series must have the same number of values (series 0 has {n}, "
                 f"series {i} has {len(s['values'])})")
+    _check_x_labels(inp["labels"], n)
 
     height = inp["height"] or 10
     width = inp["width"] or 60
@@ -1462,7 +1483,7 @@ def _render_area(inp):
         lines.append(f"{axis_labels[r]:>{axis_w}} {'+' if _is_ascii_ramp(ramp) else '┤'}{cells}")
     body = "\n".join(lines)
 
-    x = _x_axis_labels(inp["labels"], _series_max_len(series), width, axis_w + 2)
+    x = _x_axis_labels(inp["labels"], _series_max_len(series), width, axis_w + 2, _is_ascii_ramp(ramp))
     if x:
         body += "\n" + x
     if num_series > 1:

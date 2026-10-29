@@ -1,4 +1,4 @@
-# asciicharts principles v1.3
+# asciicharts principles v1.4
 
 *The principles of text charts* — version 1.3, 2026-09-27. Licensed under CC BY 4.0.
 
@@ -23,13 +23,13 @@ errors · 10 Other media · 11 Mistakes we made · 12 Limitations and choices ·
 
 ## 0. Status and conformance
 
-**Version.** asciicharts principles **v1.3**, published 2026-09-27. Every change to how a chart is drawn is
+**Version.** asciicharts principles **v1.4**, published 2026-10-29. Every change to how a chart is drawn is
 a new version, recorded in `docs/spec/CHANGELOG.md` of the asciicharts repository
 (https://github.com/boligolov/asciicharts), together with regenerated conformance outputs.
 
 **Licence.** The principles and the conformance suite are licensed under the Creative Commons Attribution
 4.0 International License (CC BY 4.0, https://creativecommons.org/licenses/by/4.0/): copy, adapt and build
-on them, commercially too, with credit — *"asciicharts principles v1.3" by asciicharts contributors*. The
+on them, commercially too, with credit — *"asciicharts principles v1.4" by asciicharts contributors*. The
 reference implementations are MIT-licensed code.
 
 **Key words.** "MUST", "MUST NOT", "SHOULD", "SHOULD NOT" and "MAY" in section 15 are to be interpreted as
@@ -38,7 +38,7 @@ informative: they explain, derive and illustrate; section 15 and the conformance
 
 **Two kinds of conformance.**
 
-1. **A renderer** conforms to v1.3 when it reproduces the conformance suite — `test/conformance/` in the
+1. **A renderer** conforms to v1.4 when it reproduces the conformance suite — `test/conformance/` in the
    repository: 317 specs with their exact output or error message, and the 31 documented examples —
    **byte for byte**. Sections 4–9 describe the arithmetic and layout the suite pins down; where prose
    and suite disagree, the suite wins and the prose is a bug.
@@ -97,7 +97,7 @@ Consolas, Courier New and Lucida Console, the defaults of many Windows editors.
 | tier | glyphs | status |
 |---|---|---|
 | 0 — ASCII | printable U+0020–U+007E | always safe |
-| 1 — safe Unicode | Latin-1 (U+00A0–U+00FF, includes `·` and `¦`), the **WGL4** box drawing: light and double lines only (`─│┌┐└┘├┤┬┴┼` and `═║╔╗╚╝╠╣╦╩╬` …), the shades `░▒▓█`, the half blocks `▌▄▐▀`, the markers `●○▲■□▼♦◊►◄` | the default alphabet |
+| 1 — safe Unicode | Latin-1 (U+00A0–U+00FF, includes `·` and `¦`), the **WGL4** box drawing: light and double lines only (`─│┌┐└┘├┤┬┴┼` and `═║╔╗╚╝╠╣╦╩╬` …), the shades `░▒▓█`, the half blocks `▌▄▐▀`, the markers `●○▲■□▼♦◊►◄`, the ellipsis `…` | the default alphabet |
 | 2 — needs a capable font | heavy (`━┃┏┓`), rounded (`╭╮╰╯`) and dashed box drawing; eighth blocks `▁▂▃▄▅▆▇` (vertical) and `▏▎▍▋▊▉` (horizontal); quadrants; braille | only on request (`border: "heavy"`/`"rounded"`, `style: "fine"`) and in sparklines, documented as such |
 
 Rules that come out of this:
@@ -601,14 +601,27 @@ Floor division means the chart can be a few columns narrower than `W` (asked 23,
 {row value, right-aligned to the widest} ┤{plot row}
 ```
 
-The x-axis labels go under the plot, indented by the axis width + 2. Placement:
+The x-axis labels go under the plot, indented by the axis width + 2. There is one label per value (per
+value of the longest series, for line) or none; any other number is an error — which value a label
+belongs to can't be guessed. Placement:
 
-1. Truncate each label to 8 columns.
+1. A label wider than 8 columns is cut to its first 7, trailing spaces dropped, and ends in `…` (`~` in
+   the ascii style), so a cut label never passes for a whole one: `January 2026` → `January…`.
 2. Centre it under its sample's column, then clamp it inside the plot, so the first and last labels are
    never cut (`Jan` must not become `an`).
 3. Always keep the first and last. Keep a middle label only if it starts after the previous kept label
    ends (at least one space between) and ends before the last label starts. Drop the rest rather than
    let them run together (`JaFeb`).
+4. If any were dropped, a line under the labels says how many are shown: `x: 12 labels, 4 shown`.
+
+```
+7 ┤                          ████      ████
+5 ┤               ████     ██    ██████
+3 ┤   █████     ██    █████
+1 ┤███     █████
+   January…    April 2…   June 20…  August…
+   x: 8 labels, 4 shown
+```
 
 ```
 30.00 ┤                     ██       
@@ -1188,7 +1201,7 @@ handful of glyphs); build rows as arrays and join once.
 
 ## 15. The requirements
 
-Normative for v1.3 (section 0). Each requirement names the section that explains it.
+Normative for v1.4 (section 0). Each requirement names the section that explains it.
 
 **Any chart** — rendered or hand-drawn:
 
@@ -1217,6 +1230,8 @@ Normative for v1.3 (section 0). Each requirement names the section that explains
   none); a wide character MUST NOT be cut in half; control characters MUST NOT reach the output.
 - **R12** (§5.7) Without a requested size, a chart SHOULD fill a readable default plot width;
   a requested width SHOULD mean the plot, not the decoration around it.
+- **R16** (§5.5) Text that was shortened or left out MUST say so: a cut label ends in `…` (`~` in ASCII),
+  and dropped axis labels are counted.
 
 **A renderer**, in addition:
 

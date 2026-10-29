@@ -10,7 +10,7 @@ Everything below applies equally to the tool arguments, to the dict you pass to 
 |-------------|-------------------|--------------------------------------|------------------------------------------------------------------------|
 | `chartType` | string, required  | all                                   | `sparkline`, `vbar`, `hbar`, `line`, `area`, `scatter`, `dual_axis`, `pie`, `histogram`, `heatmap`, `boxplot`, `dotplot` |
 | `series`    | array, required   | all                                   | see below — meaning depends on `chartType`                             |
-| `labels`    | string[]          | vbar, hbar, histogram, heatmap, dotplot | category labels / column headers                                     |
+| `labels`    | string[]          | vbar, hbar, line, area, heatmap, dotplot | category labels, x-axis labels (one per value; cut ones end in `…`), column headers |
 | `title`     | string            | all                                   | shown centered above the chart                                         |
 | `width`     | int               | most types                            | defaults vary by chart type; for `vbar`, thickens each bar/column to fill the requested width; for `heatmap`, widens each cell so the grid fills it (both default to 60); for `hbar`/`dotplot`, sets the axis width |
 | `height`    | int               | most types                            | defaults vary by chart type                                            |

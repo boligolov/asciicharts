@@ -287,7 +287,9 @@ If the data crosses zero, the reference renderer widens the range slightly so th
 Working: labels 30, 25, 20, 15, 10. Points: x = 0, 6, 12; y = 4, 0, 2. Segment (0,4)→(6,0) is shallow
 (6 columns, 4 rows): rows per column x = 0…6 are `4 − 4x/6` rounded → 4, 3, 3, 2, 1, 1, 0. Segment
 (6,0)→(12,2): `2(x − 6)/6` → 0, 0, 1, 1, 1, 2, 2 for x = 6…12. X labels are centred under their points
-and kept inside the plot.
+and kept inside the plot. One label per point, or none. A label wider than 8 columns becomes its first 7
+and `…` (`January 2026` → `January…`). When labels would touch, keep the first and the last and drop
+middle ones, then add a line under them: `x: 12 labels, 4 shown`.
 
 With markers (`showPoints`), the same cells, `·` for the line and `●` on the points:
 
