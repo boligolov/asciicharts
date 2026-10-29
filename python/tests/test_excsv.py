@@ -11,6 +11,7 @@ repo's `fixtures/fixtures.yaml`, so this is checked against the format's own gro
 """
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -32,7 +33,7 @@ def fixture(name):
 
 def run(args, stdin=None):
     return subprocess.run([sys.executable, SCRIPT, *args], input=stdin, capture_output=True,
-                          encoding="utf-8", env={"PYTHONIOENCODING": "utf-8", "PATH": ""})
+                          encoding="utf-8", env={**os.environ, "PYTHONIOENCODING": "utf-8", "PATH": ""})
 
 
 # --- the format's own fixtures --------------------------------------------

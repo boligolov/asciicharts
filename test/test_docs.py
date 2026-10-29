@@ -93,6 +93,12 @@ def test_the_go_implementations_generated_files_are_current(script):
     """The Go implementation's Unicode tables and chart catalogue are generated from this one."""
     import subprocess
     import sys
+    import unicodedata
+    if script == "gen_go_unicode.py":
+        tables = (ROOT / "go" / "asciicharts" / "unicode_tables.go").read_text(encoding="utf-8")
+        version = re.search(r'UnicodeVersion = "([^"]+)"', tables).group(1)
+        if unicodedata.unidata_version != version:
+            pytest.skip(f"the tables come from Unicode {version}; this Python has {unicodedata.unidata_version}")
     r = subprocess.run([sys.executable, str(ROOT / "scripts" / script), "--check"], capture_output=True, encoding="utf-8")
     assert r.returncode == 0, r.stderr
 

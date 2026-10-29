@@ -1,5 +1,6 @@
 """print_chart: a chart printed as UTF-8 whatever the stream's own encoding."""
 import io
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -17,7 +18,7 @@ def test_a_legacy_code_page_on_the_pipe_does_not_matter():
     raises there; print_chart writes UTF-8 bytes."""
     code = f"from asciicharts import print_chart; print_chart({SPEC!r})"
     r = subprocess.run([sys.executable, "-c", code], cwd=PYTHON_DIR, capture_output=True,
-                       env={"PYTHONIOENCODING": "cp1252", "PATH": ""})
+                       env={**os.environ, "PYTHONIOENCODING": "cp1252", "PATH": ""})
     assert r.returncode == 0, r.stderr.decode("utf-8", "replace")
     assert r.stdout.decode("utf-8").replace("\r\n", "\n") == render_chart(SPEC) + "\n"
 

@@ -189,7 +189,7 @@ def test_scatter_without_numeric_columns():
 
 def run(args, stdin=None):
     return subprocess.run([sys.executable, SCRIPT, *args], input=stdin, capture_output=True, encoding="utf-8",
-                          env={"PYTHONIOENCODING": "utf-8", "PATH": ""})
+                          env={**os.environ, "PYTHONIOENCODING": "utf-8", "PATH": ""})
 
 
 @pytest.fixture

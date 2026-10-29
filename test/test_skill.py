@@ -1,5 +1,6 @@
 """The skill folder is self-contained, in sync with the repository, and its documented commands work."""
 
+import os
 import re
 import shutil
 import subprocess
@@ -99,7 +100,7 @@ def test_readme_is_a_directory_listing():
 
 def run(args, cwd=SKILL, stdin=None):
     return subprocess.run([sys.executable, *args], cwd=cwd, input=stdin, capture_output=True,
-                          encoding="utf-8", env={"PYTHONIOENCODING": "utf-8", "PATH": ""})
+                          encoding="utf-8", env={**os.environ, "PYTHONIOENCODING": "utf-8", "PATH": ""})
 
 
 def test_quick_start_json_on_stdin():
