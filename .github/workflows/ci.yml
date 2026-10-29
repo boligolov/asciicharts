@@ -26,12 +26,12 @@ jobs:
         run: go test -race -count=1 ./...
 
   python:
-    # the oldest Python pyproject.toml allows and a newer one, on Linux and on Windows (CRLF, code pages)
+    # the oldest Python pyproject.toml allows to the newest, on Linux and on Windows (CRLF, code pages)
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python: ["3.10", "3.12"]
+        python: ["3.10", "3.12", "3.14"]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4

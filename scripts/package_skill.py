@@ -9,9 +9,10 @@ The archive holds one top-level folder, asciicharts/, with SKILL.md directly ins
 which is the layout skill uploaders expect. It refuses to build if the copies of the
 shared files inside the skill are out of date (see scripts/sync_skill.py).
 
-The same files always give the same bytes (fixed timestamps and permissions, sorted
-entries), so the copy the site offers for download, site/public/asciicharts.skill, can
-be checked against a fresh build (a test does). After changing the skill: bump its version (SKILL.md
+The same files always give the same entries (fixed timestamps and permissions, sorted,
+LF line ends), so the copy the site offers for download, site/public/asciicharts.skill, can
+be checked against a fresh build (a test does, entry by entry: the compressed bytes also
+depend on the zlib Python is built with). After changing the skill: bump its version (SKILL.md
 metadata.version and .claude-plugin/plugin.json), then `python scripts/package_skill.py --site`.
 """
 import argparse

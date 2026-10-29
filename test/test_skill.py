@@ -192,11 +192,19 @@ def test_the_skill_has_one_version():
 
 
 def test_the_sites_download_is_the_current_skill():
-    """asciicharts.online/asciicharts.skill is what claude.ai users upload; the packager is deterministic,
-    so the committed copy must equal a fresh build (python scripts/package_skill.py --site)."""
+    """asciicharts.online/asciicharts.skill is what claude.ai users upload; the committed copy must hold
+    what a fresh build does (python scripts/package_skill.py --site). Entries are compared, not the
+    archive's bytes: deflate's output depends on the zlib Python is built with (3.14 differs)."""
     sys.path.insert(0, str(ROOT / "scripts"))
+    import io
+    import zipfile
     import package_skill
-    assert (ROOT / "site" / "public" / "asciicharts.skill").read_bytes() == package_skill.build(), \
+
+    def entries(data):
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            return [(i.filename, i.date_time, i.external_attr, z.read(i)) for i in z.infolist()]
+
+    assert entries((ROOT / "site" / "public" / "asciicharts.skill").read_bytes()) == entries(package_skill.build()), \
         "the site's asciicharts.skill is stale: run python scripts/package_skill.py --site"
 
 
