@@ -22,6 +22,7 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/boligolov/asciicharts/go/asciicharts"
@@ -48,7 +49,8 @@ func main() {
 	// stdio owns stdout for the protocol: logs go to stderr
 	log.SetOutput(os.Stderr)
 	log.SetFlags(0)
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	// SIGTERM is what `docker stop` sends: without it the HTTP server would never shut down gracefully
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	server := newServer()
 	if port := os.Getenv("PORT"); port != "" {
