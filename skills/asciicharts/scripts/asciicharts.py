@@ -1982,10 +1982,18 @@ def spec_from_csv(text: str, chart: str, label=None, values=None, sort=None, lim
     row (the first value column); heatmap makes one matrix row per CSV row with
     the value columns as its columns; scatter plots each value column against
     the label (x) column."""
+    _check_chart_type(chart)
+    return _spec_from_table(*_read_csv(text), chart, label, values, sort, limit, options)
+
+
+def _check_chart_type(chart: str) -> None:
     if chart not in CHARTS:
         raise ChartError(f"unknown chartType {_q(chart)} (expected one of: {', '.join(CHART_TYPES)})")
-    header, rows, delim = _read_csv(text)
 
+
+def _spec_from_table(header, rows, delim, chart, label, values, sort, limit, options) -> dict:
+    """spec_from_csv on a table already read: the header, the rows (at least as long as it) and the
+    delimiter, which decides whether "3,14" is a decimal comma."""
     # numeric columns: every non-empty cell parses
     def is_numeric(ci):
         cells = [r[ci] for r in rows if r[ci].strip()]
@@ -2179,21 +2187,24 @@ def _csv_main(argv) -> int:
             if not args.chart:
                 raise ChartError("--chart TYPE is required (see --list) — or, for an ExCSV file "
                                  "with its own #chart suggestion(s), --chart-name (see --list-charts)")
-            label, values, data_text = args.label, args.values, text
-            if is_excsv:
-                # Manual mode on an ExCSV file: ignore its #chart suggestions and treat the data
-                # section as plain CSV, but still put its #column role= to use for the defaults
-                # --label/--values would otherwise have to guess (dimension -> label, measure ->
-                # values) when the caller didn't pin them down explicitly.
+            label, values, options = args.label, args.values, _parse_set(args.set)
+            if not is_excsv:
+                spec = spec_from_csv(text, args.chart, label, values, args.sort, args.limit, options)
+            else:
+                # Manual mode on an ExCSV file: ignore its #chart suggestions and read the data
+                # section as a plain table (in the file's own dialect), but still put its #column
+                # role= to use for the defaults --label/--values would otherwise have to guess
+                # (dimension -> label, measure -> values) when the caller didn't pin them down.
+                _check_chart_type(args.chart)
                 doc = parse_excsv(text)
-                data_text = doc["data_text"]
                 if not label:
                     dims = [n for n, kv in doc["columns"].items() if kv.get("role") == "dimension"]
                     label = dims[0] if dims else label
                 if not values:
                     measures = [n for n, kv in doc["columns"].items() if kv.get("role") == "measure"]
                     values = ",".join(measures) if measures else values
-            spec = spec_from_csv(data_text, args.chart, label, values, args.sort, args.limit, _parse_set(args.set))
+                spec = _spec_from_table(*_excsv_table(doc), args.chart, label, values, args.sort, args.limit,
+                                        options)
 
         print(json.dumps(spec, ensure_ascii=False) if args.print_spec else render_chart(spec))
         return 0
@@ -2404,6 +2415,18 @@ def _excsv_column_names(doc: dict, col_names: list, width: int) -> list:
         if idx.lstrip("-").isdigit() and 0 <= int(idx) < width:
             names[int(idx)] = name
     return names
+
+
+def _excsv_table(doc: dict):
+    """(header, rows, delimiter) of the data section, as _read_csv gives for plain CSV, but read in the
+    file's declared dialect: its delimiter and quote, header=0 named from #column index= (an undeclared
+    column by its 1-based position), and the null marker read as an empty cell."""
+    delim, quote, has_header, null_marker = _excsv_dialect(doc["header"])
+    col_names, rows = _excsv_read_data(doc["data_text"], delim, quote, has_header)
+    header = _excsv_column_names(doc, col_names, len(rows[0]))
+    header = [h or str(i + 1) for i, h in enumerate(header)]
+    rows = [["" if c == null_marker else c for c in r] + [""] * (len(header) - len(r)) for r in rows]
+    return header, rows, delim
 
 
 def _excsv_values(col_name: str, col_names: list, rows: list, null_marker):

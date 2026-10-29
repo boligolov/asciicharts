@@ -506,6 +506,22 @@ def test_cli_manual_chart_on_an_excsv_file_uses_role_hints_and_ignores_chart_sug
     assert spec["labels"] == ["widgets", "gadgets", "gizmos", "widgets"]  # raw rows, not aggregated
 
 
+def test_cli_manual_chart_on_an_excsv_file_reads_the_data_in_its_declared_dialect():
+    """header=0 has no header row (names come from #column index=), and a declared delimiter, quote and
+    null marker are the file's own, not ones to guess."""
+    text = ("#!excsv version=0.5 header=0 delim=semicolon quote=single null=NA\n"
+            "#column name=team index=0 type=string role=dimension\n"
+            "#column name=score index=1 type=int role=measure\n"
+            "'a;b';5\nc;NA\nd;9\n")
+    r = run(["--csv", "-", "--chart", "hbar", "--print-spec"], stdin=text)
+    assert r.returncode == 1 and 'row 3, column "score" is empty' in r.stderr  # NA is a missing value
+    r = run(["--csv", "-", "--chart", "hbar", "--print-spec"], stdin=text.replace("c;NA", "c;7"))
+    assert r.returncode == 0, r.stderr
+    spec = json.loads(r.stdout)
+    assert spec["labels"] == ["a;b", "c", "d"]
+    assert spec["series"] == [{"name": "score", "values": [5.0, 7.0, 9.0]}]
+
+
 def test_cli_plain_csv_still_requires_chart():
     r = run(["--csv", "-"], stdin="a,b\n1,2\n3,4\n")
     assert r.returncode == 1 and "--chart TYPE is required" in r.stderr
