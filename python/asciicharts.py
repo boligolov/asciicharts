@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """asciicharts — render numeric data as ASCII/Unicode text charts.
 
-A single-file, standard-library-only chart renderer. It is the engine behind
-the MCP server in server/ and can be copied and used on its own.
+A single-file, standard-library-only chart renderer: the reference implementation
+of the asciicharts principles. It can be copied and used on its own.
 
 Library use::
 
@@ -2151,7 +2151,8 @@ def _csv_main(argv) -> int:
     # argparse would take "--sort -p99" for two options; glue such values to their flag.
     glued, i = [], 0
     while i < len(argv):
-        if argv[i] in ("--sort", "--label", "--values") and i + 1 < len(argv)                 and argv[i + 1].startswith("-") and not argv[i + 1].startswith("--"):
+        if (argv[i] in ("--sort", "--label", "--values") and i + 1 < len(argv)
+                and argv[i + 1].startswith("-") and not argv[i + 1].startswith("--")):
             glued.append(f"{argv[i]}={argv[i + 1]}")
             i += 2
         else:

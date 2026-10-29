@@ -16,7 +16,7 @@ test/                   everything that checks the project as a whole
   test_*.py               pytest: the docs, the skill folder, the evals' grader
 python/                 the Python renderer: asciicharts.py (renderer and CLI, one stdlib-only file, also shipped
                         inside the skill), pyproject.toml, tests/ (its own tests)
-go/                     the Go renderer: package asciicharts, cmd/asciicharts (CLI), cmd/asciicharts-mcp (the MCP
+go/                     the Go renderer: package asciicharts, cmd/achart (CLI), cmd/asciicharts-mcp (the MCP
                         server); its tests live next to the code, as Go wants
 site/                   asciicharts.online (Astro); serves the skill's download, site/public/asciicharts.skill
 deploy/                 Dockerfile, docker-compose (local and production), Caddyfile — see the MCP server's README
@@ -104,7 +104,7 @@ README): run those before and after a change to what the skill tells the agent. 
 ## The Go implementation
 
 `go/` holds the Go reference implementation, byte-for-byte identical to the Python one: the library
-(`go/asciicharts`), the command line (`go/cmd/asciicharts`) and the MCP server (`go/cmd/asciicharts-mcp`).
+(`go/asciicharts`), the command line (`go/cmd/achart`) and the MCP server (`go/cmd/asciicharts-mcp`).
 
 ```sh
 cd go && go test ./...                                   # conformance suite (corpus, curated, gallery) + robustness + CLI + MCP server
