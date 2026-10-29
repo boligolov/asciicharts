@@ -265,6 +265,15 @@ def test_bar_with_color_groups_into_one_series_per_color_and_stack_1_sets_stacke
     assert {s["name"]: s["values"] for s in spec["series"]} == {"widgets": [40.0, 25.0], "gadgets": [15.0, 0.0]}
 
 
+@pytest.mark.parametrize("limit", ["0", "-1", "inf", "nan", "x"])
+def test_limit_must_be_a_positive_number(limit):
+    """limit=-1 would be a Python slice that silently drops the last category; inf would overflow."""
+    doc = _doc("", ["name=cat type=string role=dimension", "name=n type=int role=measure"],
+               f"type=bar name=c x=cat y=n sort=desc limit={limit}", "cat,n\na,5\nb,3\nc,9\n")
+    with pytest.raises(ChartError, match="limit="):
+        resolve_excsv_chart(doc)
+
+
 def test_bar_y_count_without_bin_counts_rows_per_category():
     spec = resolve_excsv_chart(_doc(
         "", ["name=cat type=string role=dimension"], "type=bar name=c x=cat y=count()",

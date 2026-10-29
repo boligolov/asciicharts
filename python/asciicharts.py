@@ -2407,7 +2407,7 @@ def _excsv_int_attr(attrs: dict, key: str):
         return None
     try:
         return int(float(v))
-    except ValueError:
+    except (ValueError, OverflowError):  # "x", "nan"; "inf"
         raise ChartError(f"{key}={_q(v)} is not a number")
 
 
@@ -2653,6 +2653,8 @@ def resolve_excsv_chart(doc: dict, name: str | None = None) -> dict:
         return attrs.get("aggregate") or (doc["columns"].get(col) or {}).get("agg") or "sum"
 
     sort, limit = attrs.get("sort"), _excsv_int_attr(attrs, "limit")
+    if limit is not None and limit < 1:  # a negative one would slice off the last rows instead
+        raise ChartError(f"limit={_q(attrs['limit'])} must be at least 1")
 
     if mark == "bar":
         spec = _excsv_bar_spec(doc, x, y, color, attrs, sort, limit, values_of, agg_of, delim)
