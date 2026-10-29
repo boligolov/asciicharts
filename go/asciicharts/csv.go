@@ -856,6 +856,10 @@ func SpecFromCSV(text, chart string, opt CSVOptions) (*Object, error) {
 		for _, ci := range valIdx {
 			vals := make([]any, len(rows))
 			for i := range rows {
+				if (chart == "line" || chart == "area") && pyStrip(rows[i][ci]) == "" {
+					vals[i] = nil // an empty cell is a gap where the chart can draw one, an error elsewhere
+					continue
+				}
 				v, err := number(i, ci)
 				if err != nil {
 					return nil, err

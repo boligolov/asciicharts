@@ -218,6 +218,9 @@ func seriesMinMax(ss []series) (float64, float64) {
 	lo, hi := math.Inf(1), math.Inf(-1)
 	for _, s := range ss {
 		for _, v := range s.values {
+			if isGap(v) {
+				continue
+			}
 			lo = pyMin(lo, v)
 			hi = pyMax(hi, v)
 		}
@@ -226,6 +229,19 @@ func seriesMinMax(ss []series) (float64, float64) {
 		return 0, 1
 	}
 	return scaleRange(lo, hi)
+}
+
+func checkNotAllGaps(ss []series) error {
+	for i, s := range ss {
+		all := true
+		for _, v := range s.values {
+			all = all && isGap(v)
+		}
+		if all {
+			return errorf("series %d %s must contain at least one number, not only nulls", i, quote(s.name))
+		}
+	}
+	return nil
 }
 
 // scaleRange centres all-equal data on its value.

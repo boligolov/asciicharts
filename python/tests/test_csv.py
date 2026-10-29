@@ -253,6 +253,14 @@ def test_cli_input_that_is_not_utf8_is_an_error_not_a_traceback(tmp_path):
     assert r.returncode == 1 and r.stderr.decode().strip() == "error: stdin is not UTF-8 text: byte 0x80 at offset 7"
 
 
+def test_an_empty_cell_is_a_gap_in_line_and_area_and_an_error_elsewhere():
+    text = "month,eu,us\nJan,10,8\nFeb,12,9\nMar,,9\nApr,13,10\n"
+    for chart in ("line", "area"):
+        assert spec_from_csv(text, chart)["series"][0]["values"] == [10.0, 12.0, None, 13.0]
+    with pytest.raises(ChartError, match='row 4, column "eu" is empty'):
+        spec_from_csv(text, "hbar")
+
+
 def test_a_field_longer_than_the_csv_readers_limit_is_a_chart_error():
     with pytest.raises(ChartError, match=r"^field larger than field limit \(131072\)$"):
         spec_from_csv("a,b\n" + "x" * 131073 + ",1\n", "hbar")

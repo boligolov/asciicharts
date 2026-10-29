@@ -312,7 +312,8 @@ def test_line_sorts_by_category_not_value_so_a_trend_is_not_scrambled():
     assert spec["labels"] == ["a", "b", "c"]  # alphabetical, not ranked by n
 
 
-def test_line_with_color_pivots_into_one_series_per_color_filling_gaps_with_zero():
+def test_line_with_color_pivots_into_one_series_per_color_leaving_gaps_as_null():
+    """A combination that never occurs is a gap the line breaks at, not a zero it falls to."""
     spec = resolve_excsv_chart(_doc(
         "", ["name=day type=string role=dimension", "name=who type=string role=dimension",
              "name=n type=int role=measure"],
@@ -320,7 +321,17 @@ def test_line_with_color_pivots_into_one_series_per_color_filling_gaps_with_zero
         "day,who,n\nmon,a,1\nmon,b,2\ntue,a,3\n"))  # (tue, b) never occurs
     by_name = {s["name"]: s["values"] for s in spec["series"]}
     assert spec["labels"] == ["mon", "tue"]
-    assert by_name == {"a": [1.0, 3.0], "b": [2.0, 0.0]}
+    assert by_name == {"a": [1.0, 3.0], "b": [2.0, None]}
+    render_chart(spec)
+
+
+def test_a_category_whose_values_are_all_null_is_a_gap_in_a_line_but_zero_in_a_bar():
+    columns = ["name=day type=string role=dimension", "name=n type=int role=measure"]
+    body = "day,n\nmon,1\ntue,\nwed,3\n"
+    line = resolve_excsv_chart(_doc("", columns, "type=line name=t x=day y=n", body))
+    assert line["series"][0]["values"] == [1.0, None, 3.0]
+    bar = resolve_excsv_chart(_doc("", columns, "type=bar name=b x=day y=n", body))
+    assert bar["series"][0]["values"] == [1.0, 0.0, 3.0]
 
 
 def test_area_stack_1_sets_stacked_but_line_ignores_stack():

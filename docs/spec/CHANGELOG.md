@@ -17,6 +17,14 @@ From a code review of both implementations.
 - **line and area take one label per value, or none** (§5.5). Any other number of labels was silently
   ignored, while vbar and hbar rejected it; now line and area reject it too: `labels length (3) must
   match the number of values (5)`. Conformance: no corpus case had such labels; two curated cases.
+- **A missing value is a gap, not a zero** (§4.7, §4.8, §9.1, R17). line and area take `null` in
+  `values`: the line breaks there (a value between two gaps is one cell, with its marker under
+  `showPoints`), an overlaid area leaves that series' columns empty, a stacked area the whole column;
+  the scale is the range of the values that are there. A series of nulls only is an error, and `null`
+  stays an error in every other chart. From CSV, an empty cell is such a gap for line and area (it is
+  still an error elsewhere); from ExCSV, a category with no value for a series is one, where v1.3's
+  reader filled in 0 and the line fell to it. Conformance: no corpus case changes (null was an error
+  for every chart); the curated case `error/value null` moves from line to hbar, seven new ones.
 
 ## v1.3 — 2026-09-27
 

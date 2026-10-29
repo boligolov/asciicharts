@@ -111,7 +111,14 @@
        "anyOf": [
         {
          "items": {
-          "type": "number"
+          "anyOf": [
+           {
+            "type": "number"
+           },
+           {
+            "type": "null"
+           }
+          ]
          },
          "type": "array"
         },
@@ -120,7 +127,7 @@
         }
        ],
        "default": null,
-       "description": "numeric values; meaning depends on chartType, see list_charts",
+       "description": "numeric values; meaning depends on chartType, see list_charts. In line and area, null is a sample with no value: a gap",
        "title": "Values"
       },
       "points": {

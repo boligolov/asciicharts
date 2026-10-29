@@ -1,6 +1,6 @@
 {
   "name": "asciicharts",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Draw correct charts out of text characters — bars, lines, sparklines, histograms, pies, heatmaps — in replies, terminals, PRs and commit messages. Lengths match the values; frames stay straight in any font.",
   "author": {
     "name": "asciicharts contributors",

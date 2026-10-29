@@ -401,6 +401,10 @@ line algorithm (8-connected: one cell per step, diagonal steps allowed). Consequ
   stroke would swallow round markers.
 - `style: "dotted"` lights every other cell of each segment (and always the endpoints), with `+`.
 - Several series: series *i* draws with `FILLS[i]`; later series overwrite earlier ones where they cross.
+- **A missing value is a gap, never a zero.** A `null` sample has no point: the segments into and out of
+  it are not drawn, and a value between two gaps stays a single cell (with its marker under
+  `showPoints`). The scale is the range of the values that are there. A zero drawn for "no data" reads
+  as a fall — the chart would state something the data doesn't. A series of nulls only is an error.
 
 **Draw order (z-order) on the canvas:** series strokes in series order → threshold dashes, **only into
 empty cells** (a reference line goes behind the data) → point markers on top.
@@ -419,6 +423,10 @@ value(x) = values[i] × (1 − f) + values[i + 1] × f        # linear interpola
 - **Stacked:** per column, exactly like stacked bars (4.6), with the column's interpolated values.
 - **Stacked with negatives:** positive bands up from the zero row, negative bands down. If zero falls on
   the bottom row, it moves up one row so the negative side has room.
+- **Gaps** (`null`, as in 4.7): `value(x)` is a gap when either sample it interpolates between is one,
+  unless `f = 0` and it sits exactly on the other. Overlaid, a gap leaves that series' column empty;
+  stacked, it leaves the whole column empty (the stack has no total there) and the column counts toward
+  neither extent of the scale.
 
 ### 4.9 Pie: sample every cell at its centre
 
@@ -913,7 +921,7 @@ One JSON object, the same for the library, the CLI and the MCP tool:
 
 ```
 chartType   sparkline | vbar | hbar | line | area | scatter | dual_axis | pie | histogram | heatmap | boxplot | dotplot
-series      [{name?, values?: number[], points?: [{x, y}]}]
+series      [{name?, values?: number[], points?: [{x, y}]}]     line, area: values may hold null, a gap
 labels?     string[]            category labels, x-axis labels, heatmap column headers
 title?, width?, height?, border?, style?, stacked?, bins?, useColor?,
 threshold?, thresholds?: (number | {value, label?})[], showPoints?, pointChar?
@@ -1232,6 +1240,8 @@ Normative for v1.4 (section 0). Each requirement names the section that explains
   a requested width SHOULD mean the plot, not the decoration around it.
 - **R16** (§5.5) Text that was shortened or left out MUST say so: a cut label ends in `…` (`~` in ASCII),
   and dropped axis labels are counted.
+- **R17** (§4.7, §4.8) A missing value MUST be drawn as missing — a gap in a line or area — never as a
+  zero.
 
 **A renderer**, in addition:
 

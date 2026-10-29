@@ -76,13 +76,13 @@ CHARTS = {
     },
     "line": {
         "summary": "One or more lines with a value axis. Optional dashed reference lines (threshold, or several labelled thresholds) and per-point markers.",
-        "series": "values: the samples in order (at least 2 per series). One line per series. labels (optional) become x-axis labels.",
+        "series": "values: the samples in order (at least 2 per series); null for a missing sample, a gap in the line. One line per series. labels (optional, one per value) become x-axis labels.",
         "options": ["labels", "width", "height", "style", "threshold", "thresholds", "showPoints", "pointChar"],
         "example": {"chartType": "line", "series": [{"values": [12, 18, 15, 30, 42, 38]}]},
     },
     "area": {
         "summary": "Line series filled down to a zero baseline: overlaid or stacked. Negative values fill downward.",
-        "series": "values: the samples in order (at least 2 per series, all the same length). One band per series. labels (optional) become x-axis labels.",
+        "series": "values: the samples in order (at least 2 per series, all the same length); null for a missing sample, a gap in the band. One band per series. labels (optional, one per value) become x-axis labels.",
         "options": ["labels", "width", "height", "stacked", "style"],
         "example": {"chartType": "area", "series": [{"values": [20, 10, -20, -60, -120]}]},
     },
@@ -400,10 +400,21 @@ def _y_pixel(v: float, lo: float, hi: float, span: int) -> int:
     return _round((1 - frac) * (span - 1))
 
 
+GAP_CHARTS = ("line", "area")  # the charts whose values may hold null, a gap
+
+
+def _check_not_all_gaps(series) -> None:
+    for i, s in enumerate(series):
+        if all(v is None for v in s["values"]):
+            raise ChartError(f"series {i} {_q(s['name'])} must contain at least one number, not only nulls")
+
+
 def _series_min_max(series) -> tuple[float, float]:
     lo, hi = math.inf, -math.inf
     for s in series:
         for v in s["values"]:
+            if v is None:
+                continue
             lo = min(lo, v)
             hi = max(hi, v)
     if lo == math.inf:
@@ -697,6 +708,8 @@ def _normalize(spec: dict) -> dict:
 
     total = 0
     series = []
+    # line and area take null for a sample that has no value: a gap, never a zero
+    gaps_allowed = spec.get("chartType") in GAP_CHARTS
     for i, s in enumerate(raw_series):
         if not isinstance(s, dict):
             raise ChartError(f"series {i} must be an object")
@@ -713,7 +726,7 @@ def _normalize(spec: dict) -> dict:
             pts.append((_num(p.get("x"), f"series {i} point x"), _num(p.get("y"), f"series {i} point y")))
         series.append({
             "name": _text(s, "name"),
-            "values": [_num(v, f"series {i} value") for v in values],
+            "values": [None if v is None and gaps_allowed else _num(v, f"series {i} value") for v in values],
             "points": pts,
         })
 
@@ -836,6 +849,8 @@ def _stack_extents(matrix):
     if not matrix:
         return max_pos, max_neg
     for c in range(len(matrix[0])):
+        if any(row[c] is None for row in matrix):  # a gap in a stacked area: the column has no total
+            continue
         pos = neg = 0.0
         for row in matrix:
             v = row[c]
@@ -1281,6 +1296,7 @@ def _render_line(inp):
     for i, s in enumerate(series):
         if len(s["values"]) < 2:
             raise ChartError(f"series {i} {_q(s['name'])} must contain at least two values")
+    _check_not_all_gaps(series)
     _check_x_labels(inp["labels"], _series_max_len(series))
 
     lo, hi = _series_min_max(series)
@@ -1313,6 +1329,9 @@ def _render_line(inp):
         n = len(s["values"])
         prev = None
         for i, v in enumerate(s["values"]):
+            if v is None:  # a gap: the line stops here and starts again at the next value
+                prev = None
+                continue
             x, y = _x_pixel(i, n, pw), _y_pixel(v, lo, hi, ph)
             if prev is not None:
                 c.line(prev[0], prev[1], x, y, line_char, color, dotted)
@@ -1347,6 +1366,8 @@ def _render_line(inp):
             marker = custom or marker_set[si % len(marker_set)]
             n = len(s["values"])
             for i, v in enumerate(s["values"]):
+                if v is None:
+                    continue
                 x, y = _x_pixel(i, n, pw), _y_pixel(v, lo, hi, ph)
                 if owner.setdefault((x, y), si) != si:
                     c.cell_char[y][x], c.cell_color[y][x] = overlap_marker, -1
@@ -1378,7 +1399,9 @@ def _area_fill_ramp(style: str):
     return {"halftone": HALFTONE_FILLS, "ascii": AREA_ASCII_FILLS}.get(style, FILLS)
 
 
-def _interp_at(values, x: int, width: int) -> float:
+def _interp_at(values, x: int, width: int):
+    """The value at column x, interpolated between its two samples; None (a gap) if either is a gap,
+    unless the column sits exactly on the other one."""
     n = len(values)
     if n == 1 or width <= 1:
         return values[0]
@@ -1387,7 +1410,10 @@ def _interp_at(values, x: int, width: int) -> float:
     if i0 >= n - 1:
         return values[n - 1]
     frac = pos - i0
-    return values[i0] * (1 - frac) + values[i0 + 1] * frac
+    a, b = values[i0], values[i0 + 1]
+    if a is None or b is None:
+        return a if frac == 0 else None
+    return a * (1 - frac) + b * frac
 
 
 def _render_area(inp):
@@ -1402,6 +1428,7 @@ def _render_area(inp):
             raise ChartError(
                 f"all series must have the same number of values (series 0 has {n}, "
                 f"series {i} has {len(s['values'])})")
+    _check_not_all_gaps(series)
     _check_x_labels(inp["labels"], n)
 
     height = inp["height"] or 10
@@ -1417,13 +1444,19 @@ def _render_area(inp):
     stack_matrix = [[_interp_at(s["values"], x, width) for x in range(width)] for s in series]
     max_pos, max_neg = _stack_extents(stack_matrix)
 
+    # a column where any series has a gap has no stack total: it stays empty
+    gap_column = [any(row[x] is None for row in stack_matrix) for x in range(width)]
+
     if inp["stacked"] and max_neg == 0:
         min_val, max_val = 0.0, 0.0
         for x in range(width):
-            max_val = max(max_val, _sum(_interp_at(s["values"], x, width) for s in series))
+            if not gap_column[x]:
+                max_val = max(max_val, _sum(_interp_at(s["values"], x, width) for s in series))
         if max_val == 0:
             max_val = 1
         for x in range(width):
+            if gap_column[x]:
+                continue
             values = [_interp_at(s["values"], x, width) for s in series]
             col_sum = _sum(values)
             total_rows = _round(col_sum / max_val * height)
@@ -1445,6 +1478,8 @@ def _render_area(inp):
         if max_neg > 0 and zero_row == height - 1 and height > 1:
             zero_row = height - 2
         for x in range(width):
+            if gap_column[x]:
+                continue
             values = [stack_matrix[si][x] for si in range(num_series)]
             up, down = _split_stack(values, max_pos, max_neg, zero_row + 1, height - 1 - zero_row)
             for side, rows_by_series in enumerate((up, down)):
@@ -1470,7 +1505,10 @@ def _render_area(inp):
             ch = ramp[si % len(ramp)]
             color = _series_color(si) if color_on else -1
             for x in range(width):
-                row = _y_pixel(_interp_at(series[si]["values"], x, width), min_val, max_val, height)
+                v = stack_matrix[si][x]
+                if v is None:  # a gap: nothing to fill down to the baseline
+                    continue
+                row = _y_pixel(v, min_val, max_val, height)
                 lo, hi = sorted((row, zero_row))
                 for r in range(lo, hi + 1):
                     grid[r][x] = ch
@@ -2084,7 +2122,10 @@ def _spec_from_table(header, rows, delim, chart, label, values, sort, limit, opt
     else:
         if label_idx is not None and chart in ("vbar", "hbar", "dotplot", "line", "area"):
             spec["labels"] = labels_for_rows()
-        spec["series"] = [{"name": header[ci], "values": [number(i, ci) for i in range(len(rows))]} for ci in val_idx]
+        def value(row_i, ci):  # an empty cell is a gap where the chart can draw one, an error elsewhere
+            return None if chart in GAP_CHARTS and not rows[row_i][ci].strip() else number(row_i, ci)
+
+        spec["series"] = [{"name": header[ci], "values": [value(i, ci) for i in range(len(rows))]} for ci in val_idx]
 
     for key, val in (options or {}).items():
         if key not in CSV_SETTABLE:
@@ -2494,8 +2535,9 @@ def _excsv_int_attr(attrs: dict, key: str):
         raise ChartError(f"{key}={_q(v)} is not a number")
 
 
-def _excsv_agg_value(vals: list, agg: str, delim: str) -> float:
-    """One aggregated number from a bucket of raw (already null-filtered-to-None) cell values."""
+def _excsv_agg_value(vals: list, agg: str, delim: str, empty=0.0):
+    """One aggregated number from a bucket of raw (already null-filtered-to-None) cell values; `empty`
+    when the bucket holds no number to sum, average or compare (None for a gap in a line or area)."""
     non_null = [v for v in vals if v is not None]
     if agg == "count":
         return float(len(vals))
@@ -2503,15 +2545,15 @@ def _excsv_agg_value(vals: list, agg: str, delim: str) -> float:
         return float(len(set(non_null)))
     nums = [n for n in (_parse_cell(v, delim) for v in non_null) if n is not None]
     if agg == "avg":
-        return _sum(nums) / len(nums) if nums else 0.0
+        return _sum(nums) / len(nums) if nums else empty
     if agg == "min":
-        return min(nums) if nums else 0.0
+        return min(nums) if nums else empty
     if agg == "max":
-        return max(nums) if nums else 0.0
-    return _sum(nums)  # sum — also the default for an agg= value we don't recognize
+        return max(nums) if nums else empty
+    return _sum(nums) if nums else empty  # sum — also the default for an agg= value we don't recognize
 
 
-def _excsv_aggregate(keys: list, raw_values: list, agg: str, delim: str):
+def _excsv_aggregate(keys: list, raw_values: list, agg: str, delim: str, empty=0.0):
     """Group raw_values by keys (equal length), in first-seen key order: [(key, aggregated), ...]."""
     order, buckets = [], {}
     for k, v in zip(keys, raw_values):
@@ -2520,10 +2562,10 @@ def _excsv_aggregate(keys: list, raw_values: list, agg: str, delim: str):
             buckets[k] = []
             order.append(k)
         buckets[k].append(v)
-    return [(k, _excsv_agg_value(buckets[k], agg, delim)) for k in order]
+    return [(k, _excsv_agg_value(buckets[k], agg, delim, empty)) for k in order]
 
 
-def _excsv_group2(primary_raw: list, secondary_raw: list, value_raw: list, agg: str, delim: str):
+def _excsv_group2(primary_raw: list, secondary_raw: list, value_raw: list, agg: str, delim: str, empty=0.0):
     """Two-level group-by — primary categories x secondary categories, each in first-seen order —
     aggregating value_raw per (primary, secondary) cell. Used for color-grouped bar/line/area (
     primary=x, secondary=color) and for rect/heatmap (primary=x, secondary=y). A combination that
@@ -2540,7 +2582,7 @@ def _excsv_group2(primary_raw: list, secondary_raw: list, value_raw: list, agg: 
             s_seen.add(s)
             secondaries.append(s)
         buckets.setdefault((p, s), []).append(v)
-    grid = {s: [_excsv_agg_value(buckets[(p, s)], agg, delim) if (p, s) in buckets else None
+    grid = {s: [_excsv_agg_value(buckets[(p, s)], agg, delim, empty) if (p, s) in buckets else None
                for p in primaries] for s in secondaries}
     return primaries, secondaries, grid
 
@@ -2599,16 +2641,19 @@ def _excsv_bar_spec(doc, x, y, color, attrs, sort, limit, values_of, agg_of, del
 
 
 def _excsv_trend_spec(mark, x, y, color, attrs, sort, limit, values_of, agg_of, delim):
+    # A category with no number for a series is a gap (null), not a zero: on a line a made-up zero
+    # reads as a fall.
     dim_raw = values_of(x)
     if color:
-        cats, cols, grid = _excsv_group2(dim_raw, values_of(color), values_of(y), agg_of(y), delim)
+        cats, cols, grid = _excsv_group2(dim_raw, values_of(color), values_of(y), agg_of(y), delim, empty=None)
         order = _excsv_order(range(len(cats)), sort, limit, key=lambda i: cats[i])
         spec = {"chartType": mark, "labels": [cats[i] for i in order],
-                "series": [{"name": c, "values": [grid[c][i] or 0.0 for i in order]} for c in cols]}
+                "series": [{"name": c, "values": [grid[c][i] for i in order]} for c in cols]}
         if mark == "area" and attrs.get("stack") in ("1", "true"):
             spec["stacked"] = True
         return spec
-    pairs = _excsv_sort_limit(_excsv_aggregate(dim_raw, values_of(y), agg_of(y), delim), sort, limit, "key")
+    pairs = _excsv_sort_limit(_excsv_aggregate(dim_raw, values_of(y), agg_of(y), delim, empty=None), sort, limit,
+                              "key")
     return {"chartType": mark, "labels": [k for k, _ in pairs], "series": [{"values": [v for _, v in pairs]}]}
 
 

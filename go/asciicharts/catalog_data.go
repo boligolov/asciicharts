@@ -93,7 +93,7 @@ const catalogJSON = `[
  {
   "type": "line",
   "summary": "One or more lines with a value axis. Optional dashed reference lines (threshold, or several labelled thresholds) and per-point markers.",
-  "series": "values: the samples in order (at least 2 per series). One line per series. labels (optional) become x-axis labels.",
+  "series": "values: the samples in order (at least 2 per series); null for a missing sample, a gap in the line. One line per series. labels (optional, one per value) become x-axis labels.",
   "options": [
    "labels",
    "width",
@@ -123,7 +123,7 @@ const catalogJSON = `[
  {
   "type": "area",
   "summary": "Line series filled down to a zero baseline: overlaid or stacked. Negative values fill downward.",
-  "series": "values: the samples in order (at least 2 per series, all the same length). One band per series. labels (optional) become x-axis labels.",
+  "series": "values: the samples in order (at least 2 per series, all the same length); null for a missing sample, a gap in the band. One band per series. labels (optional, one per value) become x-axis labels.",
   "options": [
    "labels",
    "width",
