@@ -2504,6 +2504,8 @@ def _excsv_values(col_name: str, col_names: list, rows: list, null_marker):
 def _excsv_col_role(doc: dict, col: str) -> str:
     """A column's analytical role: its own #column role= if declared, else a guess from type=
     (numeric -> measure, otherwise dimension) — used to infer bar/hbar orientation."""
+    if col == "count()":
+        return "measure"
     meta = doc["columns"].get(col) or {}
     if meta.get("role"):
         return meta["role"]
@@ -2525,14 +2527,19 @@ def _excsv_channel(doc: dict, col_names: list, attrs: dict, channel: str, chart_
     return ref
 
 
-def _excsv_int_attr(attrs: dict, key: str):
+def _excsv_int_attr(attrs: dict, key: str, least: int, takes: str):
+    """A whole-number modifier (bin=, limit=) of at least `least`, or None when absent. ExCSV's
+    #chart is advisory: a value outside the spec declines the chart, saying what the attribute takes."""
     v = attrs.get(key)
     if v is None:
         return None
     try:
-        return int(float(v))
-    except (ValueError, OverflowError):  # "x", "nan"; "inf"
-        raise ChartError(f"{key}={_q(v)} is not a number")
+        n = int(v.strip())
+    except ValueError:  # "2.5", "yes", "inf"
+        n = None
+    if n is None or n < least:
+        raise ChartError(f"{key}={_q(v)}: {key} takes {takes}")
+    return n
 
 
 def _excsv_agg_value(vals: list, agg: str, delim: str, empty=0.0):
@@ -2606,14 +2613,14 @@ def _excsv_sort_limit(pairs: list, sort, limit, by: str):
 
 
 def _excsv_bar_spec(doc, x, y, color, attrs, sort, limit, values_of, agg_of, delim):
-    bin_ = attrs.get("bin")
-    if bin_ is not None and y == "count()":
+    # bin=0 is no binning, bin=1 bins with the default count (10, as Vega-Lite's bin: true), n >= 2 asks for n
+    bins = _excsv_int_attr(attrs, "bin", 0, "0 (no bins), 1 (10 bins) or a number of bins, 2 or more")
+    if bins and y == "count()":
         xv = [v for v in (_parse_cell(v, delim) for v in values_of(x)) if v is not None]
         if not xv:
             raise ChartError(f"column {_q(x)} has no numeric values to bin")
         spec = {"chartType": "histogram", "series": [{"values": xv}]}
-        bins = _excsv_int_attr(attrs, "bin")
-        if bins and bins != 1:
+        if bins != 1:
             spec["bins"] = bins
         return spec
 
@@ -2780,9 +2787,8 @@ def resolve_excsv_chart(doc: dict, name: str | None = None) -> dict:
     def agg_of(col):
         return attrs.get("aggregate") or (doc["columns"].get(col) or {}).get("agg") or "sum"
 
-    sort, limit = attrs.get("sort"), _excsv_int_attr(attrs, "limit")
-    if limit is not None and limit < 1:  # a negative one would slice off the last rows instead
-        raise ChartError(f"limit={_q(attrs['limit'])} must be at least 1")
+    # a negative limit would slice off the last rows instead
+    sort, limit = attrs.get("sort"), _excsv_int_attr(attrs, "limit", 1, "a whole number of categories, 1 or more")
 
     if mark == "bar":
         spec = _excsv_bar_spec(doc, x, y, color, attrs, sort, limit, values_of, agg_of, delim)

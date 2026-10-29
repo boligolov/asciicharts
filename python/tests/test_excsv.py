@@ -266,8 +266,8 @@ def test_bar_with_color_groups_into_one_series_per_color_and_stack_1_sets_stacke
     assert {s["name"]: s["values"] for s in spec["series"]} == {"widgets": [40.0, 25.0], "gadgets": [15.0, 0.0]}
 
 
-@pytest.mark.parametrize("limit", ["0", "-1", "inf", "nan", "x"])
-def test_limit_must_be_a_positive_number(limit):
+@pytest.mark.parametrize("limit", ["0", "-1", "2.5", "inf", "nan", "x"])
+def test_limit_must_be_a_positive_whole_number(limit):
     """limit=-1 would be a Python slice that silently drops the last category; inf would overflow."""
     doc = _doc("", ["name=cat type=string role=dimension", "name=n type=int role=measure"],
                f"type=bar name=c x=cat y=n sort=desc limit={limit}", "cat,n\na,5\nb,3\nc,9\n")
@@ -288,6 +288,29 @@ def test_bar_bin_and_y_count_makes_a_histogram():
         "amount\n10\n12\n30\n32\n55\n58\n"))
     assert spec["chartType"] == "histogram" and spec["bins"] == 3
     assert spec["series"][0]["values"] == [10.0, 12.0, 30.0, 32.0, 55.0, 58.0]
+
+
+def _histogram_doc(bin_):
+    return _doc("", ["name=amount type=decimal role=measure"], f"type=bar name=h bin={bin_} x=amount y=count()",
+                "amount\n10\n12\n10\n55\n")
+
+
+def test_bin_1_switches_binning_on_with_the_default_count_not_one_bin():
+    spec = resolve_excsv_chart(_histogram_doc("1"))
+    assert spec["chartType"] == "histogram" and "bins" not in spec  # the renderer's default, 10
+    assert render_chart(spec).count("..") == 10
+
+
+def test_bin_0_is_no_binning_a_bar_of_rows_per_value():
+    spec = resolve_excsv_chart(_histogram_doc("0"))
+    assert spec["chartType"] == "vbar"
+    assert dict(zip(spec["labels"], spec["series"][0]["values"])) == {"10": 2.0, "12": 1.0, "55": 1.0}
+
+
+@pytest.mark.parametrize("bin_", ["-3", "2.5", "yes", "true", "inf"])
+def test_bin_takes_0_1_or_a_number_of_bins(bin_):
+    with pytest.raises(ChartError, match=r"bin=.*takes 0 \(no bins\), 1 \(10 bins\) or a number of bins"):
+        resolve_excsv_chart(_histogram_doc(bin_))
 
 
 def test_aggregate_override_beats_the_columns_own_agg():
