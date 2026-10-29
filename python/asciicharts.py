@@ -1926,7 +1926,10 @@ def _read_csv(text: str):
         delimiter = csv.Sniffer().sniff(text[:4096], delimiters=",;\t|").delimiter
     except csv.Error:
         delimiter = ","
-    rows = [r for r in csv.reader(io.StringIO(text), delimiter=delimiter) if any(c.strip() for c in r)]
+    try:
+        rows = [r for r in csv.reader(io.StringIO(text), delimiter=delimiter) if any(c.strip() for c in r)]
+    except csv.Error as e:  # "field larger than field limit (131072)"
+        raise ChartError(str(e))
     if len(rows) < 2:
         raise ChartError("the CSV needs a header row and at least one data row")
     header = [h.strip() for h in rows[0]]
@@ -2069,18 +2072,51 @@ def _parse_set(pairs):
             raise ChartError(f"--set expects key=value, got {_q(pair)}")
         key, raw = pair.split("=", 1)
         try:
-            out[key.strip()] = json.loads(raw)
-        except json.JSONDecodeError:
+            out[key.strip()] = _json_loads(raw)
+        except ValueError:
             out[key.strip()] = raw
     return out
+
+
+MAX_JSON_DEPTH = 100  # a spec needs four levels; deeper is an error, not a RecursionError
+
+
+def _json_loads(raw: str):
+    """json.loads, with nesting deeper than MAX_JSON_DEPTH a ValueError (as json.JSONDecodeError is one)."""
+    too_deep = ValueError(f"nested deeper than {MAX_JSON_DEPTH} levels")
+    try:
+        value = json.loads(raw)
+    except RecursionError:
+        raise too_deep from None
+    stack = [(value, 1)]
+    while stack:
+        v, depth = stack.pop()
+        if isinstance(v, (list, dict)):
+            if depth > MAX_JSON_DEPTH:
+                raise too_deep
+            stack.extend((c, depth + 1) for c in (v.values() if isinstance(v, dict) else v))
+    return value
+
+
+def _decode(data: bytes, where: str) -> str:
+    """UTF-8 bytes as text, without a BOM; anything else is a ChartError naming the first bad byte."""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError as e:
+        raise ChartError(f"{where} is not UTF-8 text: byte 0x{data[e.start]:02x} at offset {e.start}") from None
+    return text.removeprefix("\ufeff")
+
+
+def _read_file(path: str) -> str:
+    with open(path, "rb") as f:
+        return _decode(f.read(), path)
 
 
 def _read_stdin() -> str:
     """stdin as UTF-8 whatever the console code page, without a BOM (PowerShell's pipe adds one), with
     CRLF and CR read as LF, as text mode would."""
     buf = getattr(sys.stdin, "buffer", None)
-    text = buf.read().decode("utf-8") if buf is not None else sys.stdin.read()
-    text = text.removeprefix("\ufeff")
+    text = _decode(buf.read(), "stdin") if buf is not None else sys.stdin.read().removeprefix("\ufeff")
     return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
@@ -2118,8 +2154,7 @@ def _csv_main(argv) -> int:
         if args.csv == "-":
             text = _read_stdin()
         else:
-            with open(args.csv, encoding="utf-8-sig", newline="") as f:
-                text = f.read()
+            text = _read_file(args.csv)
 
         is_excsv = _is_excsv(text)
 
@@ -2293,8 +2328,8 @@ def parse_excsv(text: str) -> dict:
             entry = {"kind": "vega", "name": None, "engine": engine, "raw": payload}
             if engine == "vega":
                 try:
-                    entry["parsed"] = json.loads(payload)
-                except json.JSONDecodeError as e:
+                    entry["parsed"] = _json_loads(payload)
+                except ValueError as e:
                     raise ChartError(f"line {i + 1}: #chart-vega payload is not valid JSON: "
                                      f"{e} (chart_vega_invalid_json)")
             else:
@@ -2345,7 +2380,10 @@ def _excsv_read_data(data_text: str, delim: str, quote: str, has_header: bool):
         reader = csv.reader(io.StringIO(data_text), delimiter=delim, quotechar=quote)
     else:
         reader = csv.reader(io.StringIO(data_text), delimiter=delim, quoting=csv.QUOTE_NONE)
-    all_rows = [r for r in reader if any(c.strip() for c in r)]
+    try:
+        all_rows = [r for r in reader if any(c.strip() for c in r)]
+    except csv.Error as e:
+        raise ChartError(str(e))
     if not all_rows or (has_header and len(all_rows) < 2):
         raise ChartError("the ExCSV file has no data rows")
     col_names, rows = (all_rows[0], all_rows[1:]) if has_header else ([], all_rows)
@@ -2741,11 +2779,10 @@ def main(argv=None) -> int:
         elif argv[0] == "-":
             raw = _read_stdin()
         else:
-            with open(argv[0], encoding="utf-8-sig") as f:
-                raw = f.read()
+            raw = _read_file(argv[0])
         try:
-            spec = json.loads(raw)
-        except json.JSONDecodeError as e:
+            spec = _json_loads(raw)
+        except ValueError as e:
             raise ChartError(f"invalid JSON: {e}")
         print(render_chart(spec))
         return 0

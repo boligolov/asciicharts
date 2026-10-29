@@ -10,6 +10,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 
 	"github.com/boligolov/asciicharts/go/asciicharts"
 )
@@ -71,11 +72,9 @@ func renderSpec(argv []string, stdin io.Reader) (string, error) {
 		}
 		raw = []byte(argv[1])
 	case "-":
-		raw, err = io.ReadAll(stdin)
-		raw = []byte(strings.TrimPrefix(string(raw), bom)) // PowerShell's pipe adds one
+		raw, err = readText(stdin, "stdin")
 	default:
-		raw, err = os.ReadFile(argv[0])
-		raw = []byte(strings.TrimPrefix(string(raw), bom))
+		raw, err = readText(nil, argv[0])
 	}
 	if err != nil {
 		return "", err
@@ -245,13 +244,11 @@ func csvRender(a *csvArgs, stdin io.Reader) (string, error) {
 	var raw []byte
 	var err error
 	if a.csv == "-" {
-		raw, err = io.ReadAll(stdin)
-		// Python turns \r\n and \r into \n, and drops a BOM (PowerShell's pipe adds one)
+		raw, err = readText(stdin, "stdin")
+		// Python turns \r\n and \r into \n
 		raw = []byte(strings.ReplaceAll(strings.ReplaceAll(string(raw), "\r\n", "\n"), "\r", "\n"))
-		raw = []byte(strings.TrimPrefix(string(raw), bom))
 	} else {
-		raw, err = os.ReadFile(a.csv)
-		raw = []byte(strings.TrimPrefix(string(raw), bom))
+		raw, err = readText(nil, a.csv)
 	}
 	if err != nil {
 		return "", err
@@ -292,6 +289,29 @@ func csvRender(a *csvArgs, stdin io.Reader) (string, error) {
 }
 
 const bom = string(rune(0xFEFF))
+
+// readText reads stdin (r) or the file path as UTF-8 text without a BOM (PowerShell's pipe adds one);
+// anything else is an error naming the first bad byte, in the Python reference's words.
+func readText(r io.Reader, path string) ([]byte, error) {
+	var raw []byte
+	var err error
+	if r != nil {
+		raw, err = io.ReadAll(r)
+	} else {
+		raw, err = os.ReadFile(path)
+	}
+	if err != nil {
+		return nil, err
+	}
+	for i := 0; i < len(raw); {
+		c, size := utf8.DecodeRune(raw[i:])
+		if c == utf8.RuneError && size == 1 {
+			return nil, &asciicharts.ChartError{Msg: fmt.Sprintf("%s is not UTF-8 text: byte 0x%02x at offset %d", path, raw[i], i)}
+		}
+		i += size
+	}
+	return []byte(strings.TrimPrefix(string(raw), bom)), nil
+}
 
 var errExCSV = errors.New("this is an ExCSV file (#!excsv), which this build does not read yet; " +
 	"use the Python reference (python asciicharts.py --csv ...), or strip the #-lines to read it as plain CSV")

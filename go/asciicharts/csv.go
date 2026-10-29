@@ -352,6 +352,9 @@ func sniffDelimiter(text string) rune {
 
 // --- records: CPython's _csv reader (excel dialect, strict off) ---------------------------------
 
+// csvFieldLimit is _csv's default field_size_limit, in characters.
+const csvFieldLimit = 131072
+
 const (
 	stStartRecord = iota
 	stStartField
@@ -367,11 +370,16 @@ func readCSVRecords(text string, delimiter rune) ([][]string, error) {
 	var field []rune
 	state := stStartRecord
 	fieldLen := 0
+	tooLong := false
 	save := func() {
 		fields = append(fields, string(field))
 		field, fieldLen = field[:0], 0
 	}
 	add := func(c rune) {
+		if fieldLen >= csvFieldLimit {
+			tooLong = true
+			return
+		}
 		field = append(field, c)
 		fieldLen++
 	}
@@ -466,6 +474,9 @@ func readCSVRecords(text string, delimiter rune) ([][]string, error) {
 		for _, c := range line {
 			if err := process(c); err != nil {
 				return nil, err
+			}
+			if tooLong {
+				return nil, errorf("field larger than field limit (%d)", csvFieldLimit)
 			}
 		}
 		if err := process(eol); err != nil {

@@ -55,6 +55,12 @@ func TestRun(t *testing.T) {
 		{"csv ambiguous", "", []string{"--csv", csvPath, "--cha", "hbar"}, 2, "", "ambiguous option: --cha"},
 		{"csv limit", "", []string{"--csv", csvPath, "--chart", "hbar", "--limit", "x"}, 2, "", "invalid int value: 'x'"},
 		{"excsv", "", []string{"--csv", excsvPath, "--chart", "hbar"}, 1, "", "ExCSV"},
+		{"not utf-8", "a,b\n\x80,1\n", []string{"--csv", "-", "--chart", "hbar"}, 1, "",
+			"error: stdin is not UTF-8 text: byte 0x80 at offset 4\n"},
+		{"too deep", "", []string{"--json", strings.Repeat("[", 101) + strings.Repeat("]", 101)}, 1, "",
+			"error: invalid JSON: nested deeper than 100 levels\n"},
+		{"field too long", "a,b\n" + strings.Repeat("x", 131073) + ",1\n", []string{"--csv", "-", "--chart", "hbar"}, 1, "",
+			"error: field larger than field limit (131072)\n"},
 	} {
 		code, out, errOut := runCLI(t, c.stdin, c.args...)
 		if code != c.code || !strings.Contains(out, c.out) || !strings.Contains(errOut, c.err) {

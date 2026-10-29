@@ -1,6 +1,7 @@
 """CSV input: spec_from_csv and the --csv command line."""
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -237,6 +238,33 @@ def test_cli_errors_go_to_stderr_with_exit_code_1(csv_file):
     assert r.returncode == 1 and r.stderr.startswith("error:")
     r = run(["--csv", csv_file, "--chart", "hbar", "--set", "noequals"])
     assert r.returncode == 1 and "key=value" in r.stderr
+
+
+def test_cli_input_that_is_not_utf8_is_an_error_not_a_traceback(tmp_path):
+    p = tmp_path / "latin1.csv"
+    p.write_bytes(b"name,v\nPr\xe9,1\n")
+    r = run(["--csv", str(p), "--chart", "hbar"])
+    assert r.returncode == 1 and r.stderr == f"error: {p} is not UTF-8 text: byte 0xe9 at offset 9\n"
+    p.write_bytes(b'{"chartType":"sparkline","title":"\xff"}')
+    r = run([str(p)])
+    assert r.returncode == 1 and r.stderr == f"error: {p} is not UTF-8 text: byte 0xff at offset 34\n"
+    r = subprocess.run([sys.executable, SCRIPT, "--csv", "-", "--chart", "hbar"], input=b"\xef\xbb\xbfa,b\n\x80,1\n",
+                       capture_output=True, env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+    assert r.returncode == 1 and r.stderr.decode().strip() == "error: stdin is not UTF-8 text: byte 0x80 at offset 7"
+
+
+def test_a_field_longer_than_the_csv_readers_limit_is_a_chart_error():
+    with pytest.raises(ChartError, match=r"^field larger than field limit \(131072\)$"):
+        spec_from_csv("a,b\n" + "x" * 131073 + ",1\n", "hbar")
+
+
+def test_cli_json_nested_too_deeply_is_an_error_not_a_traceback():
+    r = run(["--json", "[" * 10_000 + "]" * 10_000])
+    assert r.returncode == 1 and r.stderr == "error: invalid JSON: nested deeper than 100 levels\n"
+    r = run(["--json", "[" * 101 + "]" * 101])
+    assert r.returncode == 1 and r.stderr == "error: invalid JSON: nested deeper than 100 levels\n"
+    r = run(["--json", "[" * 100 + "]" * 100])
+    assert r.returncode == 1 and r.stderr == "error: chart spec must be a JSON object\n"
 
 
 def test_cli_help_mentions_the_flags():

@@ -26,6 +26,9 @@ CSV_FILES = {
     "text.csv": "a,b\nx,y\n",
     "matrix.csv": "day|morning|noon|evening\nMon|3|7|2\nTue|5|9|4\nWed|1|4|8\n",
     "excsv.csv": "#!excsv v=0.5\n#column name=a type=string role=dimension\na,b\nx,1\n",
+    "latin1.csv": b"name,v\nPr\xe9,1\n",  # not UTF-8
+    "latin1.json": b'{"chartType":"sparkline","title":"\xff","series":[{"values":[1,2]}]}',
+    "long.csv": "a,b\n" + "x" * 131073 + ",1\n",  # longer than CPython's csv field limit
 }
 
 SPEC = '{"chartType":"hbar","labels":["Chrome","Firefox","Safari"],"series":[{"values":[62,21,12]}]}'
@@ -73,11 +76,19 @@ CASES = [
     (["--csv", "missing.csv", "--chart", "hbar"], None),
     (["--csv", "excsv.csv", "--chart", "hbar"], None),
     (["--csv", "excsv.csv", "--list-charts"], None),
+    (["latin1.json"], None),
+    (["-"], b"\xef\xbb\xbf" + SPEC.encode() + b"\xc3"),
+    (["--json", "[" * 101 + "]" * 101], None),
+    (["--json", "[" * 100 + "]" * 100], None),
+    (["--csv", "latin1.csv", "--chart", "hbar"], None),
+    (["--csv", "-", "--chart", "hbar"], b"a,b\n\x80,1\n"),
+    (["--csv", "long.csv", "--chart", "hbar"], None),
 ]
 
 
 def run(cmd, args, stdin, cwd):
-    r = subprocess.run(cmd + args, input=(stdin or "").encode("utf-8"), cwd=cwd, capture_output=True)
+    data = stdin if isinstance(stdin, bytes) else (stdin or "").encode("utf-8")
+    r = subprocess.run(cmd + args, input=data, cwd=cwd, capture_output=True)
     return r.returncode, r.stdout.decode("utf-8").replace("\r\n", "\n"), r.stderr.decode("utf-8").replace("\r\n", "\n")
 
 
@@ -88,7 +99,7 @@ def main():
     failed = 0
     with tempfile.TemporaryDirectory() as tmp:
         for name, text in CSV_FILES.items():
-            Path(tmp, name).write_bytes(text.encode("utf-8"))
+            Path(tmp, name).write_bytes(text if isinstance(text, bytes) else text.encode("utf-8"))
         Path(tmp, "spec.json").write_text(SPEC, encoding="utf-8")
         for args, stdin in CASES:
             if stdin == "usage":  # exit code 2 on both; the usage text is argparse's own
