@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from asciicharts import ChartError, render_chart, spec_from_csv
+from asciicharts import ChartError, _sniff_delimiter, render_chart, spec_from_csv
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = str(ROOT / "asciicharts.py")
@@ -127,6 +127,23 @@ def test_options_are_merged_and_unknown_ones_rejected():
 def test_other_delimiters_are_detected(delim):
     text = LATENCY.replace(",", delim)
     assert series_values(spec_from_csv(text, "hbar", values="p99")) == {"p99": [480, 1900, 950, 9, 4200]}
+
+
+def test_the_delimiter_does_not_depend_on_the_python_version():
+    """Our own sniffing, as of csv.Sniffer in 3.12.15: the stdlib's before it read the blank line's \\r
+    as a row without tabs and fell back to a comma, so this file had one column on older Pythons."""
+    spec = spec_from_csv("k\tv\r\n\r\na\t1\r\nb\t2\r\n", "hbar", values="v")
+    assert spec["labels"] == ["a", "b"] and series_values(spec) == {"v": [1, 2]}
+
+
+@pytest.mark.parametrize("text, delim", [
+    ('"a,b";c\n"d,e";f\n', ";"),             # the delimiter after a quoted field, not the comma inside it
+    ('a|"b ""c"", d"|e\n1|2|3\n', "|"),      # a doubled quote doesn't end the field
+    ('a,"b\nc\n', ","),                      # a quote never closed names nothing
+    ("one\ntwo\n", ","),                     # nothing to go on
+])
+def test_sniffing_a_delimiter(text, delim):
+    assert _sniff_delimiter(text) == delim
 
 
 def test_decorated_numbers():

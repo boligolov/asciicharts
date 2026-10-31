@@ -976,7 +976,9 @@ tool") gives it nothing — every internal exception reachable from input is a b
 
 Real CSV files are dirty. The CSV reader:
 
-- sniffs the delimiter among `,` `;` tab `|`; strips a BOM, blank lines; pads short rows;
+- sniffs the delimiter among `,` `;` tab `|`, by csv.Sniffer's algorithm as of CPython 3.12.15, in the
+  implementation's own code so that a file reads the same under any runtime; strips a BOM, blank lines;
+  pads short rows;
 - parses decorated numbers: surrounding spaces, `$ € £` prefixes, a trailing `%`, thousands separators
   (`1,234.5`), a decimal comma when the file is not comma-separated (`3,14`);
 - treats a column as numeric if every non-empty cell parses; the first text column is the label column;

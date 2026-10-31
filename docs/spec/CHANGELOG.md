@@ -25,6 +25,12 @@ From a code review of both implementations.
   still an error elsewhere); from ExCSV, a category with no value for a series is one, where v1.3's
   reader filled in 0 and the line fell to it. Conformance: no corpus case changes (null was an error
   for every chart); the curated case `error/value null` moves from line to hbar, seven new ones.
+- **The CSV delimiter no longer depends on the Python version** (§9.5). The reference called
+  `csv.Sniffer`, which CPython rewrote in a 3.12 patch release, so one file could read as one column
+  on one Python and five on another, and the Go port, written against the older one, disagreed with
+  the newer. Both implementations now hold the algorithm as of 3.12.15 themselves. A CRLF file with
+  blank lines, or quoted fields holding quotes, may sniff differently than under older Pythons.
+  Conformance: no case changes.
 
 ## v1.3 — 2026-09-27
 

@@ -1,7 +1,7 @@
 package asciicharts
 
 // A chart spec straight from a CSV file (docs/spec/principles.md §9.5), as the Python reference builds it:
-// the same delimiter sniffing (a port of CPython's csv.Sniffer), the same record parsing (a port of
+// the same delimiter sniffing (csv.Sniffer's algorithm as of 3.12.15), the same record parsing (a port of
 // CPython's _csv reader state machine), the same number parsing and column matching, and the same
 // error messages.
 
@@ -86,7 +86,7 @@ func parseCell(cell string, delimiter rune) (float64, bool) {
 	return v, true
 }
 
-// --- delimiter sniffing: CPython's csv.Sniffer, restricted to the delimiters , ; tab | -----------
+// --- delimiter sniffing: csv.Sniffer as of CPython 3.12.15, restricted to , ; tab | ---------------
 
 func isPyWord(r rune) bool { return r == '_' || unicode.IsLetter(r) || unicode.IsNumber(r) }
 
@@ -105,7 +105,22 @@ func sniffQuoted(s []rune) []sniffMatch {
 	n := len(s)
 	lineStart := func(i int) bool { return i == 0 || s[i-1] == '\n' }
 	atLineEnd := func(k int) bool { return k+1 == n || s[k+1] == '\n' }
-	// pattern 1: (delim)( ?)(quote).*?(quote)(delim)    pattern 3: (delim)( ?)(quote).*?(quote)(?:$|\n)
+	// closing is the quote that ends the field opened at start, the first that isn't doubled, or -1.
+	closing := func(start int) int {
+		q := s[start]
+		for k := start + 1; k < n; k++ {
+			if s[k] != q {
+				continue
+			}
+			if k+1 < n && s[k+1] == q {
+				k++
+				continue
+			}
+			return k
+		}
+		return -1
+	}
+	// pattern 1: (delim)( ?)(quote)body(quote)(delim)    pattern 3: (delim)( ?)(quote)body(quote)(?:$|\n)
 	delimQuoted := func(closeAtLineEnd bool) []sniffMatch {
 		var out []sniffMatch
 		for i := 0; i < n; {
@@ -115,30 +130,25 @@ func sniffQuoted(s []rune) []sniffMatch {
 					j, spaced = j+1, true
 				}
 				if j < n && isQuoteRune(s[j]) {
-					q := s[j]
-					for k := j + 1; k < n; k++ {
-						if s[k] != q {
+					if k := closing(j); k >= 0 {
+						if closeAtLineEnd && atLineEnd(k) {
+							out = append(out, sniffMatch{quote: s[j], delim: s[i], hasDelim: true, spaced: spaced})
+							i = k + 1
 							continue
 						}
-						if closeAtLineEnd && atLineEnd(k) {
-							out = append(out, sniffMatch{quote: q, delim: s[i], hasDelim: true, spaced: spaced})
-							i = k + 1
-							goto next
-						}
 						if !closeAtLineEnd && k+1 < n && s[k+1] == s[i] {
-							out = append(out, sniffMatch{quote: q, delim: s[i], hasDelim: true, spaced: spaced})
+							out = append(out, sniffMatch{quote: s[j], delim: s[i], hasDelim: true, spaced: spaced})
 							i = k + 2
-							goto next
+							continue
 						}
 					}
 				}
 			}
 			i++
-		next:
 		}
 		return out
 	}
-	// pattern 2: (?:^|\n)(quote).*?(quote)(delim)( ?)    pattern 4: (?:^|\n)(quote).*?(quote)(?:$|\n)
+	// pattern 2: (?:^|\n)(quote)body(quote)(delim)( ?)    pattern 4: (?:^|\n)(quote)body(quote)(?:$|\n)
 	lineQuoted := func(withDelim bool) []sniffMatch {
 		var out []sniffMatch
 		for i := 0; i < n; {
@@ -154,28 +164,23 @@ func sniffQuoted(s []rune) []sniffMatch {
 				if p >= n || !isQuoteRune(s[p]) {
 					continue
 				}
-				q := s[p]
-				for k := p + 1; k < n; k++ {
-					if s[k] != q {
-						continue
-					}
-					if withDelim && k+1 < n && delimClass(s[k+1]) {
-						end := k + 2
-						spaced := end < n && s[end] == ' '
-						if spaced {
-							end++
-						}
-						out = append(out, sniffMatch{quote: q, delim: s[k+1], hasDelim: true, spaced: spaced})
-						i, matched = end, true
-						break
-					}
-					if !withDelim && atLineEnd(k) {
-						out = append(out, sniffMatch{quote: q})
-						i, matched = k+1, true
-						break
-					}
+				k := closing(p)
+				if k < 0 {
+					continue
 				}
-				if matched {
+				if withDelim && k+1 < n && delimClass(s[k+1]) {
+					end := k + 2
+					spaced := end < n && s[end] == ' '
+					if spaced {
+						end++
+					}
+					out = append(out, sniffMatch{quote: s[p], delim: s[k+1], hasDelim: true, spaced: spaced})
+					i, matched = end, true
+					break
+				}
+				if !withDelim && atLineEnd(k) {
+					out = append(out, sniffMatch{quote: s[p]})
+					i, matched = k+1, true
 					break
 				}
 			}
@@ -335,16 +340,17 @@ func guessDelimiter(sample string, delimiters string) rune {
 	return delimOrder[len(delimOrder)-1]
 }
 
-// sniffDelimiter is csv.Sniffer().sniff(sample, delimiters=",;\t|").delimiter, "," when it can't tell.
+// sniffDelimiter is the reference's _sniff_delimiter: the delimiter among , ; tab |, "," when it can't tell.
 func sniffDelimiter(text string) rune {
 	sample := []rune(text)
 	if len(sample) > 4096 {
 		sample = sample[:4096]
 	}
-	if d := guessQuoteAndDelimiter(sample, ",;\t|"); d != 0 {
+	normalized := strings.NewReplacer("\r\n", "\n", "\r", "\n").Replace(string(sample))
+	if d := guessQuoteAndDelimiter([]rune(normalized), ",;\t|"); d != 0 {
 		return d
 	}
-	if d := guessDelimiter(string(sample), ",;\t|"); d != 0 {
+	if d := guessDelimiter(normalized, ",;\t|"); d != 0 {
 		return d
 	}
 	return ','

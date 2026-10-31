@@ -1976,15 +1976,122 @@ def _parse_cell(cell: str, delimiter: str):
     return v if math.isfinite(v) else None
 
 
+CSV_DELIMITERS = ",;\t|"
+
+
+def _sniff_quoted(s: str) -> list:
+    """Delimiters next to a quoted field, by csv.Sniffer's four patterns (the first that matches wins):
+    ,"...",   "...",   ,"..."   and a lone "...", which names no delimiter. A quoted field ends at its
+    first quote that isn't doubled. By hand: these patterns need possessive matching, Python 3.11+."""
+    n = len(s)
+
+    def is_delim(ch):
+        return not (ch.isalnum() or ch == "_" or ch in "\n\"'")
+
+    def closing(start):  # the quote that closes the field opened at start, or -1
+        k = start + 1
+        while k < n:
+            if s[k] == s[start]:
+                if s[k + 1:k + 2] != s[start]:
+                    return k
+                k += 1
+            k += 1
+        return -1
+
+    def at_line_end(k):
+        return k + 1 == n or s[k + 1] == "\n"
+
+    def after_delim(close_at_line_end):
+        found, i = [], 0
+        while i < n:
+            j = i + 1
+            if is_delim(s[i]):
+                if s[j:j + 1] == " ":
+                    j += 1
+                k = closing(j) if s[j:j + 1] and s[j] in "\"'" else -1
+                if k >= 0 and close_at_line_end and at_line_end(k):
+                    found.append(s[i])
+                    j = k + 1
+                elif k >= 0 and not close_at_line_end and s[k + 1:k + 2] == s[i]:
+                    found.append(s[i])
+                    j = k + 2
+                else:
+                    j = i + 1
+            i = j
+        return found
+
+    def at_line_start(with_delim):
+        found, i = [], 0
+        while i < n:
+            next_i = i + 1
+            for p in ([i] if i == 0 or s[i - 1] == "\n" else []) + ([i + 1] if s[i] == "\n" else []):
+                k = closing(p) if p < n and s[p] in "\"'" else -1
+                if k >= 0 and with_delim and k + 1 < n and is_delim(s[k + 1]):
+                    found.append(s[k + 1])
+                    next_i = k + 3 if s[k + 2:k + 3] == " " else k + 2
+                    break
+                if k >= 0 and not with_delim and at_line_end(k):
+                    found.append("")
+                    next_i = k + 1
+                    break
+            i = next_i
+        return found
+
+    return after_delim(False) or at_line_start(True) or after_delim(True) or at_line_start(False)
+
+
+def _sniff_frequency(s: str):
+    """The delimiter that occurs the same number of times on most lines, read ten lines at a time, as
+    csv.Sniffer does; None when no line count holds on at least 90% of the lines."""
+    lines = [line for line in s.split("\n") if line]
+    chunk = min(10, len(lines))
+    tally = {d: {} for d in CSV_DELIMITERS}  # delimiter -> {count on a line: lines with that count}
+    modes, delims = {}, {}
+    start, iteration = 0, 0
+    while start < len(lines):
+        iteration += 1
+        for line in lines[start:start + chunk]:
+            for d in CSV_DELIMITERS:
+                count = line.count(d)
+                tally[d][count] = tally[d].get(count, 0) + 1
+        for d, counts in tally.items():
+            if list(counts) == [0]:
+                continue
+            count, lines_with = max(counts.items(), key=lambda item: item[1])  # the first of equals
+            modes[d] = (count, 2 * lines_with - sum(counts.values()))
+        total = min(chunk * iteration, len(lines))
+        consistency = 1.0
+        while not delims and consistency >= 0.9:
+            for d, (count, score) in modes.items():
+                if count > 0 and score > 0 and score / total >= consistency:
+                    delims[d] = (count, score)
+            consistency -= 0.01
+        if len(delims) == 1:
+            return next(iter(delims))
+        start += chunk
+    for d in ",\t;":
+        if d in delims:
+            return d
+    return "|" if delims else None
+
+
+def _sniff_delimiter(text: str) -> str:
+    """The delimiter among , ; tab |, "," when it can't tell. csv.Sniffer's algorithm as of Python
+    3.12.15, not csv.Sniffer itself: that one changes in patch releases, and with it how a file reads."""
+    sample = text[:4096].replace("\r\n", "\n").replace("\r", "\n")
+    votes = {}
+    for d in _sniff_quoted(sample):
+        if d and d in CSV_DELIMITERS:
+            votes[d] = votes.get(d, 0) + 1
+    return (max(votes, key=votes.get) if votes else _sniff_frequency(sample)) or ","
+
+
 def _read_csv(text: str):
     """(header, rows, delimiter) — the delimiter is sniffed among , ; tab |."""
     text = text.lstrip("﻿")
     if not text.strip():
         raise ChartError("the CSV is empty")
-    try:
-        delimiter = csv.Sniffer().sniff(text[:4096], delimiters=",;\t|").delimiter
-    except csv.Error:
-        delimiter = ","
+    delimiter = _sniff_delimiter(text)
     try:
         rows = [r for r in csv.reader(io.StringIO(text), delimiter=delimiter) if any(c.strip() for c in r)]
     except csv.Error as e:  # "field larger than field limit (131072)"
