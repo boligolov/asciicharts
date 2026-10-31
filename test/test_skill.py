@@ -191,6 +191,18 @@ def test_the_skill_has_one_version():
     assert plugin["version"] == version
 
 
+def test_the_archive_is_ordered_the_same_on_every_os():
+    """Sorted by the path as text: a Windows Path sorts ignoring case, which put SKILL.md after scripts/."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import io
+    import zipfile
+    import package_skill
+
+    with zipfile.ZipFile(io.BytesIO(package_skill.build())) as z:
+        names = z.namelist()
+    assert names == sorted(names)
+
+
 def test_the_sites_download_is_the_current_skill():
     """asciicharts.online/asciicharts.skill is what claude.ai users upload; the committed copy must hold
     what a fresh build does (python scripts/package_skill.py --site). Entries are compared, not the

@@ -30,7 +30,7 @@ CRLF, LF = bytes([13, 10]), bytes([10])
 
 
 def files():
-    for path in sorted(SKILL.rglob("*")):
+    for path in sorted(SKILL.rglob("*"), key=lambda p: p.relative_to(SKILL).as_posix()):  # not by Path: Windows ignores case
         if path.is_file() and not (SKIP_DIRS & set(path.relative_to(SKILL).parts)) and path.suffix not in SKIP_SUFFIXES:
             yield path
 
