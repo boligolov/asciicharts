@@ -559,6 +559,7 @@ def test_track_glyph_is_font_safe():
 # right edge of an otherwise rectangular chart ragged.
 SAFE_FILLS = set("█▓▒░▌▄▐▀")
 SAFE_MARKERS = set("●○▲■□▼♦◊►◄")
+SAFE_PUNCTUATION = set("…")  # WGL4: the ellipsis of a cut x-axis label
 # The box-drawing glyphs of WGL4, the set Consolas, Courier New and Lucida Console actually cover:
 # light and double lines only — heavy (━┃), rounded (╭╮) and dashed lines are not in it.
 WGL4_BOX = set("─│┌┐└┘├┤┬┴┼═║╒╓╔╕╖╗╘╙╚╛╜╝╞╟╠╡╢╣╤╥╦╧╨╩╪╫╬")
@@ -583,7 +584,7 @@ def test_default_output_uses_only_font_safe_glyphs():
         if spec.get("border") in ("heavy", "rounded"):
             continue
         for ch in set(case["out"]):
-            ok = ord(ch) < 0x100 or ch in WGL4_BOX or ch in SAFE_FILLS or ch in SAFE_MARKERS
+            ok = ord(ch) < 0x100 or ch in WGL4_BOX or ch in SAFE_FILLS or ch in SAFE_MARKERS or ch in SAFE_PUNCTUATION
             assert ok, f"{ch!r} (U+{ord(ch):04X}) in the output of {spec}"
         checked += 1
     assert checked > 200

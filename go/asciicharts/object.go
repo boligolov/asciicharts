@@ -57,12 +57,16 @@ func Plain(v any) any {
 	return v
 }
 
+// MaxJSONDepth is how deeply DecodeOrdered lets arrays and objects nest; a spec needs four levels.
+const MaxJSONDepth = 100
+
 // DecodeOrdered parses one JSON value, keeping object key order and number literals (json.Number).
-// It fails if anything but whitespace follows the value, like Python's json.loads.
+// It fails if anything but whitespace follows the value, like Python's json.loads, and if it nests
+// deeper than MaxJSONDepth.
 func DecodeOrdered(data []byte) (any, error) {
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.UseNumber()
-	v, err := decodeValue(dec)
+	v, err := decodeValue(dec, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -72,13 +76,16 @@ func DecodeOrdered(data []byte) (any, error) {
 	return v, nil
 }
 
-func decodeValue(dec *json.Decoder) (any, error) {
+func decodeValue(dec *json.Decoder, depth int) (any, error) {
 	tok, err := dec.Token()
 	if err != nil {
 		return nil, err
 	}
 	switch t := tok.(type) {
 	case json.Delim:
+		if depth++; depth > MaxJSONDepth {
+			return nil, errorf("nested deeper than %d levels", MaxJSONDepth)
+		}
 		switch t {
 		case '{':
 			o := NewObject()
@@ -87,7 +94,7 @@ func decodeValue(dec *json.Decoder) (any, error) {
 				if err != nil {
 					return nil, err
 				}
-				v, err := decodeValue(dec)
+				v, err := decodeValue(dec, depth)
 				if err != nil {
 					return nil, err
 				}
@@ -98,7 +105,7 @@ func decodeValue(dec *json.Decoder) (any, error) {
 		case '[':
 			list := []any{}
 			for dec.More() {
-				v, err := decodeValue(dec)
+				v, err := decodeValue(dec, depth)
 				if err != nil {
 					return nil, err
 				}

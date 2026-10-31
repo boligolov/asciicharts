@@ -1,6 +1,7 @@
 """The chart catalogue (list_charts / --list) can't drift from the renderers."""
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -71,7 +72,7 @@ def test_list_charts_returns_independent_copies():
 
 def test_cli_list():
     out = subprocess.run([sys.executable, str(ROOT / "asciicharts.py"), "--list"], capture_output=True,
-                         encoding="utf-8", check=True, env={"PYTHONIOENCODING": "utf-8", "PATH": ""}).stdout
+                         encoding="utf-8", check=True, env={**os.environ, "PYTHONIOENCODING": "utf-8", "PATH": ""}).stdout
     for t in CHART_TYPES:
         assert f"\n{t}\n" in "\n" + out
     # every printed example is a valid one-line JSON spec

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """asciicharts — render numeric data as ASCII/Unicode text charts.
 
-A single-file, standard-library-only chart renderer. It is the engine behind
-the MCP server in server/ and can be copied and used on its own.
+A single-file, standard-library-only chart renderer: the reference implementation
+of the asciicharts principles. It can be copied and used on its own.
 
 Library use::
 
@@ -76,13 +76,13 @@ CHARTS = {
     },
     "line": {
         "summary": "One or more lines with a value axis. Optional dashed reference lines (threshold, or several labelled thresholds) and per-point markers.",
-        "series": "values: the samples in order (at least 2 per series). One line per series. labels (optional) become x-axis labels.",
+        "series": "values: the samples in order (at least 2 per series); null for a missing sample, a gap in the line. One line per series. labels (optional, one per value) become x-axis labels.",
         "options": ["labels", "width", "height", "style", "threshold", "thresholds", "showPoints", "pointChar"],
         "example": {"chartType": "line", "series": [{"values": [12, 18, 15, 30, 42, 38]}]},
     },
     "area": {
         "summary": "Line series filled down to a zero baseline: overlaid or stacked. Negative values fill downward.",
-        "series": "values: the samples in order (at least 2 per series, all the same length). One band per series. labels (optional) become x-axis labels.",
+        "series": "values: the samples in order (at least 2 per series, all the same length); null for a missing sample, a gap in the band. One band per series. labels (optional, one per value) become x-axis labels.",
         "options": ["labels", "width", "height", "stacked", "style"],
         "example": {"chartType": "area", "series": [{"values": [20, 10, -20, -60, -120]}]},
     },
@@ -400,10 +400,21 @@ def _y_pixel(v: float, lo: float, hi: float, span: int) -> int:
     return _round((1 - frac) * (span - 1))
 
 
+GAP_CHARTS = ("line", "area")  # the charts whose values may hold null, a gap
+
+
+def _check_not_all_gaps(series) -> None:
+    for i, s in enumerate(series):
+        if all(v is None for v in s["values"]):
+            raise ChartError(f"series {i} {_q(s['name'])} must contain at least one number, not only nulls")
+
+
 def _series_min_max(series) -> tuple[float, float]:
     lo, hi = math.inf, -math.inf
     for s in series:
         for v in s["values"]:
+            if v is None:
+                continue
             lo = min(lo, v)
             hi = max(hi, v)
     if lo == math.inf:
@@ -443,7 +454,23 @@ def _left_axis_labels(lo: float, hi: float, height: int):
     return labels, max([0] + [len(l) for l in labels])
 
 
-def _x_axis_labels(labels, n: int, plot_width: int, left_pad: int) -> str:
+X_LABEL_WIDTH = 8  # columns an x-axis label keeps, its ellipsis included
+
+
+def _shorten(s: str, n: int, mark: str) -> str:
+    """s if it fits in n columns, else its first n - 1 columns and the mark (… or ~) saying it was cut."""
+    if _width(s) <= n:
+        return s
+    return _truncate(s, n - 1).rstrip(" ") + mark
+
+
+def _check_x_labels(labels, n: int) -> None:
+    """line and area: one label per value, or none at all."""
+    if labels and len(labels) != n:
+        raise ChartError(f"labels length ({len(labels)}) must match the number of values ({n})")
+
+
+def _x_axis_labels(labels, n: int, plot_width: int, left_pad: int, ascii_style: bool = False) -> str:
     if len(labels) != n or n == 0 or plot_width <= 0:
         return ""
     row = [" "] * plot_width
@@ -451,7 +478,7 @@ def _x_axis_labels(labels, n: int, plot_width: int, left_pad: int) -> str:
     # the first and last are never cut off ("Jan" must not become "an").
     placed = []
     for i, lbl in enumerate(labels):
-        cell = _truncate(lbl, 8)
+        cell = _shorten(lbl, X_LABEL_WIDTH, "~" if ascii_style else "…")
         start = _clamp(_x_pixel(i, n, plot_width) - _width(cell) // 2, 0, max(plot_width - _width(cell), 0))
         placed.append((start, cell))
     # When labels don't all fit, drop the ones that would touch a neighbour rather
@@ -469,7 +496,10 @@ def _x_axis_labels(labels, n: int, plot_width: int, left_pad: int) -> str:
             for j, r in enumerate(_cells(cell)):
                 if start + j < plot_width:
                     row[start + j] = r
-    return " " * left_pad + "".join(row).rstrip(" ")
+    out = " " * left_pad + "".join(row).rstrip(" ")
+    if not all(keep):  # say so, rather than let the reader take the gaps for missing data
+        out += "\n" + " " * left_pad + f"x: {n} labels, {sum(keep)} shown"
+    return out
 
 
 def _is_ascii_ramp(ramp) -> bool:
@@ -678,6 +708,8 @@ def _normalize(spec: dict) -> dict:
 
     total = 0
     series = []
+    # line and area take null for a sample that has no value: a gap, never a zero
+    gaps_allowed = spec.get("chartType") in GAP_CHARTS
     for i, s in enumerate(raw_series):
         if not isinstance(s, dict):
             raise ChartError(f"series {i} must be an object")
@@ -694,7 +726,7 @@ def _normalize(spec: dict) -> dict:
             pts.append((_num(p.get("x"), f"series {i} point x"), _num(p.get("y"), f"series {i} point y")))
         series.append({
             "name": _text(s, "name"),
-            "values": [_num(v, f"series {i} value") for v in values],
+            "values": [None if v is None and gaps_allowed else _num(v, f"series {i} value") for v in values],
             "points": pts,
         })
 
@@ -817,6 +849,8 @@ def _stack_extents(matrix):
     if not matrix:
         return max_pos, max_neg
     for c in range(len(matrix[0])):
+        if any(row[c] is None for row in matrix):  # a gap in a stacked area: the column has no total
+            continue
         pos = neg = 0.0
         for row in matrix:
             v = row[c]
@@ -1262,6 +1296,8 @@ def _render_line(inp):
     for i, s in enumerate(series):
         if len(s["values"]) < 2:
             raise ChartError(f"series {i} {_q(s['name'])} must contain at least two values")
+    _check_not_all_gaps(series)
+    _check_x_labels(inp["labels"], _series_max_len(series))
 
     lo, hi = _series_min_max(series)
     threshold = inp["threshold"]
@@ -1293,6 +1329,9 @@ def _render_line(inp):
         n = len(s["values"])
         prev = None
         for i, v in enumerate(s["values"]):
+            if v is None:  # a gap: the line stops here and starts again at the next value
+                prev = None
+                continue
             x, y = _x_pixel(i, n, pw), _y_pixel(v, lo, hi, ph)
             if prev is not None:
                 c.line(prev[0], prev[1], x, y, line_char, color, dotted)
@@ -1327,6 +1366,8 @@ def _render_line(inp):
             marker = custom or marker_set[si % len(marker_set)]
             n = len(s["values"])
             for i, v in enumerate(s["values"]):
+                if v is None:
+                    continue
                 x, y = _x_pixel(i, n, pw), _y_pixel(v, lo, hi, ph)
                 if owner.setdefault((x, y), si) != si:
                     c.cell_char[y][x], c.cell_color[y][x] = overlap_marker, -1
@@ -1341,7 +1382,7 @@ def _render_line(inp):
                      + ("  " + _colorize(", ".join(notes[r]), tcolor, color_on) if r in notes else "")
                      for r, l in enumerate(rows))
 
-    x = _x_axis_labels(inp["labels"], _series_max_len(series), width, axis_w + 2)
+    x = _x_axis_labels(inp["labels"], _series_max_len(series), width, axis_w + 2, ascii_style)
     if x:
         body += "\n" + x
     if multi:
@@ -1358,7 +1399,9 @@ def _area_fill_ramp(style: str):
     return {"halftone": HALFTONE_FILLS, "ascii": AREA_ASCII_FILLS}.get(style, FILLS)
 
 
-def _interp_at(values, x: int, width: int) -> float:
+def _interp_at(values, x: int, width: int):
+    """The value at column x, interpolated between its two samples; None (a gap) if either is a gap,
+    unless the column sits exactly on the other one."""
     n = len(values)
     if n == 1 or width <= 1:
         return values[0]
@@ -1367,7 +1410,10 @@ def _interp_at(values, x: int, width: int) -> float:
     if i0 >= n - 1:
         return values[n - 1]
     frac = pos - i0
-    return values[i0] * (1 - frac) + values[i0 + 1] * frac
+    a, b = values[i0], values[i0 + 1]
+    if a is None or b is None:
+        return a if frac == 0 else None
+    return a * (1 - frac) + b * frac
 
 
 def _render_area(inp):
@@ -1382,6 +1428,8 @@ def _render_area(inp):
             raise ChartError(
                 f"all series must have the same number of values (series 0 has {n}, "
                 f"series {i} has {len(s['values'])})")
+    _check_not_all_gaps(series)
+    _check_x_labels(inp["labels"], n)
 
     height = inp["height"] or 10
     width = inp["width"] or 60
@@ -1396,13 +1444,19 @@ def _render_area(inp):
     stack_matrix = [[_interp_at(s["values"], x, width) for x in range(width)] for s in series]
     max_pos, max_neg = _stack_extents(stack_matrix)
 
+    # a column where any series has a gap has no stack total: it stays empty
+    gap_column = [any(row[x] is None for row in stack_matrix) for x in range(width)]
+
     if inp["stacked"] and max_neg == 0:
         min_val, max_val = 0.0, 0.0
         for x in range(width):
-            max_val = max(max_val, _sum(_interp_at(s["values"], x, width) for s in series))
+            if not gap_column[x]:
+                max_val = max(max_val, _sum(_interp_at(s["values"], x, width) for s in series))
         if max_val == 0:
             max_val = 1
         for x in range(width):
+            if gap_column[x]:
+                continue
             values = [_interp_at(s["values"], x, width) for s in series]
             col_sum = _sum(values)
             total_rows = _round(col_sum / max_val * height)
@@ -1424,6 +1478,8 @@ def _render_area(inp):
         if max_neg > 0 and zero_row == height - 1 and height > 1:
             zero_row = height - 2
         for x in range(width):
+            if gap_column[x]:
+                continue
             values = [stack_matrix[si][x] for si in range(num_series)]
             up, down = _split_stack(values, max_pos, max_neg, zero_row + 1, height - 1 - zero_row)
             for side, rows_by_series in enumerate((up, down)):
@@ -1449,7 +1505,10 @@ def _render_area(inp):
             ch = ramp[si % len(ramp)]
             color = _series_color(si) if color_on else -1
             for x in range(width):
-                row = _y_pixel(_interp_at(series[si]["values"], x, width), min_val, max_val, height)
+                v = stack_matrix[si][x]
+                if v is None:  # a gap: nothing to fill down to the baseline
+                    continue
+                row = _y_pixel(v, min_val, max_val, height)
                 lo, hi = sorted((row, zero_row))
                 for r in range(lo, hi + 1):
                     grid[r][x] = ch
@@ -1462,7 +1521,7 @@ def _render_area(inp):
         lines.append(f"{axis_labels[r]:>{axis_w}} {'+' if _is_ascii_ramp(ramp) else '┤'}{cells}")
     body = "\n".join(lines)
 
-    x = _x_axis_labels(inp["labels"], _series_max_len(series), width, axis_w + 2)
+    x = _x_axis_labels(inp["labels"], _series_max_len(series), width, axis_w + 2, _is_ascii_ramp(ramp))
     if x:
         body += "\n" + x
     if num_series > 1:
@@ -1917,16 +1976,126 @@ def _parse_cell(cell: str, delimiter: str):
     return v if math.isfinite(v) else None
 
 
+CSV_DELIMITERS = ",;\t|"
+
+
+def _sniff_quoted(s: str) -> list:
+    """Delimiters next to a quoted field, by csv.Sniffer's four patterns (the first that matches wins):
+    ,"...",   "...",   ,"..."   and a lone "...", which names no delimiter. A quoted field ends at its
+    first quote that isn't doubled. By hand: these patterns need possessive matching, Python 3.11+."""
+    n = len(s)
+
+    def is_delim(ch):
+        return not (ch.isalnum() or ch == "_" or ch in "\n\"'")
+
+    def closing(start):  # the quote that closes the field opened at start, or -1
+        k = start + 1
+        while k < n:
+            if s[k] == s[start]:
+                if s[k + 1:k + 2] != s[start]:
+                    return k
+                k += 1
+            k += 1
+        return -1
+
+    def at_line_end(k):
+        return k + 1 == n or s[k + 1] == "\n"
+
+    def after_delim(close_at_line_end):
+        found, i = [], 0
+        while i < n:
+            j = i + 1
+            if is_delim(s[i]):
+                if s[j:j + 1] == " ":
+                    j += 1
+                k = closing(j) if s[j:j + 1] and s[j] in "\"'" else -1
+                if k >= 0 and close_at_line_end and at_line_end(k):
+                    found.append(s[i])
+                    j = k + 1
+                elif k >= 0 and not close_at_line_end and s[k + 1:k + 2] == s[i]:
+                    found.append(s[i])
+                    j = k + 2
+                else:
+                    j = i + 1
+            i = j
+        return found
+
+    def at_line_start(with_delim):
+        found, i = [], 0
+        while i < n:
+            next_i = i + 1
+            for p in ([i] if i == 0 or s[i - 1] == "\n" else []) + ([i + 1] if s[i] == "\n" else []):
+                k = closing(p) if p < n and s[p] in "\"'" else -1
+                if k >= 0 and with_delim and k + 1 < n and is_delim(s[k + 1]):
+                    found.append(s[k + 1])
+                    next_i = k + 3 if s[k + 2:k + 3] == " " else k + 2
+                    break
+                if k >= 0 and not with_delim and at_line_end(k):
+                    found.append("")
+                    next_i = k + 1
+                    break
+            i = next_i
+        return found
+
+    return after_delim(False) or at_line_start(True) or after_delim(True) or at_line_start(False)
+
+
+def _sniff_frequency(s: str):
+    """The delimiter that occurs the same number of times on most lines, read ten lines at a time, as
+    csv.Sniffer does; None when no line count holds on at least 90% of the lines."""
+    lines = [line for line in s.split("\n") if line]
+    chunk = min(10, len(lines))
+    tally = {d: {} for d in CSV_DELIMITERS}  # delimiter -> {count on a line: lines with that count}
+    modes, delims = {}, {}
+    start, iteration = 0, 0
+    while start < len(lines):
+        iteration += 1
+        for line in lines[start:start + chunk]:
+            for d in CSV_DELIMITERS:
+                count = line.count(d)
+                tally[d][count] = tally[d].get(count, 0) + 1
+        for d, counts in tally.items():
+            if list(counts) == [0]:
+                continue
+            count, lines_with = max(counts.items(), key=lambda item: item[1])  # the first of equals
+            modes[d] = (count, 2 * lines_with - sum(counts.values()))
+        total = min(chunk * iteration, len(lines))
+        consistency = 1.0
+        while not delims and consistency >= 0.9:
+            for d, (count, score) in modes.items():
+                if count > 0 and score > 0 and score / total >= consistency:
+                    delims[d] = (count, score)
+            consistency -= 0.01
+        if len(delims) == 1:
+            return next(iter(delims))
+        start += chunk
+    for d in ",\t;":
+        if d in delims:
+            return d
+    return "|" if delims else None
+
+
+def _sniff_delimiter(text: str) -> str:
+    """The delimiter among , ; tab |, "," when it can't tell. csv.Sniffer's algorithm as of Python
+    3.12.15, not csv.Sniffer itself: that one changes in patch releases, and with it how a file reads."""
+    sample = text[:4096].replace("\r\n", "\n").replace("\r", "\n")
+    votes = {}
+    for d in _sniff_quoted(sample):
+        if d and d in CSV_DELIMITERS:
+            votes[d] = votes.get(d, 0) + 1
+    return (max(votes, key=votes.get) if votes else _sniff_frequency(sample)) or ","
+
+
 def _read_csv(text: str):
     """(header, rows, delimiter) — the delimiter is sniffed among , ; tab |."""
     text = text.lstrip("﻿")
     if not text.strip():
         raise ChartError("the CSV is empty")
+    delimiter = _sniff_delimiter(text)
     try:
-        delimiter = csv.Sniffer().sniff(text[:4096], delimiters=",;\t|").delimiter
-    except csv.Error:
-        delimiter = ","
-    rows = [r for r in csv.reader(io.StringIO(text), delimiter=delimiter) if any(c.strip() for c in r)]
+        rows = [r for r in csv.reader(io.StringIO(text), delimiter=delimiter) if any(c.strip() for c in r)]
+    except csv.Error as e:  # "field larger than field limit (131072)"
+        raise ChartError(str(e))
     if len(rows) < 2:
         raise ChartError("the CSV needs a header row and at least one data row")
     header = [h.strip() for h in rows[0]]
@@ -1979,10 +2148,18 @@ def spec_from_csv(text: str, chart: str, label=None, values=None, sort=None, lim
     row (the first value column); heatmap makes one matrix row per CSV row with
     the value columns as its columns; scatter plots each value column against
     the label (x) column."""
+    _check_chart_type(chart)
+    return _spec_from_table(*_read_csv(text), chart, label, values, sort, limit, options)
+
+
+def _check_chart_type(chart: str) -> None:
     if chart not in CHARTS:
         raise ChartError(f"unknown chartType {_q(chart)} (expected one of: {', '.join(CHART_TYPES)})")
-    header, rows, delim = _read_csv(text)
 
+
+def _spec_from_table(header, rows, delim, chart, label, values, sort, limit, options) -> dict:
+    """spec_from_csv on a table already read: the header, the rows (at least as long as it) and the
+    delimiter, which decides whether "3,14" is a decimal comma."""
     # numeric columns: every non-empty cell parses
     def is_numeric(ci):
         cells = [r[ci] for r in rows if r[ci].strip()]
@@ -2052,7 +2229,10 @@ def spec_from_csv(text: str, chart: str, label=None, values=None, sort=None, lim
     else:
         if label_idx is not None and chart in ("vbar", "hbar", "dotplot", "line", "area"):
             spec["labels"] = labels_for_rows()
-        spec["series"] = [{"name": header[ci], "values": [number(i, ci) for i in range(len(rows))]} for ci in val_idx]
+        def value(row_i, ci):  # an empty cell is a gap where the chart can draw one, an error elsewhere
+            return None if chart in GAP_CHARTS and not rows[row_i][ci].strip() else number(row_i, ci)
+
+        spec["series"] = [{"name": header[ci], "values": [value(i, ci) for i in range(len(rows))]} for ci in val_idx]
 
     for key, val in (options or {}).items():
         if key not in CSV_SETTABLE:
@@ -2069,18 +2249,51 @@ def _parse_set(pairs):
             raise ChartError(f"--set expects key=value, got {_q(pair)}")
         key, raw = pair.split("=", 1)
         try:
-            out[key.strip()] = json.loads(raw)
-        except json.JSONDecodeError:
+            out[key.strip()] = _json_loads(raw)
+        except ValueError:
             out[key.strip()] = raw
     return out
+
+
+MAX_JSON_DEPTH = 100  # a spec needs four levels; deeper is an error, not a RecursionError
+
+
+def _json_loads(raw: str):
+    """json.loads, with nesting deeper than MAX_JSON_DEPTH a ValueError (as json.JSONDecodeError is one)."""
+    too_deep = ValueError(f"nested deeper than {MAX_JSON_DEPTH} levels")
+    try:
+        value = json.loads(raw)
+    except RecursionError:
+        raise too_deep from None
+    stack = [(value, 1)]
+    while stack:
+        v, depth = stack.pop()
+        if isinstance(v, (list, dict)):
+            if depth > MAX_JSON_DEPTH:
+                raise too_deep
+            stack.extend((c, depth + 1) for c in (v.values() if isinstance(v, dict) else v))
+    return value
+
+
+def _decode(data: bytes, where: str) -> str:
+    """UTF-8 bytes as text, without a BOM; anything else is a ChartError naming the first bad byte."""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError as e:
+        raise ChartError(f"{where} is not UTF-8 text: byte 0x{data[e.start]:02x} at offset {e.start}") from None
+    return text.removeprefix("\ufeff")
+
+
+def _read_file(path: str) -> str:
+    with open(path, "rb") as f:
+        return _decode(f.read(), path)
 
 
 def _read_stdin() -> str:
     """stdin as UTF-8 whatever the console code page, without a BOM (PowerShell's pipe adds one), with
     CRLF and CR read as LF, as text mode would."""
     buf = getattr(sys.stdin, "buffer", None)
-    text = buf.read().decode("utf-8") if buf is not None else sys.stdin.read()
-    text = text.removeprefix("\ufeff")
+    text = _decode(buf.read(), "stdin") if buf is not None else sys.stdin.read().removeprefix("\ufeff")
     return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
@@ -2107,7 +2320,8 @@ def _csv_main(argv) -> int:
     # argparse would take "--sort -p99" for two options; glue such values to their flag.
     glued, i = [], 0
     while i < len(argv):
-        if argv[i] in ("--sort", "--label", "--values") and i + 1 < len(argv)                 and argv[i + 1].startswith("-") and not argv[i + 1].startswith("--"):
+        if (argv[i] in ("--sort", "--label", "--values") and i + 1 < len(argv)
+                and argv[i + 1].startswith("-") and not argv[i + 1].startswith("--")):
             glued.append(f"{argv[i]}={argv[i + 1]}")
             i += 2
         else:
@@ -2118,8 +2332,7 @@ def _csv_main(argv) -> int:
         if args.csv == "-":
             text = _read_stdin()
         else:
-            with open(args.csv, encoding="utf-8-sig", newline="") as f:
-                text = f.read()
+            text = _read_file(args.csv)
 
         is_excsv = _is_excsv(text)
 
@@ -2144,21 +2357,24 @@ def _csv_main(argv) -> int:
             if not args.chart:
                 raise ChartError("--chart TYPE is required (see --list) — or, for an ExCSV file "
                                  "with its own #chart suggestion(s), --chart-name (see --list-charts)")
-            label, values, data_text = args.label, args.values, text
-            if is_excsv:
-                # Manual mode on an ExCSV file: ignore its #chart suggestions and treat the data
-                # section as plain CSV, but still put its #column role= to use for the defaults
-                # --label/--values would otherwise have to guess (dimension -> label, measure ->
-                # values) when the caller didn't pin them down explicitly.
+            label, values, options = args.label, args.values, _parse_set(args.set)
+            if not is_excsv:
+                spec = spec_from_csv(text, args.chart, label, values, args.sort, args.limit, options)
+            else:
+                # Manual mode on an ExCSV file: ignore its #chart suggestions and read the data
+                # section as a plain table (in the file's own dialect), but still put its #column
+                # role= to use for the defaults --label/--values would otherwise have to guess
+                # (dimension -> label, measure -> values) when the caller didn't pin them down.
+                _check_chart_type(args.chart)
                 doc = parse_excsv(text)
-                data_text = doc["data_text"]
                 if not label:
                     dims = [n for n, kv in doc["columns"].items() if kv.get("role") == "dimension"]
                     label = dims[0] if dims else label
                 if not values:
                     measures = [n for n, kv in doc["columns"].items() if kv.get("role") == "measure"]
                     values = ",".join(measures) if measures else values
-            spec = spec_from_csv(data_text, args.chart, label, values, args.sort, args.limit, _parse_set(args.set))
+                spec = _spec_from_table(*_excsv_table(doc), args.chart, label, values, args.sort, args.limit,
+                                        options)
 
         print(json.dumps(spec, ensure_ascii=False) if args.print_spec else render_chart(spec))
         return 0
@@ -2293,8 +2509,8 @@ def parse_excsv(text: str) -> dict:
             entry = {"kind": "vega", "name": None, "engine": engine, "raw": payload}
             if engine == "vega":
                 try:
-                    entry["parsed"] = json.loads(payload)
-                except json.JSONDecodeError as e:
+                    entry["parsed"] = _json_loads(payload)
+                except ValueError as e:
                     raise ChartError(f"line {i + 1}: #chart-vega payload is not valid JSON: "
                                      f"{e} (chart_vega_invalid_json)")
             else:
@@ -2345,7 +2561,10 @@ def _excsv_read_data(data_text: str, delim: str, quote: str, has_header: bool):
         reader = csv.reader(io.StringIO(data_text), delimiter=delim, quotechar=quote)
     else:
         reader = csv.reader(io.StringIO(data_text), delimiter=delim, quoting=csv.QUOTE_NONE)
-    all_rows = [r for r in reader if any(c.strip() for c in r)]
+    try:
+        all_rows = [r for r in reader if any(c.strip() for c in r)]
+    except csv.Error as e:
+        raise ChartError(str(e))
     if not all_rows or (has_header and len(all_rows) < 2):
         raise ChartError("the ExCSV file has no data rows")
     col_names, rows = (all_rows[0], all_rows[1:]) if has_header else ([], all_rows)
@@ -2368,6 +2587,18 @@ def _excsv_column_names(doc: dict, col_names: list, width: int) -> list:
     return names
 
 
+def _excsv_table(doc: dict):
+    """(header, rows, delimiter) of the data section, as _read_csv gives for plain CSV, but read in the
+    file's declared dialect: its delimiter and quote, header=0 named from #column index= (an undeclared
+    column by its 1-based position), and the null marker read as an empty cell."""
+    delim, quote, has_header, null_marker = _excsv_dialect(doc["header"])
+    col_names, rows = _excsv_read_data(doc["data_text"], delim, quote, has_header)
+    header = _excsv_column_names(doc, col_names, len(rows[0]))
+    header = [h or str(i + 1) for i, h in enumerate(header)]
+    rows = [["" if c == null_marker else c for c in r] + [""] * (len(header) - len(r)) for r in rows]
+    return header, rows, delim
+
+
 def _excsv_values(col_name: str, col_names: list, rows: list, null_marker):
     """Raw string values of one column, empty/null-marker cells as None. None (the return value,
     not a list of them) if the column isn't in the data at all."""
@@ -2380,6 +2611,8 @@ def _excsv_values(col_name: str, col_names: list, rows: list, null_marker):
 def _excsv_col_role(doc: dict, col: str) -> str:
     """A column's analytical role: its own #column role= if declared, else a guess from type=
     (numeric -> measure, otherwise dimension) — used to infer bar/hbar orientation."""
+    if col == "count()":
+        return "measure"
     meta = doc["columns"].get(col) or {}
     if meta.get("role"):
         return meta["role"]
@@ -2401,18 +2634,24 @@ def _excsv_channel(doc: dict, col_names: list, attrs: dict, channel: str, chart_
     return ref
 
 
-def _excsv_int_attr(attrs: dict, key: str):
+def _excsv_int_attr(attrs: dict, key: str, least: int, takes: str):
+    """A whole-number modifier (bin=, limit=) of at least `least`, or None when absent. ExCSV's
+    #chart is advisory: a value outside the spec declines the chart, saying what the attribute takes."""
     v = attrs.get(key)
     if v is None:
         return None
     try:
-        return int(float(v))
-    except ValueError:
-        raise ChartError(f"{key}={_q(v)} is not a number")
+        n = int(v.strip())
+    except ValueError:  # "2.5", "yes", "inf"
+        n = None
+    if n is None or n < least:
+        raise ChartError(f"{key}={_q(v)}: {key} takes {takes}")
+    return n
 
 
-def _excsv_agg_value(vals: list, agg: str, delim: str) -> float:
-    """One aggregated number from a bucket of raw (already null-filtered-to-None) cell values."""
+def _excsv_agg_value(vals: list, agg: str, delim: str, empty=0.0):
+    """One aggregated number from a bucket of raw (already null-filtered-to-None) cell values; `empty`
+    when the bucket holds no number to sum, average or compare (None for a gap in a line or area)."""
     non_null = [v for v in vals if v is not None]
     if agg == "count":
         return float(len(vals))
@@ -2420,15 +2659,15 @@ def _excsv_agg_value(vals: list, agg: str, delim: str) -> float:
         return float(len(set(non_null)))
     nums = [n for n in (_parse_cell(v, delim) for v in non_null) if n is not None]
     if agg == "avg":
-        return _sum(nums) / len(nums) if nums else 0.0
+        return _sum(nums) / len(nums) if nums else empty
     if agg == "min":
-        return min(nums) if nums else 0.0
+        return min(nums) if nums else empty
     if agg == "max":
-        return max(nums) if nums else 0.0
-    return _sum(nums)  # sum — also the default for an agg= value we don't recognize
+        return max(nums) if nums else empty
+    return _sum(nums) if nums else empty  # sum — also the default for an agg= value we don't recognize
 
 
-def _excsv_aggregate(keys: list, raw_values: list, agg: str, delim: str):
+def _excsv_aggregate(keys: list, raw_values: list, agg: str, delim: str, empty=0.0):
     """Group raw_values by keys (equal length), in first-seen key order: [(key, aggregated), ...]."""
     order, buckets = [], {}
     for k, v in zip(keys, raw_values):
@@ -2437,10 +2676,10 @@ def _excsv_aggregate(keys: list, raw_values: list, agg: str, delim: str):
             buckets[k] = []
             order.append(k)
         buckets[k].append(v)
-    return [(k, _excsv_agg_value(buckets[k], agg, delim)) for k in order]
+    return [(k, _excsv_agg_value(buckets[k], agg, delim, empty)) for k in order]
 
 
-def _excsv_group2(primary_raw: list, secondary_raw: list, value_raw: list, agg: str, delim: str):
+def _excsv_group2(primary_raw: list, secondary_raw: list, value_raw: list, agg: str, delim: str, empty=0.0):
     """Two-level group-by — primary categories x secondary categories, each in first-seen order —
     aggregating value_raw per (primary, secondary) cell. Used for color-grouped bar/line/area (
     primary=x, secondary=color) and for rect/heatmap (primary=x, secondary=y). A combination that
@@ -2457,7 +2696,7 @@ def _excsv_group2(primary_raw: list, secondary_raw: list, value_raw: list, agg: 
             s_seen.add(s)
             secondaries.append(s)
         buckets.setdefault((p, s), []).append(v)
-    grid = {s: [_excsv_agg_value(buckets[(p, s)], agg, delim) if (p, s) in buckets else None
+    grid = {s: [_excsv_agg_value(buckets[(p, s)], agg, delim, empty) if (p, s) in buckets else None
                for p in primaries] for s in secondaries}
     return primaries, secondaries, grid
 
@@ -2481,14 +2720,14 @@ def _excsv_sort_limit(pairs: list, sort, limit, by: str):
 
 
 def _excsv_bar_spec(doc, x, y, color, attrs, sort, limit, values_of, agg_of, delim):
-    bin_ = attrs.get("bin")
-    if bin_ is not None and y == "count()":
+    # bin=0 is no binning, bin=1 bins with the default count (10, as Vega-Lite's bin: true), n >= 2 asks for n
+    bins = _excsv_int_attr(attrs, "bin", 0, "0 (no bins), 1 (10 bins) or a number of bins, 2 or more")
+    if bins and y == "count()":
         xv = [v for v in (_parse_cell(v, delim) for v in values_of(x)) if v is not None]
         if not xv:
             raise ChartError(f"column {_q(x)} has no numeric values to bin")
         spec = {"chartType": "histogram", "series": [{"values": xv}]}
-        bins = _excsv_int_attr(attrs, "bin")
-        if bins and bins != 1:
+        if bins != 1:
             spec["bins"] = bins
         return spec
 
@@ -2516,16 +2755,19 @@ def _excsv_bar_spec(doc, x, y, color, attrs, sort, limit, values_of, agg_of, del
 
 
 def _excsv_trend_spec(mark, x, y, color, attrs, sort, limit, values_of, agg_of, delim):
+    # A category with no number for a series is a gap (null), not a zero: on a line a made-up zero
+    # reads as a fall.
     dim_raw = values_of(x)
     if color:
-        cats, cols, grid = _excsv_group2(dim_raw, values_of(color), values_of(y), agg_of(y), delim)
+        cats, cols, grid = _excsv_group2(dim_raw, values_of(color), values_of(y), agg_of(y), delim, empty=None)
         order = _excsv_order(range(len(cats)), sort, limit, key=lambda i: cats[i])
         spec = {"chartType": mark, "labels": [cats[i] for i in order],
-                "series": [{"name": c, "values": [grid[c][i] or 0.0 for i in order]} for c in cols]}
+                "series": [{"name": c, "values": [grid[c][i] for i in order]} for c in cols]}
         if mark == "area" and attrs.get("stack") in ("1", "true"):
             spec["stacked"] = True
         return spec
-    pairs = _excsv_sort_limit(_excsv_aggregate(dim_raw, values_of(y), agg_of(y), delim), sort, limit, "key")
+    pairs = _excsv_sort_limit(_excsv_aggregate(dim_raw, values_of(y), agg_of(y), delim, empty=None), sort, limit,
+                              "key")
     return {"chartType": mark, "labels": [k for k, _ in pairs], "series": [{"values": [v for _, v in pairs]}]}
 
 
@@ -2652,7 +2894,8 @@ def resolve_excsv_chart(doc: dict, name: str | None = None) -> dict:
     def agg_of(col):
         return attrs.get("aggregate") or (doc["columns"].get(col) or {}).get("agg") or "sum"
 
-    sort, limit = attrs.get("sort"), _excsv_int_attr(attrs, "limit")
+    # a negative limit would slice off the last rows instead
+    sort, limit = attrs.get("sort"), _excsv_int_attr(attrs, "limit", 1, "a whole number of categories, 1 or more")
 
     if mark == "bar":
         spec = _excsv_bar_spec(doc, x, y, color, attrs, sort, limit, values_of, agg_of, delim)
@@ -2739,11 +2982,10 @@ def main(argv=None) -> int:
         elif argv[0] == "-":
             raw = _read_stdin()
         else:
-            with open(argv[0], encoding="utf-8-sig") as f:
-                raw = f.read()
+            raw = _read_file(argv[0])
         try:
-            spec = json.loads(raw)
-        except json.JSONDecodeError as e:
+            spec = _json_loads(raw)
+        except ValueError as e:
             raise ChartError(f"invalid JSON: {e}")
         print(render_chart(spec))
         return 0

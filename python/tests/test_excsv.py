@@ -11,6 +11,7 @@ repo's `fixtures/fixtures.yaml`, so this is checked against the format's own gro
 """
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -32,7 +33,7 @@ def fixture(name):
 
 def run(args, stdin=None):
     return subprocess.run([sys.executable, SCRIPT, *args], input=stdin, capture_output=True,
-                          encoding="utf-8", env={"PYTHONIOENCODING": "utf-8", "PATH": ""})
+                          encoding="utf-8", env={**os.environ, "PYTHONIOENCODING": "utf-8", "PATH": ""})
 
 
 # --- the format's own fixtures --------------------------------------------
@@ -265,6 +266,15 @@ def test_bar_with_color_groups_into_one_series_per_color_and_stack_1_sets_stacke
     assert {s["name"]: s["values"] for s in spec["series"]} == {"widgets": [40.0, 25.0], "gadgets": [15.0, 0.0]}
 
 
+@pytest.mark.parametrize("limit", ["0", "-1", "2.5", "inf", "nan", "x"])
+def test_limit_must_be_a_positive_whole_number(limit):
+    """limit=-1 would be a Python slice that silently drops the last category; inf would overflow."""
+    doc = _doc("", ["name=cat type=string role=dimension", "name=n type=int role=measure"],
+               f"type=bar name=c x=cat y=n sort=desc limit={limit}", "cat,n\na,5\nb,3\nc,9\n")
+    with pytest.raises(ChartError, match="limit="):
+        resolve_excsv_chart(doc)
+
+
 def test_bar_y_count_without_bin_counts_rows_per_category():
     spec = resolve_excsv_chart(_doc(
         "", ["name=cat type=string role=dimension"], "type=bar name=c x=cat y=count()",
@@ -278,6 +288,29 @@ def test_bar_bin_and_y_count_makes_a_histogram():
         "amount\n10\n12\n30\n32\n55\n58\n"))
     assert spec["chartType"] == "histogram" and spec["bins"] == 3
     assert spec["series"][0]["values"] == [10.0, 12.0, 30.0, 32.0, 55.0, 58.0]
+
+
+def _histogram_doc(bin_):
+    return _doc("", ["name=amount type=decimal role=measure"], f"type=bar name=h bin={bin_} x=amount y=count()",
+                "amount\n10\n12\n10\n55\n")
+
+
+def test_bin_1_switches_binning_on_with_the_default_count_not_one_bin():
+    spec = resolve_excsv_chart(_histogram_doc("1"))
+    assert spec["chartType"] == "histogram" and "bins" not in spec  # the renderer's default, 10
+    assert render_chart(spec).count("..") == 10
+
+
+def test_bin_0_is_no_binning_a_bar_of_rows_per_value():
+    spec = resolve_excsv_chart(_histogram_doc("0"))
+    assert spec["chartType"] == "vbar"
+    assert dict(zip(spec["labels"], spec["series"][0]["values"])) == {"10": 2.0, "12": 1.0, "55": 1.0}
+
+
+@pytest.mark.parametrize("bin_", ["-3", "2.5", "yes", "true", "inf"])
+def test_bin_takes_0_1_or_a_number_of_bins(bin_):
+    with pytest.raises(ChartError, match=r"bin=.*takes 0 \(no bins\), 1 \(10 bins\) or a number of bins"):
+        resolve_excsv_chart(_histogram_doc(bin_))
 
 
 def test_aggregate_override_beats_the_columns_own_agg():
@@ -302,7 +335,8 @@ def test_line_sorts_by_category_not_value_so_a_trend_is_not_scrambled():
     assert spec["labels"] == ["a", "b", "c"]  # alphabetical, not ranked by n
 
 
-def test_line_with_color_pivots_into_one_series_per_color_filling_gaps_with_zero():
+def test_line_with_color_pivots_into_one_series_per_color_leaving_gaps_as_null():
+    """A combination that never occurs is a gap the line breaks at, not a zero it falls to."""
     spec = resolve_excsv_chart(_doc(
         "", ["name=day type=string role=dimension", "name=who type=string role=dimension",
              "name=n type=int role=measure"],
@@ -310,7 +344,17 @@ def test_line_with_color_pivots_into_one_series_per_color_filling_gaps_with_zero
         "day,who,n\nmon,a,1\nmon,b,2\ntue,a,3\n"))  # (tue, b) never occurs
     by_name = {s["name"]: s["values"] for s in spec["series"]}
     assert spec["labels"] == ["mon", "tue"]
-    assert by_name == {"a": [1.0, 3.0], "b": [2.0, 0.0]}
+    assert by_name == {"a": [1.0, 3.0], "b": [2.0, None]}
+    render_chart(spec)
+
+
+def test_a_category_whose_values_are_all_null_is_a_gap_in_a_line_but_zero_in_a_bar():
+    columns = ["name=day type=string role=dimension", "name=n type=int role=measure"]
+    body = "day,n\nmon,1\ntue,\nwed,3\n"
+    line = resolve_excsv_chart(_doc("", columns, "type=line name=t x=day y=n", body))
+    assert line["series"][0]["values"] == [1.0, None, 3.0]
+    bar = resolve_excsv_chart(_doc("", columns, "type=bar name=b x=day y=n", body))
+    assert bar["series"][0]["values"] == [1.0, 0.0, 3.0]
 
 
 def test_area_stack_1_sets_stacked_but_line_ignores_stack():
@@ -495,6 +539,22 @@ def test_cli_manual_chart_on_an_excsv_file_uses_role_hints_and_ignores_chart_sug
     assert spec["chartType"] == "hbar"
     assert "title" not in spec  # the #chart suggestion's title= is not used in manual mode
     assert spec["labels"] == ["widgets", "gadgets", "gizmos", "widgets"]  # raw rows, not aggregated
+
+
+def test_cli_manual_chart_on_an_excsv_file_reads_the_data_in_its_declared_dialect():
+    """header=0 has no header row (names come from #column index=), and a declared delimiter, quote and
+    null marker are the file's own, not ones to guess."""
+    text = ("#!excsv version=0.5 header=0 delim=semicolon quote=single null=NA\n"
+            "#column name=team index=0 type=string role=dimension\n"
+            "#column name=score index=1 type=int role=measure\n"
+            "'a;b';5\nc;NA\nd;9\n")
+    r = run(["--csv", "-", "--chart", "hbar", "--print-spec"], stdin=text)
+    assert r.returncode == 1 and 'row 3, column "score" is empty' in r.stderr  # NA is a missing value
+    r = run(["--csv", "-", "--chart", "hbar", "--print-spec"], stdin=text.replace("c;NA", "c;7"))
+    assert r.returncode == 0, r.stderr
+    spec = json.loads(r.stdout)
+    assert spec["labels"] == ["a;b", "c", "d"]
+    assert spec["series"] == [{"name": "score", "values": [5.0, 7.0, 9.0]}]
 
 
 def test_cli_plain_csv_still_requires_chart():

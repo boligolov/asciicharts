@@ -1,5 +1,6 @@
 """The skill folder is self-contained, in sync with the repository, and its documented commands work."""
 
+import os
 import re
 import shutil
 import subprocess
@@ -99,7 +100,7 @@ def test_readme_is_a_directory_listing():
 
 def run(args, cwd=SKILL, stdin=None):
     return subprocess.run([sys.executable, *args], cwd=cwd, input=stdin, capture_output=True,
-                          encoding="utf-8", env={"PYTHONIOENCODING": "utf-8", "PATH": ""})
+                          encoding="utf-8", env={**os.environ, "PYTHONIOENCODING": "utf-8", "PATH": ""})
 
 
 def test_quick_start_json_on_stdin():
@@ -190,12 +191,32 @@ def test_the_skill_has_one_version():
     assert plugin["version"] == version
 
 
-def test_the_sites_download_is_the_current_skill():
-    """asciicharts.online/asciicharts.skill is what claude.ai users upload; the packager is deterministic,
-    so the committed copy must equal a fresh build (python scripts/package_skill.py --site)."""
+def test_the_archive_is_ordered_the_same_on_every_os():
+    """Sorted by the path as text: a Windows Path sorts ignoring case, which put SKILL.md after scripts/."""
     sys.path.insert(0, str(ROOT / "scripts"))
+    import io
+    import zipfile
     import package_skill
-    assert (ROOT / "site" / "public" / "asciicharts.skill").read_bytes() == package_skill.build(), \
+
+    with zipfile.ZipFile(io.BytesIO(package_skill.build())) as z:
+        names = z.namelist()
+    assert names == sorted(names)
+
+
+def test_the_sites_download_is_the_current_skill():
+    """asciicharts.online/asciicharts.skill is what claude.ai users upload; the committed copy must hold
+    what a fresh build does (python scripts/package_skill.py --site). Entries are compared, not the
+    archive's bytes: deflate's output depends on the zlib Python is built with (3.14 differs)."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import io
+    import zipfile
+    import package_skill
+
+    def entries(data):
+        with zipfile.ZipFile(io.BytesIO(data)) as z:
+            return [(i.filename, i.date_time, i.external_attr, z.read(i)) for i in z.infolist()]
+
+    assert entries((ROOT / "site" / "public" / "asciicharts.skill").read_bytes()) == entries(package_skill.build()), \
         "the site's asciicharts.skill is stale: run python scripts/package_skill.py --site"
 
 

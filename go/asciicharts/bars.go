@@ -102,6 +102,9 @@ func stackExtents(matrix [][]float64) (float64, float64) {
 		return 0, 0
 	}
 	for c := range matrix[0] {
+		if columnHasGap(matrix, c) { // a gap in a stacked area: the column has no total
+			continue
+		}
 		pos, neg := 0.0, 0.0
 		for _, row := range matrix {
 			v := row[c]
@@ -114,6 +117,15 @@ func stackExtents(matrix [][]float64) (float64, float64) {
 		maxPos, maxNeg = pyMax(maxPos, pos), pyMax(maxNeg, neg)
 	}
 	return maxPos, maxNeg
+}
+
+func columnHasGap(matrix [][]float64, c int) bool {
+	for _, row := range matrix {
+		if isGap(row[c]) {
+			return true
+		}
+	}
+	return false
 }
 
 func splitRows(maxPos, maxNeg float64, total int) int {

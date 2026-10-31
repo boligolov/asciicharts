@@ -100,6 +100,12 @@ func renderLine(in *input) (string, error) {
 			return "", errorf("series %d %s must contain at least two values", i, quote(s.name))
 		}
 	}
+	if err := checkNotAllGaps(ss); err != nil {
+		return "", err
+	}
+	if err := checkXLabels(in.labels, seriesMaxLen(ss)); err != nil {
+		return "", err
+	}
 	lo, hi := seriesMinMax(ss)
 	var refs []float64
 	if in.threshold != nil {
@@ -140,6 +146,10 @@ func renderLine(in *input) (string, error) {
 		n := len(s.values)
 		px, py, havePrev := 0, 0, false
 		for i, v := range s.values {
+			if isGap(v) { // the line stops here and starts again at the next value
+				havePrev = false
+				continue
+			}
 			x, y := xPixel(i, n, w), yPixel(v, lo, hi, height)
 			if havePrev {
 				c.line(px, py, x, y, lineChar, color, dotted)
@@ -196,6 +206,9 @@ func renderLine(in *input) (string, error) {
 			}
 			n := len(s.values)
 			for i, v := range s.values {
+				if isGap(v) {
+					continue
+				}
 				x, y := xPixel(i, n, w), yPixel(v, lo, hi, height)
 				if first, ok := owner[[2]int{x, y}]; !ok {
 					owner[[2]int{x, y}] = si
@@ -225,7 +238,7 @@ func renderLine(in *input) (string, error) {
 		}
 	}
 	body := strings.Join(out, "\n")
-	if x := xAxisLabels(in.labels, seriesMaxLen(ss), w, axisW+2); x != "" {
+	if x := xAxisLabels(in.labels, seriesMaxLen(ss), w, axisW+2, asciiStyle); x != "" {
 		body += "\n" + x
 	}
 	if multi {
@@ -255,7 +268,8 @@ func areaFillRamp(style string) ramp {
 	return fills
 }
 
-// interpAt is the series' value at column x of a plot w columns wide, by linear interpolation.
+// interpAt is the series' value at column x of a plot w columns wide, by linear interpolation; a gap
+// if either sample is one, unless the column sits exactly on the other.
 func interpAt(values []float64, x, w int) float64 {
 	n := len(values)
 	if n == 1 || w <= 1 {
@@ -267,7 +281,14 @@ func interpAt(values []float64, x, w int) float64 {
 		return values[n-1]
 	}
 	frac := pos - float64(i0)
-	return values[i0]*(1-frac) + values[i0+1]*frac
+	a, b := values[i0], values[i0+1]
+	if isGap(a) || isGap(b) {
+		if frac == 0 {
+			return a
+		}
+		return gap
+	}
+	return a*(1-frac) + b*frac
 }
 
 func renderArea(in *input) (string, error) {
@@ -284,6 +305,12 @@ func renderArea(in *input) (string, error) {
 			return "", errorf("all series must have the same number of values (series 0 has %d, "+
 				"series %d has %d)", n, i, len(s.values))
 		}
+	}
+	if err := checkNotAllGaps(ss); err != nil {
+		return "", err
+	}
+	if err := checkXLabels(in.labels, n); err != nil {
+		return "", err
 	}
 	height := in.height
 	if height == 0 {
@@ -309,6 +336,11 @@ func renderArea(in *input) (string, error) {
 		}
 	}
 	maxPos, maxNeg := stackExtents(stackMatrix)
+	// a column where any series has a gap has no stack total: it stays empty
+	gapColumn := make([]bool, w)
+	for x := range gapColumn {
+		gapColumn[x] = columnHasGap(stackMatrix, x)
+	}
 	column := func(x int) []float64 {
 		values := make([]float64, numSeries)
 		for si, s := range ss {
@@ -322,12 +354,17 @@ func renderArea(in *input) (string, error) {
 	case in.stacked && maxNeg == 0:
 		minVal, maxVal = 0, 0
 		for x := 0; x < w; x++ {
-			maxVal = pyMax(maxVal, sum(column(x)))
+			if !gapColumn[x] {
+				maxVal = pyMax(maxVal, sum(column(x)))
+			}
 		}
 		if maxVal == 0 {
 			maxVal = 1
 		}
 		for x := 0; x < w; x++ {
+			if gapColumn[x] {
+				continue
+			}
 			values := column(x)
 			colSum := sum(values)
 			totalRows := round(colSum / maxVal * float64(height))
@@ -352,6 +389,9 @@ func renderArea(in *input) (string, error) {
 			zeroRow = height - 2
 		}
 		for x := 0; x < w; x++ {
+			if gapColumn[x] {
+				continue
+			}
 			values := make([]float64, numSeries)
 			for si := range ss {
 				values[si] = stackMatrix[si][x]
@@ -388,7 +428,11 @@ func renderArea(in *input) (string, error) {
 			ch := r[si%len(r)]
 			color := colorOf(si, colorOn)
 			for x := 0; x < w; x++ {
-				row := yPixel(interpAt(ss[si].values, x, w), minVal, maxVal, height)
+				v := stackMatrix[si][x]
+				if isGap(v) { // nothing to fill down to the baseline
+					continue
+				}
+				row := yPixel(v, minVal, maxVal, height)
 				lo, hi := row, zeroRow
 				if lo > hi {
 					lo, hi = hi, lo
@@ -411,7 +455,7 @@ func renderArea(in *input) (string, error) {
 		lines[y] = padLeft(axisLabels[y], axisW) + " " + tick + g.row(y, colorOn)
 	}
 	body := strings.Join(lines, "\n")
-	if x := xAxisLabels(in.labels, seriesMaxLen(ss), w, axisW+2); x != "" {
+	if x := xAxisLabels(in.labels, seriesMaxLen(ss), w, axisW+2, isASCIIRamp(r)); x != "" {
 		body += "\n" + x
 	}
 	if numSeries > 1 {

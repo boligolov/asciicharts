@@ -30,8 +30,6 @@ The skill (`skills/asciicharts/`) is the main product; the principles (`docs/spe
 - [ ] **The link-preview image** (`site/public/og.png`, from `site/src/pages/og.astro` via
       `scripts/og_image.py`) still carries the old tagline, "Charts for the places images can't go";
       regenerate it with the skill-first wording.
-- [ ] **`docker build -f deploy/Dockerfile`** has never been run (the Docker daemon was down); build the
-      image once and try `docker run --rm -e PORT=8080 -p 8080:8080 asciicharts` against `/healthz` and `/mcp`.
 
 ## Ideas, not decided
 

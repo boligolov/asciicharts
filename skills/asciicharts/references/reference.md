@@ -10,7 +10,7 @@ Everything below applies equally to the tool arguments, to the dict you pass to 
 |-------------|-------------------|--------------------------------------|------------------------------------------------------------------------|
 | `chartType` | string, required  | all                                   | `sparkline`, `vbar`, `hbar`, `line`, `area`, `scatter`, `dual_axis`, `pie`, `histogram`, `heatmap`, `boxplot`, `dotplot` |
 | `series`    | array, required   | all                                   | see below — meaning depends on `chartType`                             |
-| `labels`    | string[]          | vbar, hbar, histogram, heatmap, dotplot | category labels / column headers                                     |
+| `labels`    | string[]          | vbar, hbar, line, area, heatmap, dotplot | category labels, x-axis labels (one per value; cut ones end in `…`), column headers |
 | `title`     | string            | all                                   | shown centered above the chart                                         |
 | `width`     | int               | most types                            | defaults vary by chart type; for `vbar`, thickens each bar/column to fill the requested width; for `heatmap`, widens each cell so the grid fills it (both default to 60); for `hbar`/`dotplot`, sets the axis width |
 | `height`    | int               | most types                            | defaults vary by chart type                                            |
@@ -30,6 +30,7 @@ Each entry in `series` has `name`, `values`, and `points` — which ones you fil
 - `vbar`, `hbar`, `dotplot`: `values` holds one number per category (aligned with `labels`) — vbar/hbar draw multiple series grouped or stacked, dotplot always overlays them on the same row
 - `scatter`, `dual_axis` (as points): `points` holds `{x, y}` samples — `dual_axis` actually takes two `values` series, one per axis
 - `pie`: `values` sums to the slice's magnitude, `name` is its label
+- `line`, `area`: `null` in `values` is a missing sample — the line (or band) breaks there instead of falling to zero; a series of nulls only is an error, and so is `null` in any other chart
 - `line`: series that may share values hide each other's line; `"showPoints": true` marks a shared point `*`
 - `heatmap`: `values` is one matrix row, `name` is the row label, `labels` are column headers; the scale is linear, with a legend of four equal buckets — if one row dwarfs the rest, chart an index (first year = 100) or a logarithm instead
 - `boxplot`: `values` is the raw sample population — min/Q1/median/Q3/max are computed for you

@@ -38,9 +38,14 @@ func errorf(format string, args ...any) error {
 
 type series struct {
 	name   string
-	values []float64
+	values []float64 // a gap (null, line and area only) is NaN, which no value can be
 	points [][2]float64
 }
+
+// gap is a value that is missing: JSON null in a line or area series.
+var gap = math.NaN()
+
+func isGap(v float64) bool { return v != v }
 
 type threshold struct {
 	value float64
@@ -239,6 +244,9 @@ func normalize(raw any) (*input, error) {
 
 	in := &input{}
 	total := 0
+	// line and area take null for a sample that has no value: a gap, never a zero
+	chartType, _ := spec["chartType"].(string)
+	gapsAllowed := chartType == "line" || chartType == "area"
 	for i, s := range list {
 		obj, ok := s.(map[string]any)
 		if !ok {
@@ -275,6 +283,10 @@ func normalize(raw any) (*input, error) {
 		}
 		vals := make([]float64, 0, len(values))
 		for _, v := range values {
+			if v == nil && gapsAllowed {
+				vals = append(vals, gap)
+				continue
+			}
 			f, err := num(v, fmt.Sprintf("series %d value", i))
 			if err != nil {
 				return nil, err

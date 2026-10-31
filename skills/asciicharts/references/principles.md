@@ -1,4 +1,4 @@
-# asciicharts principles v1.3
+# asciicharts principles v1.4
 
 *The principles of text charts* — version 1.3, 2026-09-27. Licensed under CC BY 4.0.
 
@@ -23,13 +23,13 @@ errors · 10 Other media · 11 Mistakes we made · 12 Limitations and choices ·
 
 ## 0. Status and conformance
 
-**Version.** asciicharts principles **v1.3**, published 2026-09-27. Every change to how a chart is drawn is
+**Version.** asciicharts principles **v1.4**, published 2026-10-29. Every change to how a chart is drawn is
 a new version, recorded in `docs/spec/CHANGELOG.md` of the asciicharts repository
 (https://github.com/boligolov/asciicharts), together with regenerated conformance outputs.
 
 **Licence.** The principles and the conformance suite are licensed under the Creative Commons Attribution
 4.0 International License (CC BY 4.0, https://creativecommons.org/licenses/by/4.0/): copy, adapt and build
-on them, commercially too, with credit — *"asciicharts principles v1.3" by asciicharts contributors*. The
+on them, commercially too, with credit — *"asciicharts principles v1.4" by asciicharts contributors*. The
 reference implementations are MIT-licensed code.
 
 **Key words.** "MUST", "MUST NOT", "SHOULD", "SHOULD NOT" and "MAY" in section 15 are to be interpreted as
@@ -38,7 +38,7 @@ informative: they explain, derive and illustrate; section 15 and the conformance
 
 **Two kinds of conformance.**
 
-1. **A renderer** conforms to v1.3 when it reproduces the conformance suite — `test/conformance/` in the
+1. **A renderer** conforms to v1.4 when it reproduces the conformance suite — `test/conformance/` in the
    repository: 317 specs with their exact output or error message, and the 31 documented examples —
    **byte for byte**. Sections 4–9 describe the arithmetic and layout the suite pins down; where prose
    and suite disagree, the suite wins and the prose is a bug.
@@ -97,7 +97,7 @@ Consolas, Courier New and Lucida Console, the defaults of many Windows editors.
 | tier | glyphs | status |
 |---|---|---|
 | 0 — ASCII | printable U+0020–U+007E | always safe |
-| 1 — safe Unicode | Latin-1 (U+00A0–U+00FF, includes `·` and `¦`), the **WGL4** box drawing: light and double lines only (`─│┌┐└┘├┤┬┴┼` and `═║╔╗╚╝╠╣╦╩╬` …), the shades `░▒▓█`, the half blocks `▌▄▐▀`, the markers `●○▲■□▼♦◊►◄` | the default alphabet |
+| 1 — safe Unicode | Latin-1 (U+00A0–U+00FF, includes `·` and `¦`), the **WGL4** box drawing: light and double lines only (`─│┌┐└┘├┤┬┴┼` and `═║╔╗╚╝╠╣╦╩╬` …), the shades `░▒▓█`, the half blocks `▌▄▐▀`, the markers `●○▲■□▼♦◊►◄`, the ellipsis `…` | the default alphabet |
 | 2 — needs a capable font | heavy (`━┃┏┓`), rounded (`╭╮╰╯`) and dashed box drawing; eighth blocks `▁▂▃▄▅▆▇` (vertical) and `▏▎▍▋▊▉` (horizontal); quadrants; braille | only on request (`border: "heavy"`/`"rounded"`, `style: "fine"`) and in sparklines, documented as such |
 
 Rules that come out of this:
@@ -401,6 +401,10 @@ line algorithm (8-connected: one cell per step, diagonal steps allowed). Consequ
   stroke would swallow round markers.
 - `style: "dotted"` lights every other cell of each segment (and always the endpoints), with `+`.
 - Several series: series *i* draws with `FILLS[i]`; later series overwrite earlier ones where they cross.
+- **A missing value is a gap, never a zero.** A `null` sample has no point: the segments into and out of
+  it are not drawn, and a value between two gaps stays a single cell (with its marker under
+  `showPoints`). The scale is the range of the values that are there. A zero drawn for "no data" reads
+  as a fall — the chart would state something the data doesn't. A series of nulls only is an error.
 
 **Draw order (z-order) on the canvas:** series strokes in series order → threshold dashes, **only into
 empty cells** (a reference line goes behind the data) → point markers on top.
@@ -419,6 +423,10 @@ value(x) = values[i] × (1 − f) + values[i + 1] × f        # linear interpola
 - **Stacked:** per column, exactly like stacked bars (4.6), with the column's interpolated values.
 - **Stacked with negatives:** positive bands up from the zero row, negative bands down. If zero falls on
   the bottom row, it moves up one row so the negative side has room.
+- **Gaps** (`null`, as in 4.7): `value(x)` is a gap when either sample it interpolates between is one,
+  unless `f = 0` and it sits exactly on the other. Overlaid, a gap leaves that series' column empty;
+  stacked, it leaves the whole column empty (the stack has no total there) and the column counts toward
+  neither extent of the scale.
 
 ### 4.9 Pie: sample every cell at its centre
 
@@ -601,14 +609,27 @@ Floor division means the chart can be a few columns narrower than `W` (asked 23,
 {row value, right-aligned to the widest} ┤{plot row}
 ```
 
-The x-axis labels go under the plot, indented by the axis width + 2. Placement:
+The x-axis labels go under the plot, indented by the axis width + 2. There is one label per value (per
+value of the longest series, for line) or none; any other number is an error — which value a label
+belongs to can't be guessed. Placement:
 
-1. Truncate each label to 8 columns.
+1. A label wider than 8 columns is cut to its first 7, trailing spaces dropped, and ends in `…` (`~` in
+   the ascii style), so a cut label never passes for a whole one: `January 2026` → `January…`.
 2. Centre it under its sample's column, then clamp it inside the plot, so the first and last labels are
    never cut (`Jan` must not become `an`).
 3. Always keep the first and last. Keep a middle label only if it starts after the previous kept label
    ends (at least one space between) and ends before the last label starts. Drop the rest rather than
    let them run together (`JaFeb`).
+4. If any were dropped, a line under the labels says how many are shown: `x: 12 labels, 4 shown`.
+
+```
+7 ┤                          ████      ████
+5 ┤               ████     ██    ██████
+3 ┤   █████     ██    █████
+1 ┤███     █████
+   January…    April 2…   June 20…  August…
+   x: 8 labels, 4 shown
+```
 
 ```
 30.00 ┤                     ██       
@@ -900,7 +921,7 @@ One JSON object, the same for the library, the CLI and the MCP tool:
 
 ```
 chartType   sparkline | vbar | hbar | line | area | scatter | dual_axis | pie | histogram | heatmap | boxplot | dotplot
-series      [{name?, values?: number[], points?: [{x, y}]}]
+series      [{name?, values?: number[], points?: [{x, y}]}]     line, area: values may hold null, a gap
 labels?     string[]            category labels, x-axis labels, heatmap column headers
 title?, width?, height?, border?, style?, stacked?, bins?, useColor?,
 threshold?, thresholds?: (number | {value, label?})[], showPoints?, pointChar?
@@ -955,7 +976,9 @@ tool") gives it nothing — every internal exception reachable from input is a b
 
 Real CSV files are dirty. The CSV reader:
 
-- sniffs the delimiter among `,` `;` tab `|`; strips a BOM, blank lines; pads short rows;
+- sniffs the delimiter among `,` `;` tab `|`, by csv.Sniffer's algorithm as of CPython 3.12.15, in the
+  implementation's own code so that a file reads the same under any runtime; strips a BOM, blank lines;
+  pads short rows;
 - parses decorated numbers: surrounding spaces, `$ € £` prefixes, a trailing `%`, thousands separators
   (`1,234.5`), a decimal comma when the file is not comma-separated (`3,14`);
 - treats a column as numeric if every non-empty cell parses; the first text column is the label column;
@@ -1188,7 +1211,7 @@ handful of glyphs); build rows as arrays and join once.
 
 ## 15. The requirements
 
-Normative for v1.3 (section 0). Each requirement names the section that explains it.
+Normative for v1.4 (section 0). Each requirement names the section that explains it.
 
 **Any chart** — rendered or hand-drawn:
 
@@ -1217,6 +1240,10 @@ Normative for v1.3 (section 0). Each requirement names the section that explains
   none); a wide character MUST NOT be cut in half; control characters MUST NOT reach the output.
 - **R12** (§5.7) Without a requested size, a chart SHOULD fill a readable default plot width;
   a requested width SHOULD mean the plot, not the decoration around it.
+- **R16** (§5.5) Text that was shortened or left out MUST say so: a cut label ends in `…` (`~` in ASCII),
+  and dropped axis labels are counted.
+- **R17** (§4.7, §4.8) A missing value MUST be drawn as missing — a gap in a line or area — never as a
+  zero.
 
 **A renderer**, in addition:
 

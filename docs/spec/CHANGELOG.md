@@ -4,6 +4,34 @@ Versions of the principles (`principles.md`) and of the conformance suite (`conf
 how any chart is drawn is a change to the principles: it gets an entry here and regenerated conformance
 outputs, never a silent edit.
 
+## v1.4 — 2026-10-29
+
+From a code review of both implementations.
+
+- **A cut x-axis label says it was cut, and dropped ones are counted** (§5.5, R16). A label wider than
+  8 columns kept its first 8 (`April 20`), which reads as a whole label; it now keeps 7 and ends in `…`
+  (`April 2…`), `~` in the ascii style, and `…` joins the tier-1 alphabet (it is in WGL4). When labels
+  collide and middle ones are dropped, a line under them says so: `x: 8 labels, 4 shown`.
+  Conformance: 24 corpus cases (line, area), one curated case, 13 MCP answers; curated cases pin both
+  (`rule/x labels cut with an ellipsis, dropped ones counted`, `rule/x labels cut with a tilde, ascii`).
+- **line and area take one label per value, or none** (§5.5). Any other number of labels was silently
+  ignored, while vbar and hbar rejected it; now line and area reject it too: `labels length (3) must
+  match the number of values (5)`. Conformance: no corpus case had such labels; two curated cases.
+- **A missing value is a gap, not a zero** (§4.7, §4.8, §9.1, R17). line and area take `null` in
+  `values`: the line breaks there (a value between two gaps is one cell, with its marker under
+  `showPoints`), an overlaid area leaves that series' columns empty, a stacked area the whole column;
+  the scale is the range of the values that are there. A series of nulls only is an error, and `null`
+  stays an error in every other chart. From CSV, an empty cell is such a gap for line and area (it is
+  still an error elsewhere); from ExCSV, a category with no value for a series is one, where v1.3's
+  reader filled in 0 and the line fell to it. Conformance: no corpus case changes (null was an error
+  for every chart); the curated case `error/value null` moves from line to hbar, seven new ones.
+- **The CSV delimiter no longer depends on the Python version** (§9.5). The reference called
+  `csv.Sniffer`, which CPython rewrote in a 3.12 patch release, so one file could read as one column
+  on one Python and five on another, and the Go port, written against the older one, disagreed with
+  the newer. Both implementations now hold the algorithm as of 3.12.15 themselves. A CRLF file with
+  blank lines, or quoted fields holding quotes, may sniff differently than under older Pythons.
+  Conformance: no case changes.
+
 ## v1.3 — 2026-09-27
 
 From a second review by the same agent.

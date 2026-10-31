@@ -1,6 +1,6 @@
 package asciicharts
 
-// The conformance suite of asciicharts principles v1.3 (test/conformance/), byte for byte.
+// The conformance suite of asciicharts principles v1.4 (test/conformance/), byte for byte.
 
 import (
 	"bytes"

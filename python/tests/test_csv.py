@@ -1,13 +1,14 @@
 """CSV input: spec_from_csv and the --csv command line."""
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 import pytest
 
-from asciicharts import ChartError, render_chart, spec_from_csv
+from asciicharts import ChartError, _sniff_delimiter, render_chart, spec_from_csv
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = str(ROOT / "asciicharts.py")
@@ -128,6 +129,23 @@ def test_other_delimiters_are_detected(delim):
     assert series_values(spec_from_csv(text, "hbar", values="p99")) == {"p99": [480, 1900, 950, 9, 4200]}
 
 
+def test_the_delimiter_does_not_depend_on_the_python_version():
+    """Our own sniffing, as of csv.Sniffer in 3.12.15: the stdlib's before it read the blank line's \\r
+    as a row without tabs and fell back to a comma, so this file had one column on older Pythons."""
+    spec = spec_from_csv("k\tv\r\n\r\na\t1\r\nb\t2\r\n", "hbar", values="v")
+    assert spec["labels"] == ["a", "b"] and series_values(spec) == {"v": [1, 2]}
+
+
+@pytest.mark.parametrize("text, delim", [
+    ('"a,b";c\n"d,e";f\n', ";"),             # the delimiter after a quoted field, not the comma inside it
+    ('a|"b ""c"", d"|e\n1|2|3\n', "|"),      # a doubled quote doesn't end the field
+    ('a,"b\nc\n', ","),                      # a quote never closed names nothing
+    ("one\ntwo\n", ","),                     # nothing to go on
+])
+def test_sniffing_a_delimiter(text, delim):
+    assert _sniff_delimiter(text) == delim
+
+
 def test_decorated_numbers():
     text = 'item,price,share\nA,"$1,200.50",12%\nB,"$980",8.5 %\nC,"1,000",  30%\n'
     spec = spec_from_csv(text, "hbar")
@@ -188,7 +206,7 @@ def test_scatter_without_numeric_columns():
 
 def run(args, stdin=None):
     return subprocess.run([sys.executable, SCRIPT, *args], input=stdin, capture_output=True, encoding="utf-8",
-                          env={"PYTHONIOENCODING": "utf-8", "PATH": ""})
+                          env={**os.environ, "PYTHONIOENCODING": "utf-8", "PATH": ""})
 
 
 @pytest.fixture
@@ -237,6 +255,41 @@ def test_cli_errors_go_to_stderr_with_exit_code_1(csv_file):
     assert r.returncode == 1 and r.stderr.startswith("error:")
     r = run(["--csv", csv_file, "--chart", "hbar", "--set", "noequals"])
     assert r.returncode == 1 and "key=value" in r.stderr
+
+
+def test_cli_input_that_is_not_utf8_is_an_error_not_a_traceback(tmp_path):
+    p = tmp_path / "latin1.csv"
+    p.write_bytes(b"name,v\nPr\xe9,1\n")
+    r = run(["--csv", str(p), "--chart", "hbar"])
+    assert r.returncode == 1 and r.stderr == f"error: {p} is not UTF-8 text: byte 0xe9 at offset 9\n"
+    p.write_bytes(b'{"chartType":"sparkline","title":"\xff"}')
+    r = run([str(p)])
+    assert r.returncode == 1 and r.stderr == f"error: {p} is not UTF-8 text: byte 0xff at offset 34\n"
+    r = subprocess.run([sys.executable, SCRIPT, "--csv", "-", "--chart", "hbar"], input=b"\xef\xbb\xbfa,b\n\x80,1\n",
+                       capture_output=True, env={**os.environ, "PYTHONIOENCODING": "utf-8"})
+    assert r.returncode == 1 and r.stderr.decode().strip() == "error: stdin is not UTF-8 text: byte 0x80 at offset 7"
+
+
+def test_an_empty_cell_is_a_gap_in_line_and_area_and_an_error_elsewhere():
+    text = "month,eu,us\nJan,10,8\nFeb,12,9\nMar,,9\nApr,13,10\n"
+    for chart in ("line", "area"):
+        assert spec_from_csv(text, chart)["series"][0]["values"] == [10.0, 12.0, None, 13.0]
+    with pytest.raises(ChartError, match='row 4, column "eu" is empty'):
+        spec_from_csv(text, "hbar")
+
+
+def test_a_field_longer_than_the_csv_readers_limit_is_a_chart_error():
+    with pytest.raises(ChartError, match=r"^field larger than field limit \(131072\)$"):
+        spec_from_csv("a,b\n" + "x" * 131073 + ",1\n", "hbar")
+
+
+def test_cli_json_nested_too_deeply_is_an_error_not_a_traceback():
+    r = run(["--json", "[" * 10_000 + "]" * 10_000])
+    assert r.returncode == 1 and r.stderr == "error: invalid JSON: nested deeper than 100 levels\n"
+    r = run(["--json", "[" * 101 + "]" * 101])
+    assert r.returncode == 1 and r.stderr == "error: invalid JSON: nested deeper than 100 levels\n"
+    r = run(["--json", "[" * 100 + "]" * 100])
+    assert r.returncode == 1 and r.stderr == "error: chart spec must be a JSON object\n"
 
 
 def test_cli_help_mentions_the_flags():

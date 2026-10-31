@@ -1,5 +1,5 @@
 // Package asciicharts renders numbers as text charts: the Go reference implementation of
-// asciicharts principles v1.3 (docs/spec/principles.md in https://github.com/boligolov/asciicharts).
+// asciicharts principles v1.4 (docs/spec/principles.md in https://github.com/boligolov/asciicharts).
 //
 // A spec is the JSON object of the principles (§9.1). The output is deterministic and matches the
 // conformance suite (test/conformance/) byte for byte, error messages included.
@@ -20,7 +20,7 @@ import (
 const Version = "1.0.0"
 
 // PrinciplesVersion is the version of the principles this implementation conforms to.
-const PrinciplesVersion = "1.3"
+const PrinciplesVersion = "1.4"
 
 // RenderJSON renders a chart from a JSON spec.
 func RenderJSON(data []byte) (string, error) {
@@ -218,6 +218,9 @@ func seriesMinMax(ss []series) (float64, float64) {
 	lo, hi := math.Inf(1), math.Inf(-1)
 	for _, s := range ss {
 		for _, v := range s.values {
+			if isGap(v) {
+				continue
+			}
 			lo = pyMin(lo, v)
 			hi = pyMax(hi, v)
 		}
@@ -226,6 +229,19 @@ func seriesMinMax(ss []series) (float64, float64) {
 		return 0, 1
 	}
 	return scaleRange(lo, hi)
+}
+
+func checkNotAllGaps(ss []series) error {
+	for i, s := range ss {
+		all := true
+		for _, v := range s.values {
+			all = all && isGap(v)
+		}
+		if all {
+			return errorf("series %d %s must contain at least one number, not only nulls", i, quote(s.name))
+		}
+	}
+	return nil
 }
 
 // scaleRange centres all-equal data on its value.
@@ -280,9 +296,32 @@ func leftAxisLabels(lo, hi float64, height int) ([]string, int) {
 func padLeft(s string, w int) string  { return repeat(" ", w-len([]rune(s))) + s }
 func padRight(s string, w int) string { return s + repeat(" ", w-len([]rune(s))) }
 
-func xAxisLabels(labels []string, n, plotWidth, leftPad int) string {
+// xLabelWidth is the columns an x-axis label keeps, its ellipsis included.
+const xLabelWidth = 8
+
+// shorten is s if it fits in n columns, else its first n-1 columns and the mark (… or ~) saying it was cut.
+func shorten(s string, n int, mark string) string {
+	if width(s) <= n {
+		return s
+	}
+	return strings.TrimRight(truncate(s, n-1), " ") + mark
+}
+
+// checkXLabels: line and area take one label per value, or none at all.
+func checkXLabels(labels []string, n int) error {
+	if len(labels) > 0 && len(labels) != n {
+		return errorf("labels length (%d) must match the number of values (%d)", len(labels), n)
+	}
+	return nil
+}
+
+func xAxisLabels(labels []string, n, plotWidth, leftPad int, asciiStyle bool) string {
 	if len(labels) != n || n == 0 || plotWidth <= 0 {
 		return ""
+	}
+	mark := "…"
+	if asciiStyle {
+		mark = "~"
 	}
 	row := make([]string, plotWidth)
 	for i := range row {
@@ -294,7 +333,7 @@ func xAxisLabels(labels []string, n, plotWidth, leftPad int) string {
 	}
 	placed := make([]placedLabel, n)
 	for i, lbl := range labels {
-		cell := truncate(lbl, 8)
+		cell := shorten(lbl, xLabelWidth, mark)
 		start := clamp(xPixel(i, n, plotWidth)-width(cell)/2, 0, maxInt(plotWidth-width(cell), 0))
 		placed[i] = placedLabel{start, cell}
 	}
@@ -318,7 +357,17 @@ func xAxisLabels(labels []string, n, plotWidth, leftPad int) string {
 			}
 		}
 	}
-	return repeat(" ", leftPad) + strings.TrimRight(strings.Join(row, ""), " ")
+	out := repeat(" ", leftPad) + strings.TrimRight(strings.Join(row, ""), " ")
+	shown := 0
+	for _, k := range keep {
+		if k {
+			shown++
+		}
+	}
+	if shown < n { // say so, rather than let the reader take the gaps for missing data
+		out += "\n" + repeat(" ", leftPad) + fmt.Sprintf("x: %d labels, %d shown", n, shown)
+	}
+	return out
 }
 
 func sep(r ramp) string {
